@@ -11,6 +11,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from datetime import timedelta
+from typing import Optional
 from cms.db.task import Task
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
@@ -22,14 +23,18 @@ from pisek.utils.paths import InputPath
 
 
 def create_task(
-    session: Session, env: Env, testcases: list[InputPath], description: str
+    session: Session,
+    env: Env,
+    testcases: list[InputPath],
+    description: str,
+    time_limit: Optional[float],
 ) -> Task:
     config = env.config
 
     task = Task(name=config.cms.name, title=config.cms.title)
     set_task_settings(task, config)
 
-    dataset = create_dataset(session, env, task, testcases, description)
+    dataset = create_dataset(session, env, task, testcases, description, time_limit)
 
     task.active_dataset = dataset
 
