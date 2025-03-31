@@ -46,7 +46,7 @@ class Env(BaseEnv):
         strict: Whether to interpret warnings as failures
         testing_log: Whether to produce testing_log.json after running
         solutions: List of all solutions to be tested
-        timeout: Timeout for task in seconds. Overrides task config if specified. (Must be >= 0)
+        timeout: Timeout for solutions in seconds. Overrides task config if specified. (Must be >= 0)
         all_inputs: Finish testing all inputs of a solution
         repeat: Test task REPEAT times giving generator different seeds. (Changes seeded inputs only.)
         iteration: Current iteration of task testing. (0 <= iteration < repeat)
