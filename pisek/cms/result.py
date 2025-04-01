@@ -25,6 +25,17 @@ from pisek.task_jobs.solution.solution_result import Verdict
 from pisek.config.task_config import SolutionConfig, TestConfig
 from pisek.utils.text import eprint, tab
 
+RUNTIME_ERROR_MESSAGES = [
+    "Evaluation didn't produce file %s",
+    "Execution killed (could be triggered by violating memory limits)",
+    "Execution failed because the return code was nonzero",
+]
+
+TIME_LIMIT_MESSAGES = [
+    "Execution timed out",
+    "Execution timed out (wall clock limit exceeded)",
+]
+
 
 def create_testing_log(session: Session, env: Env, dataset: Dataset) -> bool:
     config = env.config
@@ -55,7 +66,12 @@ def create_testing_log(session: Session, env: Env, dataset: Dataset) -> bool:
                 if points >= 1:
                     result_type = Verdict.ok.name
                 elif points <= 0:
-                    result_type = Verdict.wrong_answer.name
+                    if evaluation.text[0] in TIME_LIMIT_MESSAGES:
+                        result_type = Verdict.timeout.name
+                    elif evaluation.text[0] in RUNTIME_ERROR_MESSAGES:
+                        result_type = Verdict.error.name
+                    else:
+                        result_type = Verdict.wrong_answer.name
                 else:
                     result_type = Verdict.partial_ok.name
             except ValueError:
