@@ -85,36 +85,8 @@ class BuildStrategy(ABC):
     def _all_end_with(cls, sources: list[str], suffixes: list[str]) -> bool:
         return all(cls._ends_with(source, suffixes) for source in sources)
 
-    def _run_compilation(self, args: list[str], program: str, **kwargs) -> str:
-        self._check_tool(args[0])
-
-        logger.debug("Compiling '" + " ".join(args) + "'")
-        comp = subprocess.Popen(args, **kwargs, stderr=subprocess.PIPE)
-        while comp.stderr is not None:
-            line = comp.stderr.readline().decode()
-            if not line:
-                break
-            self._print(line, end="", stderr=True)
-
-        comp.wait()
-        if comp.returncode != 0:
-            raise PipelineItemFailure(
-                f"Compilation of {program} failed.\n"
-                + tab(self._env.colored(" ".join(args), "yellow"))
-            )
-        return self.target
-
-    def _build_script(self, program: str) -> str:
-        self._check_shebang(program)
-        with open(program, "r", newline="\n") as f:
-            interpreter = f.readline().strip().lstrip("#!")
-        self._check_tool(interpreter)
-        st = os.stat(program)
-        os.chmod(program, st.st_mode | 0o111)
-        return program
-
-    def _check_shebang(self, program: str) -> None:
-        """Check if file has shebang and if the shebang is valid"""
+    def _load_shebang(self, program: str) -> str:
+        """Load shebang from program."""
         with open(program, "r", newline="\n") as f:
             first_line = f.readline()
 
@@ -122,6 +94,8 @@ class BuildStrategy(ABC):
             raise PipelineItemFailure(f"Missing shebang in {program}")
         if first_line.endswith("\r\n"):
             raise PipelineItemFailure(f"First line ends with '\\r\\n' in {program}")
+
+        return first_line.strip().lstrip("#!")
 
     def _check_tool(self, tool: str) -> None:
         """Checks that a tool exists."""
@@ -145,11 +119,37 @@ class BuildScript(BuildStrategy):
         assert len(self.sources) == 1
         return self._build_script(self.sources[0])
 
+    def _build_script(self, program: str) -> str:
+        interpreter = self._load_shebang(program)
+        self._check_tool(interpreter)
+        st = os.stat(program)
+        os.chmod(program, st.st_mode | 0o111)
+        return program
+
 
 class BuildBinary(BuildStrategy):
     @classmethod
     def applicable_on_directory(cls, build: BuildConfig, directory: str) -> bool:
         return False
+
+    def _run_compilation(self, args: list[str], program: str, **kwargs) -> str:
+        self._check_tool(args[0])
+
+        logger.debug("Compiling '" + " ".join(args) + "'")
+        comp = subprocess.Popen(args, **kwargs, stderr=subprocess.PIPE)
+        while comp.stderr is not None:
+            line = comp.stderr.readline().decode()
+            if not line:
+                break
+            self._print(line, end="", stderr=True)
+
+        comp.wait()
+        if comp.returncode != 0:
+            raise PipelineItemFailure(
+                f"Compilation of {program} failed.\n"
+                + tab(self._env.colored(" ".join(args), "yellow"))
+            )
+        return self.target
 
 
 class Python(BuildScript):
@@ -160,16 +160,16 @@ class Python(BuildScript):
     def applicable_on_files(cls, build: BuildConfig, sources: list[str]) -> bool:
         if not cls._all_end_with(sources, [".py"]):
             return False
-        if len(sources) > 1 and build.entrypoint == "":
-            raise PipelineItemFailure(
-                f"For multiple python files 'entrypoint' must be set (in section [{build.section_name}])."
-            )
         return True
 
     def _build(self):
         if len(self.sources) == 1:
             return self._build_script(self.sources[0])
         else:
+            if self._build_section.entrypoint == "":
+                raise PipelineItemFailure(
+                    f"For multiple python files 'entrypoint' must be set (in section [{self._build_section.section_name}])."
+                )
             assert "run" not in self.sources
             if (entrypoint := self._build_section.entrypoint + ".py") in self.sources:
                 pass
@@ -180,7 +180,7 @@ class Python(BuildScript):
                     f"Entrypoint '{self._build_section.entrypoint}' not in sources."
                 )
 
-            os.rename(self._build_script(entrypoint), "run")
+            os.symlink(self._build_script(entrypoint), "run")
             return "."
 
 

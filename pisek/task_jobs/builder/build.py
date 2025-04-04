@@ -140,7 +140,7 @@ class Build(TaskJob):
 
         sources = self._strategy_sources(strategy, sources)
         extras = self._strategy_extras(strategy, extras)
-        self._check_valid_sources(sources)  # XXX: We need to check valid
+        self._check_valid_sources(sources)
 
         if self._env.verbosity >= 1:
             msg = f"Building '{self.build_section.program_name}' using build strategy '{strategy.name}'."
@@ -177,7 +177,7 @@ class Build(TaskJob):
         executable = os.path.join(WORKING_DIR, executable_name)
         # Intentionally avoiding caching sources
         if os.path.isdir(executable):
-            shutil.copytree(executable, target.path)
+            shutil.copytree(executable, target.path, symlinks=True)
             self._access_dir(target)
         else:
             shutil.copy(executable, target.path)
