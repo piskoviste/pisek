@@ -633,7 +633,10 @@ class RunConfig(BaseEnv):
 
 
 class BuildConfig(BaseEnv):
+    _section: str
     section_name: str
+    build_type: str
+    program_name: str
 
     sources: ListTaskPathFromStr
     comp_args: ListStr
@@ -647,23 +650,21 @@ class BuildConfig(BaseEnv):
     extra_sources_cpp: ListTaskPathFromStr
     extra_sources_py: ListTaskPathFromStr
 
-    @property
-    def program_name(self) -> str:
-        return self.section_name.split(":", 1)[1]
-
     @classmethod
     def load_dict(cls, name: ConfigValue, configs: ConfigHierarchy) -> ConfigValuesDict:
-        program = name.value
-        default_sections = [f"build:{program}", "build"]
+        program = name
+        program_type = ConfigValue("", name.config, name.section, name.key)
+        default_sections = [f"build:{program.value}", "build"]
         for pt in ProgramType:
             prefix = f"{pt.build_name}:"
             if name.value.startswith(prefix):
-                program = name.value.removeprefix(prefix)
+                program_type, program = name.split(":")
                 default_sections = [
-                    f"build_{pt.build_name}:{program}",
+                    f"build_{pt.build_name}:{program.value}",
                     f"build_{pt.build_name}",
                     f"build",
                 ]
+                break
 
         section_name = configs.get_from_candidates(
             [(section, None) for section in default_sections]
@@ -673,18 +674,26 @@ class BuildConfig(BaseEnv):
                 [(section, key) for section in default_sections]
             )
             for key in cls.model_fields
-            if key not in ("section_name")
+            if key not in ("section_name", "build_type", "program_name")
         }
-        if args["sources"].value == "@auto":
-            args["sources"].value = program
 
         return {
             "_section": section_name,
             "section_name": ConfigValue.make_internal(
-                default_sections[0], default_sections[0]
+                default_sections[0], default_sections[0], None
             ),
+            "build_type": program_type,
+            "program_name": program,
             **args,
         }
+
+    @field_validator("sources", mode="before")
+    @classmethod
+    def convert_sources(cls, value: str, info: ValidationInfo) -> str:
+        if value == "@auto":
+            return str(info.data.get("program_name"))
+        else:
+            return value
 
 
 class LimitsConfig(BaseEnv):
