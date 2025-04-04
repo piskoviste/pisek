@@ -127,6 +127,10 @@ class Build(TaskJob):
         extras: set[TaskPath] = set(self.build_section.extras)
         for part in self.build_section.sources:
             sources |= self._resolve_program(part)
+
+        # We need to check valid sources twice:
+        # - First in order to report correct error
+        # - Second time because we added extra sources
         self._check_valid_sources(sources)
 
         if self.build_section.strategy == BuildStrategyName.auto:
@@ -136,7 +140,7 @@ class Build(TaskJob):
 
         sources = self._strategy_sources(strategy, sources)
         extras = self._strategy_extras(strategy, extras)
-        self._check_valid_sources(sources)
+        self._check_valid_sources(sources)  # XXX: We need to check valid
 
         if self._env.verbosity >= 1:
             msg = f"Building '{self.build_section.program_name}' using build strategy '{strategy.name}'."
