@@ -72,7 +72,11 @@ def create_dataset(
         )
 
     if config.task_type == TaskType.batch:
-        check_key("out_format", config.out_format, lambda t: t == DataFormat.binary)
+        check_key(
+            "out_format",
+            config.out_format,
+            lambda t: t in (DataFormat.strict_text, DataFormat.binary),
+        )
 
     score_params = get_group_score_parameters(config)
 
