@@ -625,9 +625,7 @@ class RunConfig(BaseEnv):
     @classmethod
     def convert_exec(cls, value: str, info: ValidationInfo) -> str:
         if value == "@auto":
-            value = os.path.join(
-                str(info.data.get("subdir")), str(info.data.get("name"))
-            )
+            value = info.data.get("build").program_name  # type: ignore
             return value
         else:
             return value

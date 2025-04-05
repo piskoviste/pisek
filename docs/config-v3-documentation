@@ -263,7 +263,8 @@ build=@auto
 
 exec=@auto
 # Filename of the program to execute (without suffix)
-# @auto expands to {program} (default)
+# If directory is chosen directory/run is executed instead
+# @auto expands to value of the build key without program_type (default)
 args=--slow
 # Additional arguments for the program. (Given before any other arguments.)
 # (defaults to empty)
