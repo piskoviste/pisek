@@ -89,8 +89,9 @@ def create(env: Env, args: Namespace) -> int:
     session = Session()
 
     description = args.description
+    time_limit = args.time_limit
 
-    task = create_task(session, env, testcases, description)
+    task = create_task(session, env, testcases, description, time_limit)
     dataset = task.active_dataset
 
     try:
@@ -127,10 +128,13 @@ def add(env: Env, args: Namespace) -> int:
     session = Session()
 
     description = args.description
+    time_limit = args.time_limit
     autojudge = not args.no_autojudge
 
     task = get_task(session, env.config)
-    dataset = create_dataset(session, env, task, testcases, description, autojudge)
+    dataset = create_dataset(
+        session, env, task, testcases, description, time_limit, autojudge
+    )
 
     try:
         session.commit()

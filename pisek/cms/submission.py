@@ -25,7 +25,9 @@ from datetime import datetime, timezone
 
 from pisek.env.env import Env
 from pisek.config.task_config import SolutionConfig, TaskConfig
+from pisek.utils.colors import ColorSettings
 from pisek.utils.paths import TaskPath
+from pisek.utils.text import eprint
 
 
 def get_participation(session: Session, task: Task, username: str) -> Participation:
@@ -56,7 +58,8 @@ def submit_all(
 
     for name, solution in config.solutions.items():
         submission = submit(session, files, env, solution, task, participation)
-        submissions.append((name, submission))
+        if submission is not None:
+            submissions.append((name, submission))
 
     return submissions
 
@@ -69,7 +72,10 @@ def submit(
     task: Task,
     participation: Participation,
 ) -> Submission:
-    file_path, language = resolve_solution(task.contest, env, solution)
+    resolved = resolve_solution(task.contest, env, solution)
+    if resolved is None:
+        return None
+    file_path, language = resolved
 
     if len(task.submission_format) != 1:
         raise RuntimeError(
@@ -107,7 +113,11 @@ def get_submission(
     if task.contest is None:
         raise RuntimeError("The task is not part of any contest")
 
-    file_path, language = resolve_solution(task.contest, env, solution)
+    resolved = resolve_solution(task.contest, env, solution)
+    if resolved is None:
+        return None
+    file_path, language = resolved
+
     digest = files.put_file_from_path(file_path.path, f"Solution to task {task.name}")
 
     return get_submission_of_digest(session, digest, language, task)
@@ -132,7 +142,7 @@ def get_submission_of_digest(
 
 def resolve_solution(
     contest: Contest, env: Env, solution: SolutionConfig
-) -> tuple[TaskPath, Language]:
+) -> Optional[tuple[TaskPath, Language]]:
     sources = solution.run.build.sources
     if len(sources) != 1:
         raise RuntimeError(
@@ -153,4 +163,10 @@ def resolve_solution(
             if path.isfile(file_path.path):
                 return file_path, language
 
-    raise RuntimeError(f"Solution {source} isn't available in any enabled language")
+    eprint(
+        ColorSettings.colored(
+            f"Skipping {source}, as it isn't available in any enabled language",
+            "yellow",
+        )
+    )
+    return None

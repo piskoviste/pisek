@@ -203,15 +203,19 @@ class TestcaseInfoMixin(JobManager):
             jobs += self._check_input_jobs(input_path)
 
         if self._env.config.validator is not None and test > 0:
-            jobs.append(
-                check_input := ValidatorJob(
-                    self._env,
-                    self._env.config.validator,
-                    input_path,
-                    test,
+            for t in range(self._env.config.tests_count):
+                if not self._env.config.tests[t].in_test(input_path.name):
+                    continue
+
+                jobs.append(
+                    check_input := ValidatorJob(
+                        self._env,
+                        self._env.config.validator,
+                        input_path,
+                        t,
+                    )
                 )
-            )
-            check_input.add_prerequisite(gen_inp)
+                check_input.add_prerequisite(gen_inp)
 
         return jobs
 

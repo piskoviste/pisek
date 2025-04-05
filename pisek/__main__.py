@@ -81,12 +81,19 @@ def main(argv):
         )
     )
 
-    def add_argument_description(parser):
+    def add_cms_import_arguments(parser):
         parser.add_argument(
             "--description",
             "-d",
             type=str,
             help="create the dataset with the description DESCRIPTION",
+        )
+
+        parser.add_argument(
+            "--time-limit",
+            "-t",
+            type=float,
+            help="override the time limit when importing to TIME_LIMIT seconds",
         )
 
     def add_argument_dataset(parser):
@@ -279,7 +286,7 @@ def main(argv):
     )
 
     parser_cms_create = subparsers_cms.add_parser("create", help="create a new task")
-    add_argument_description(parser_cms_create)
+    add_cms_import_arguments(parser_cms_create)
 
     parser_cms_update = subparsers_cms.add_parser(
         "update", help="update the basic properties of an existing task"
@@ -288,7 +295,7 @@ def main(argv):
     parser_cms_add = subparsers_cms.add_parser(
         "add", help="add a dataset to an existing task"
     )
-    add_argument_description(parser_cms_add)
+    add_cms_import_arguments(parser_cms_add)
     parser_cms_add.add_argument(
         "--no-autojudge",
         action="store_true",

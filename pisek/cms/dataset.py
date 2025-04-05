@@ -18,12 +18,20 @@ from sqlalchemy.orm.exc import NoResultFound
 from os import path, listdir
 import re
 import datetime
+from typing import Callable, TypeVar
 
 from pisek.cms.testcase import create_testcase
 from pisek.env.env import Env
 from pisek.config.task_config import TaskConfig
-from pisek.config.config_types import OutCheck, TaskType
-from pisek.utils.paths import TaskPath, InputPath, OutputPath
+from pisek.config.config_types import JudgeType, OutCheck, TaskType, DataFormat
+from pisek.utils.paths import TaskPath, InputPath
+
+T = TypeVar("T")
+
+
+def check_key(name: str, value: T, condition: Callable[[T], bool]):
+    if not condition(value):
+        raise RuntimeError(f"Cannot import task with {name}={value}")
 
 
 def create_dataset(
@@ -32,12 +40,43 @@ def create_dataset(
     task: Task,
     testcases: list[InputPath],
     description: Optional[str],
+    time_limit: Optional[float],
     autojudge: bool = True,
 ) -> Dataset:
     if description is None:
         description = create_description()
 
     config = env.config
+
+    check_key(
+        "out_check",
+        config.out_check,
+        lambda v: v in (OutCheck.diff, OutCheck.judge, OutCheck.tokens),
+    )
+    if config.out_check == OutCheck.tokens:
+        check_key("tokens_ignore_case", config.tokens_ignore_case, lambda v: not v)
+        check_key(
+            "tokens_ignore_newlines", config.tokens_ignore_newlines, lambda v: not v
+        )
+        check_key(
+            "tokens_float_abs_error", config.tokens_float_abs_error, lambda v: v is None
+        )
+        check_key(
+            "tokens_float_rel_error", config.tokens_float_rel_error, lambda v: v is None
+        )
+    if config.out_check == OutCheck.judge and config.task_type == TaskType.batch:
+        check_key("judge_type", config.judge_type, lambda t: t == JudgeType.cms_batch)
+    if config.out_check == OutCheck.judge and config.task_type == TaskType.interactive:
+        check_key(
+            "judge_type", config.judge_type, lambda t: t == JudgeType.cms_communication
+        )
+
+    if config.task_type == TaskType.batch:
+        check_key(
+            "out_format",
+            config.out_format,
+            lambda t: t in (DataFormat.strict_text, DataFormat.binary),
+        )
 
     score_params = get_group_score_parameters(config)
 
@@ -64,7 +103,7 @@ def create_dataset(
         task_type_parameters=task_params,
         score_type="GroupMin",
         score_type_parameters=score_params,
-        time_limit=config.cms.time_limit,
+        time_limit=time_limit if time_limit is not None else config.cms.time_limit,
         memory_limit=config.cms.mem_limit * 1024 * 1024,
         task=task,
     )

@@ -149,7 +149,8 @@ class PisekV1GeneratorJob(ProgramsJob):
         )
         if result.kind != RunResultKind.OK:
             raise self._create_program_failure(
-                f"{self.generator.name} failed on input {self.testcase_info.name}, seed {self.seed:016x}:",
+                f"{self.generator.name} failed on input {self.testcase_info.name}"
+                + (":" if self.seed is None else f", seed {self.seed:016x}:"),
                 result,
             )
 
