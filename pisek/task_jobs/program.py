@@ -22,7 +22,7 @@ from typing import Optional, Any, Union, Callable
 import signal
 import subprocess
 
-from pisek.config.task_config import ProgramType
+from pisek.config.task_config import ProgramType, RunConfig
 from pisek.env.env import Env
 from pisek.utils.paths import TaskPath, LogPath
 from pisek.jobs.jobs import PipelineItemFailure
@@ -88,16 +88,6 @@ class ProgramsJob(TaskJob):
         self._program_pool: list[ProgramPoolItem] = []
         self._callback: Optional[Callable[[subprocess.Popen], None]] = None
 
-    def _load_compiled(self, program: TaskPath) -> TaskPath:
-        """Loads name of compiled program."""
-        executable = TaskPath.executable_file(self._env, program.path)
-        if not self._file_exists(executable):
-            raise PipelineItemFailure(
-                f"Program {executable:p} does not exist, "
-                f"although it should have been compiled already."
-            )
-        return executable
-
     def _load_executable(
         self,
         executable: TaskPath,
@@ -111,7 +101,18 @@ class ProgramsJob(TaskJob):
         stderr: Optional[LogPath] = None,
         env={},
     ):
-        self._access_file(executable)
+        if self._is_file(executable):
+            self._access_file(executable)
+        elif self._is_dir(executable):
+            self._access_dir(executable)
+            executable = executable.join("run")
+
+        if not self._is_file(executable):
+            raise PipelineItemFailure(
+                f"Program {executable:p} does not exist, "
+                f"although it should have been compiled already."
+            )
+
         if isinstance(stdin, TaskPath):
             self._access_file(stdin)
         if isinstance(stdout, TaskPath):
@@ -139,7 +140,7 @@ class ProgramsJob(TaskJob):
     def _load_program(
         self,
         program_type: ProgramType,
-        program: str,
+        program: RunConfig,
         args: list[str] = [],
         stdin: Optional[Union[TaskPath, int]] = None,
         stdout: Optional[Union[TaskPath, int]] = None,
@@ -147,20 +148,17 @@ class ProgramsJob(TaskJob):
         env={},
     ) -> None:
         """Adds program to execution pool."""
-        run = self._env.config.runs[f"{program_type}_{program}"]
-        executable = self._load_compiled(run.exec)
-
         timeout: Optional[float] = None
         if program_type.is_solution():
             timeout = self._env.timeout
 
         self._load_executable(
-            executable=executable,
-            args=run.args + args,
-            time_limit=run.time_limit if timeout is None else timeout,
-            clock_limit=run.clock_limit(timeout),
-            mem_limit=run.mem_limit,
-            process_limit=run.process_limit,
+            executable=TaskPath.executable_file(self._env, program.exec.path),
+            args=program.args + args,
+            time_limit=program.time_limit if timeout is None else timeout,
+            clock_limit=program.clock_limit(timeout),
+            mem_limit=program.mem_limit,
+            process_limit=program.process_limit,
             stdin=stdin,
             stdout=stdout,
             stderr=stderr,
@@ -273,7 +271,7 @@ class ProgramsJob(TaskJob):
     def _run_program(
         self,
         program_type: ProgramType,
-        program: str,
+        program: RunConfig,
         **kwargs,
     ) -> RunResult:
         """Loads one program and runs it."""

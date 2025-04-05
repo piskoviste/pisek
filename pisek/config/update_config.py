@@ -176,6 +176,19 @@ def get_subtask_mask(points, subtasks):
     return sub_mask
 
 
+def update_to_extra(
+    config: ConfigParser, key_from: str, key_to: str, suffix: str
+) -> None:
+    if "build_solution" not in config:
+        config.add_section("build_solution")
+    if key_from in config["tests"]:
+        file = config["tests"][key_from]
+        if os.path.exists(file + suffix):
+            config["build_solution"][key_to] = file + suffix
+        elif os.path.exists(file):
+            config["build_solution"][key_to] = file
+
+
 def update_to_v3(config: ConfigParser, task_path: str) -> None:
     contest_type = config.get("task", "contest_type", fallback="kasiopea")
     if contest_type not in ["kasiopea", "cms"]:
@@ -229,8 +242,14 @@ def update_to_v3(config: ConfigParser, task_path: str) -> None:
                 f"{limit}_limit",
             )
 
-    maybe_move_key(config, "stub", "tests", "solutions")
-    maybe_move_key(config, "headers", "tests", "solutions")
+    update_to_extra(config, "stub", "extra_sources_c", ".c")
+    update_to_extra(config, "stub", "extra_sources_cpp", ".cpp")
+    update_to_extra(config, "stub", "extra_sources_py", ".py")
+    maybe_delete_key(config, "tests", "stub")
+    update_to_extra(config, "headers", "headers_c", ".h")
+    update_to_extra(config, "headers", "headers_cpp", ".h")
+    maybe_delete_key(config, "tests", "headers")
+
     maybe_move_key(config, "static_subdir", "task", "tests")
 
     if contest_type == "cms":

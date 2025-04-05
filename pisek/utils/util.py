@@ -18,16 +18,19 @@ import os
 import shutil
 from typing import Optional
 
-from pisek.jobs.cache import CACHE_CONTENT_FILE
-from pisek.config.task_config import load_config
 from pisek.utils.paths import BUILD_DIR, TESTS_DIR, INTERNALS_DIR
 
 
-def rm_f(fn):
-    try:
-        os.unlink(fn)
-    except FileNotFoundError:
-        pass
+class ChangedCWD:
+    def __init__(self, path):
+        self._path = path
+
+    def __enter__(self):
+        self._orig_path = os.getcwd()
+        os.chdir(self._path)
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        os.chdir(self._orig_path)
 
 
 def _clean_subdirs(task_dir: str, subdirs: list[str]) -> None:
@@ -39,17 +42,7 @@ def _clean_subdirs(task_dir: str, subdirs: list[str]) -> None:
             pass
 
 
-def is_task_dir(task_dir: str, pisek_directory: Optional[str]) -> bool:
-    # XXX: Safeguard, raises an exception if task_dir isn't really a task
-    # directory
-    config = load_config(
-        task_dir, suppress_warnings=True, pisek_directory=pisek_directory
-    )
-    return config is not None
-
-
 def clean_task_dir(task_dir: str, pisek_directory: Optional[str]) -> bool:
-    rm_f(os.path.join(task_dir, CACHE_CONTENT_FILE))
     _clean_subdirs(task_dir, [BUILD_DIR, TESTS_DIR, INTERNALS_DIR])
     return True
 

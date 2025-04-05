@@ -46,7 +46,7 @@ P = ParamSpec("P")
 class TaskHelper:
     _env: Env
 
-    def globs_to_files(
+    def _globs_to_files(
         self, globs: Iterable[str], directory: TaskPath
     ) -> list[TaskPath]:
         """Get files in given directory that match any glob."""
@@ -65,6 +65,9 @@ class TaskHelper:
             text = f"{points:.{precision}f}"
 
         return text + "p"
+
+    def _path_list(self, paths: list[TaskPath]) -> str:
+        return "\n".join(path.col(self._env) for path in paths)
 
     @staticmethod
     def _short_list(arr: list[str], cutoff: int = 1) -> str:
@@ -110,6 +113,10 @@ class TaskHelper:
 class TaskJob(Job, TaskHelper):
     """Job class that implements useful methods"""
 
+    def _access_dir(self, dirname: TaskPath) -> None:
+        for file in self._globs_to_files(["**"], dirname):
+            self._access_file(file)
+
     @staticmethod
     def _file_access(files: int):
         """Adds first i args as accessed files."""
@@ -135,28 +142,48 @@ class TaskJob(Job, TaskHelper):
         return open(filename.path, mode, **kwargs)
 
     @_file_access(1)
-    def _file_exists(self, filename: TaskPath):
-        return os.path.isfile(filename.path)
+    def _exists(self, path: TaskPath) -> bool:
+        return os.path.exists(path.path)
 
-    def _remove_file(self, filename: TaskPath):
+    @_file_access(1)
+    def _is_file(self, path: TaskPath) -> bool:
+        return os.path.isfile(path.path)
+
+    @_file_access(1)
+    def _is_dir(self, path: TaskPath) -> bool:
+        return os.path.isdir(path.path)
+
+    def _remove_file(self, filename: TaskPath) -> None:
         "Removes given file. It must be created inside this job."
         self._accessed_files.remove(filename.path)
         return os.remove(filename.path)
 
     @_file_access(1)
-    def _file_size(self, filename: TaskPath):
+    def _file_size(self, filename: TaskPath) -> int:
         return os.path.getsize(filename.path)
 
     @_file_access(1)
-    def _file_not_empty(self, filename: TaskPath):
+    def _file_not_empty(self, filename: TaskPath) -> bool:
         with self._open_file(filename) as f:
             content = f.read()
         return len(content.strip()) > 0
 
     @_file_access(2)
-    def _copy_file(self, filename: TaskPath, dst: TaskPath):
+    def _copy_file(self, filename: TaskPath, dst: TaskPath) -> None:
         self.make_filedirs(dst)
-        return shutil.copy(filename.path, dst.path)
+        shutil.copy(filename.path, dst.path)
+
+    def _copy_dir(self, path: TaskPath, dst: TaskPath) -> None:
+        self.make_filedirs(dst)
+        shutil.copytree(path.path, dst.path)
+        self._access_dir(path)
+        self._access_dir(dst)
+
+    def _copy_target(self, path: TaskPath, dst: TaskPath) -> None:
+        if self._is_dir(path):
+            self._copy_dir(path, dst)
+        else:
+            self._copy_file(path, dst)
 
     @_file_access(2)
     def _rename_file(self, filename: TaskPath, dst: TaskPath) -> None:
@@ -164,7 +191,9 @@ class TaskJob(Job, TaskHelper):
         return os.rename(filename.path, dst.path)
 
     @_file_access(2)
-    def _link_file(self, filename: TaskPath, dst: TaskPath, overwrite: bool = False):
+    def _link_file(
+        self, filename: TaskPath, dst: TaskPath, overwrite: bool = False
+    ) -> None:
         self.make_filedirs(dst)
         if overwrite and os.path.exists(dst.path):
             os.remove(dst.path)
@@ -178,7 +207,9 @@ class TaskJob(Job, TaskHelper):
         return os.link(source, dst.path)
 
     @_file_access(2)
-    def _symlink_file(self, filename: TaskPath, dst: TaskPath, overwrite: bool = False):
+    def _symlink_file(
+        self, filename: TaskPath, dst: TaskPath, overwrite: bool = False
+    ) -> None:
         self.make_filedirs(dst)
         if overwrite and os.path.exists(dst.path):
             os.remove(dst.path)
@@ -198,6 +229,12 @@ class TaskJob(Job, TaskHelper):
             stdout=subprocess.PIPE,
         )
         return diff.stdout.decode("utf-8")
+
+    def _globs_to_files(
+        self, globs: Iterable[str], directory: TaskPath
+    ) -> list[TaskPath]:
+        self._accessed_globs |= set(globs)
+        return super()._globs_to_files(globs, directory)
 
     def _quote_file(self, file: TaskPath, **kwargs) -> str:
         """Get shortened file contents"""

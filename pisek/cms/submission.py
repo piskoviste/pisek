@@ -143,7 +143,18 @@ def get_submission_of_digest(
 def resolve_solution(
     contest: Contest, env: Env, solution: SolutionConfig
 ) -> Optional[tuple[TaskPath, Language]]:
-    source: TaskPath = env.config.solution_path(solution.name)
+    sources = solution.run.build.sources
+    if len(sources) != 1:
+        eprint(
+            ColorSettings.colored(
+                "For CMS import there must be exactly one source:\n  "
+                + " ".join(map(lambda p: p.col(env), sources)),
+                "yellow",
+            )
+        )
+        return None
+
+    source: TaskPath = sources[0]
 
     for language_name in contest.languages:
         language: Language = get_language(language_name)

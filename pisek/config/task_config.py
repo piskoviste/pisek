@@ -17,6 +17,7 @@
 
 import fnmatch
 from functools import cached_property
+import os
 from pydantic_core import PydanticCustomError, ErrorDetails
 from pydantic import (
     Field,
@@ -28,7 +29,7 @@ from pydantic import (
     model_validator,
 )
 import re
-from typing import Optional, Any, Annotated, Union, Mapping
+from typing import Any, Annotated, ClassVar, Mapping, Optional, Union
 
 from pisek.utils.paths import TaskPath
 from pisek.utils.text import tab
@@ -44,11 +45,13 @@ from pisek.config.config_types import (
     ShuffleMode,
     DataFormat,
     ProgramType,
+    BuildStrategyName,
     CMSFeedbackLevel,
     CMSScoreMode,
 )
 from pisek.env.context import init_context
 from pisek.task_jobs.solution.solution_result import TEST_SPEC
+from pisek.task_jobs.builder.strategies import ALL_STRATEGIES
 
 
 MaybeInt = Annotated[
@@ -68,6 +71,9 @@ ListTaskPathFromStr = Annotated[
 OptionalJudgeType = Annotated[Optional[JudgeType], BeforeValidator(lambda t: t or None)]
 OptionalShuffleMode = Annotated[
     Optional[ShuffleMode], BeforeValidator(lambda t: t or None)
+]
+OptionalRunConfig = Annotated[
+    Optional["RunConfig"], BeforeValidator(lambda t: t or None)
 ]
 
 MISSING_VALIDATION_CONTEXT = "Missing validation context."
@@ -96,11 +102,11 @@ class TaskConfig(BaseEnv):
 
     static_subdir: TaskPathFromStr
 
-    in_gen: OptionalStr
+    in_gen: OptionalRunConfig
     gen_type: GenType
-    validator: OptionalStr
+    validator: OptionalRunConfig
     out_check: OutCheck
-    out_judge: OptionalStr
+    out_judge: OptionalRunConfig
     judge_type: OptionalJudgeType
     judge_needs_in: Optional[bool]
     judge_needs_out: Optional[bool]
@@ -114,14 +120,10 @@ class TaskConfig(BaseEnv):
     in_format: DataFormat
     out_format: DataFormat
 
-    stub: OptionalTaskPathFromStr
-    headers: ListTaskPathFromStr
-
     tests: dict[int, "TestConfig"]
 
     solutions: dict[str, "SolutionConfig"]
 
-    runs: dict[str, "RunConfig"]
     solution_time_limit: float = Field(ge=0)  # Needed for visualization
 
     limits: "LimitsConfig"
@@ -145,37 +147,6 @@ class TaskConfig(BaseEnv):
     def input_globs(self) -> list[str]:
         return sum((sub.all_globs for sub in self.tests.values()), start=[])
 
-    def _full_path(self, program_type: ProgramType, program: str) -> TaskPath:
-        return TaskPath(self.runs[f"{program_type}_{program}"].subdir, program)
-
-    @computed_field  # type: ignore[misc]
-    @cached_property
-    def in_gen_path(self) -> TaskPath:
-        assert self.in_gen is not None
-        return self._full_path(ProgramType.gen, self.in_gen)
-
-    @computed_field  # type: ignore[misc]
-    @cached_property
-    def validator_path(self) -> TaskPath:
-        assert self.validator is not None
-        return self._full_path(ProgramType.validator, self.validator)
-
-    @computed_field  # type: ignore[misc]
-    @cached_property
-    def out_judge_path(self) -> TaskPath:
-        assert self.out_judge is not None
-        return self._full_path(ProgramType.judge, self.out_judge)
-
-    def solution_path(self, solution_label: str) -> TaskPath:
-        if solution_label == self.primary_solution:
-            return self._full_path(
-                ProgramType.primary_solution, self.solutions[solution_label].run
-            )
-        else:
-            return self._full_path(
-                ProgramType.secondary_solution, self.solutions[solution_label].run
-            )
-
     @computed_field  # type: ignore[misc]
     @property
     def primary_solution(self) -> str:
@@ -185,7 +156,7 @@ class TaskConfig(BaseEnv):
             return [name for name, sol in self.solutions.items() if sol.primary][0]
 
     def get_solution_by_run(self, run: str) -> Optional[str]:
-        sources = (name for name, sol in self.solutions.items() if sol.run == run)
+        sources = (name for name, sol in self.solutions.items() if sol.run.name == run)
         return next(sources, None)
 
     def __init__(self, **kwargs):
@@ -206,8 +177,6 @@ class TaskConfig(BaseEnv):
             ("tests", "in_format"),
             ("tests", "out_format"),
             ("tests", "static_subdir"),
-            ("solutions", "stub"),
-            ("solutions", "headers"),
         ]
         OUT_CHECK_SPECIFIC_KEYS = [
             ((None, "judge"), "out_judge", ""),
@@ -224,8 +193,6 @@ class TaskConfig(BaseEnv):
         args: dict[str, Any] = {
             key: configs.get(section, key) for section, key in GLOBAL_KEYS
         }
-        runs: dict[str, Any] = {}
-        args["runs"] = runs
 
         # Load judge specific keys
         for (task_type, out_check), key, default in OUT_CHECK_SPECIFIC_KEYS:
@@ -234,18 +201,18 @@ class TaskConfig(BaseEnv):
             ].value == out_check:
                 args[key] = configs.get("tests", key)
             else:
-                args[key] = ConfigValue(default, "_internal", "tests", key, True)
+                args[key] = ConfigValue.make_internal(default, "tests", key)
 
         section_names = configs.sections()
 
         PROGRAMS = [
-            (ProgramType.gen, args["in_gen"]),
-            (ProgramType.validator, args["validator"]),
-            (ProgramType.judge, args["out_judge"]),
+            (ProgramType.gen, "in_gen"),
+            (ProgramType.validator, "validator"),
+            (ProgramType.judge, "out_judge"),
         ]
         for t, program in PROGRAMS:
-            if program:
-                runs |= TaskConfig.load_run(t, program, configs)
+            if args[program].value:
+                args[program] = RunConfig.load_dict(t, args[program], configs)
 
         # Load tests
         args["tests"] = tests = {}
@@ -262,19 +229,8 @@ class TaskConfig(BaseEnv):
         args["solutions"] = solutions = {}
         for section in section_names:
             if m := re.fullmatch(r"solution_(.+)", section.value):
-                sol = solutions[m[1]] = SolutionConfig.load_dict(
+                solutions[m[1]] = SolutionConfig.load_dict(
                     ConfigValue(m[1], section.config, section.section, None), configs
-                )
-                assert isinstance(sol["primary"], ConfigValue)
-                assert isinstance(sol["run"], ConfigValue)
-                runs |= TaskConfig.load_run(
-                    (
-                        ProgramType.primary_solution
-                        if sol["primary"].value == "yes"
-                        else ProgramType.secondary_solution
-                    ),
-                    sol["run"],
-                    configs,
                 )
 
         args["limits"] = LimitsConfig.load_dict(configs)
@@ -286,16 +242,6 @@ class TaskConfig(BaseEnv):
         )
 
         return args
-
-    @staticmethod
-    def load_run(
-        program_type: ProgramType, name: ConfigValue, configs: ConfigHierarchy
-    ) -> dict[str, ConfigValuesDict]:
-        return {
-            f"{program_type}_{name.value}": RunConfig.load_dict(
-                program_type, name, configs
-            )
-        }
 
     @model_validator(mode="after")
     def validate_model(self):
@@ -491,7 +437,7 @@ class SolutionConfig(BaseEnv):
     _section: str
     name: str
     primary: bool
-    run: str
+    run: "RunConfig"
     points: MaybeInt
     points_min: MaybeInt
     points_max: MaybeInt
@@ -518,6 +464,12 @@ class SolutionConfig(BaseEnv):
         if args["run"].value == "@auto":
             args["run"].value = name.value
 
+        sol_type = (
+            ProgramType.primary_solution
+            if args["primary"].value in ()
+            else ProgramType.secondary_solution
+        )
+
         # XXX: Backwards compatibility hack for v3
         # Delete this when finalizing config-v3
         # This way we get some time to migrate
@@ -532,6 +484,7 @@ class SolutionConfig(BaseEnv):
             "_section": configs.get(name.section, None),
             "name": name,
             **args,
+            "run": RunConfig.load_dict(sol_type, args["run"], configs),
         }
 
     @field_validator("name", mode="after")
@@ -597,11 +550,31 @@ class SolutionConfig(BaseEnv):
         return self
 
 
+def get_run_defaults(program_type: ProgramType, program_name: str) -> list[str]:
+    if program_type.is_solution():
+        return [
+            f"run_solution:{program_name}",
+            f"run_{program_type}",
+            f"run_solution",
+            f"run",
+        ]
+    else:
+        return [
+            f"run_{program_type}:{program_name}",
+            f"run_{program_type}",
+            f"run",
+        ]
+
+
 class RunConfig(BaseEnv):
     """Configuration of running an program"""
 
     _section: str
 
+    program_type: ProgramType
+    name: str
+    subdir: str
+    build: "BuildConfig"
     exec: TaskPathFromStr
     time_limit: float = Field(ge=0)  # [seconds]
     clock_mul: float = Field(ge=0)  # [1]
@@ -610,7 +583,6 @@ class RunConfig(BaseEnv):
     process_limit: int = Field(ge=0)  # [1]
     # limit=0 means unlimited
     args: ListStr
-    subdir: str
 
     def clock_limit(self, override_time_limit: Optional[float] = None) -> float:
         tl = override_time_limit if override_time_limit is not None else self.time_limit
@@ -622,19 +594,7 @@ class RunConfig(BaseEnv):
     def load_dict(
         cls, program_type: ProgramType, name: ConfigValue, configs: ConfigHierarchy
     ) -> ConfigValuesDict:
-        if program_type.is_solution():
-            default_sections = [
-                f"run_solution_{name.value}",
-                f"run_{program_type}",
-                "run_solution",
-                "run",
-            ]
-        else:
-            default_sections = [
-                f"run_{program_type}_{name.value}",
-                f"run_{program_type}",
-                "run",
-            ]
+        default_sections = get_run_defaults(program_type, name.value)
 
         section_name = configs.get_from_candidates(
             [(section, None) for section in default_sections]
@@ -644,17 +604,107 @@ class RunConfig(BaseEnv):
                 [(section, key) for section in default_sections]
             )
             for key in cls.model_fields
+            if key not in ("name", "program_type")
         }
-        if args["exec"].value == "@auto":
-            args["exec"].value = name.value
-        return {"_section": section_name} | args
+        if args["build"].value == "@auto":
+            args["build"].value = (
+                f"{program_type.build_name}:{os.path.join(args['subdir'].value, name.value)}"
+            )
+
+        return {
+            "_section": section_name,
+            "program_type": ConfigValue.make_internal(
+                program_type.name, "run", "program_type"
+            ),
+            "name": name,
+            **args,
+            "build": BuildConfig.load_dict(args["build"], configs),
+        }
 
     @field_validator("exec", mode="before")
     @classmethod
-    def convert_auto(cls, value: str, info: ValidationInfo) -> str:
+    def convert_exec(cls, value: str, info: ValidationInfo) -> str:
         if value == "@auto":
-            value = info.data.get("name", "")
-        return value
+            value = info.data.get("build").program_name  # type: ignore
+            return value
+        else:
+            return value
+
+
+class BuildConfig(BaseEnv):
+    program_names: ClassVar[dict[str, str]] = {}
+
+    _section: str
+    section_name: str
+    build_type: str
+    program_name: str
+
+    sources: ListTaskPathFromStr
+    comp_args: ListStr
+    extras: ListTaskPathFromStr
+    strategy: BuildStrategyName
+    entrypoint: str
+
+    headers_c: ListTaskPathFromStr
+    extra_sources_c: ListTaskPathFromStr
+    headers_cpp: ListTaskPathFromStr
+    extra_sources_cpp: ListTaskPathFromStr
+    extra_sources_py: ListTaskPathFromStr
+
+    @classmethod
+    def load_dict(cls, name: ConfigValue, configs: ConfigHierarchy) -> ConfigValuesDict:
+        program = name
+        program_type = ConfigValue("", name.config, name.section, name.key)
+        default_sections = [f"build:{program.value}", "build"]
+        for pt in ProgramType:
+            prefix = f"{pt.build_name}:"
+            if name.value.startswith(prefix):
+                program_type, program = name.split(":")
+                default_sections = [
+                    f"build_{pt.build_name}:{program.value}",
+                    f"build_{pt.build_name}",
+                    f"build",
+                ]
+                break
+
+        if (
+            program.value in cls.program_names
+            and cls.program_names[program.value] != default_sections[0]
+        ):
+            raise TaskConfigError(
+                "Colliding suffixes of build sections not allowed: "
+                f"[{default_sections[0]}] and [{cls.program_names[program.value]}]."
+            )
+        cls.program_names[program.value] = default_sections[0]
+
+        section_name = configs.get_from_candidates(
+            [(section, None) for section in default_sections]
+        )
+        args = {
+            key: configs.get_from_candidates(
+                [(section, key) for section in default_sections]
+            )
+            for key in cls.model_fields
+            if key not in ("section_name", "build_type", "program_name")
+        }
+
+        return {
+            "_section": section_name,
+            "section_name": ConfigValue.make_internal(
+                default_sections[0], default_sections[0], None
+            ),
+            "build_type": program_type,
+            "program_name": program,
+            **args,
+        }
+
+    @field_validator("sources", mode="before")
+    @classmethod
+    def convert_sources(cls, value: str, info: ValidationInfo) -> str:
+        if value == "@auto":
+            return str(info.data.get("program_name"))
+        else:
+            return value
 
 
 class LimitsConfig(BaseEnv):
@@ -686,6 +736,9 @@ class CMSConfig(BaseEnv):
     score_mode: CMSScoreMode
     feedback_level: CMSFeedbackLevel
 
+    stubs: ListTaskPathFromStr
+    headers: ListTaskPathFromStr
+
     @classmethod
     def load_dict(cls, configs: ConfigHierarchy) -> ConfigValuesDict:
         KEYS = [
@@ -698,9 +751,31 @@ class CMSConfig(BaseEnv):
             "min_submission_interval",
             "score_mode",
             "feedback_level",
+            "stubs",
+            "headers",
         ]
 
-        return {key: configs.get("cms", key) for key in KEYS}
+        args = {key: configs.get("cms", key) for key in KEYS}
+
+        def get_strategy_union(key: str) -> str:
+            all_items = {
+                configs.get_from_candidates(
+                    [
+                        ("build_solution", getattr(strat, key)),
+                        ("build", getattr(strat, key)),
+                    ]
+                ).value
+                for strat in ALL_STRATEGIES.values()
+                if getattr(strat, key) is not None
+            }
+            return " ".join(sorted(all_items))
+
+        if args["stubs"].value == "@auto":
+            args["stubs"].value = get_strategy_union("extra_sources")
+        if args["headers"].value == "@auto":
+            args["headers"].value = get_strategy_union("extra_nonsources")
+
+        return args
 
     @field_validator("title", mode="before")
     @classmethod
@@ -788,7 +863,7 @@ def load_config(
         config_hierarchy = ConfigHierarchy(path, not suppress_warnings, pisek_directory)
         config_values = TaskConfig.load_dict(config_hierarchy)
         config = TaskConfig(**_to_values(config_values))
-        config_hierarchy.check_unused_keys()
+        config_hierarchy.check_all()
         if config_hierarchy.check_todos() and not suppress_warnings:
             warn("Unsolved TODOs in config.", TaskConfigError, strict)
         return config

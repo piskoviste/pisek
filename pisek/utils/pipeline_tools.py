@@ -19,15 +19,16 @@ from argparse import Namespace
 from datetime import datetime
 import os
 import sys
-from typing import Callable
+from typing import Callable, Optional
 
 from pisek.jobs.job_pipeline import JobPipeline
-from pisek.utils.util import clean_non_relevant_files
+from pisek.utils.util import clean_non_relevant_files, ChangedCWD
 from pisek.utils.text import eprint
 from pisek.utils.terminal import TARGET_LINE_WIDTH
 from pisek.utils.paths import INTERNALS_DIR
 from pisek.utils.colors import ColorSettings
 from pisek.env.env import Env
+from pisek.config.task_config import load_config
 from pisek.jobs.cache import Cache
 
 PATH = "."
@@ -65,18 +66,6 @@ def run_pipeline(path: str, pipeline_class: Callable[[Env], JobPipeline], **env_
 
         clean_non_relevant_files(all_accessed_files)
         return False
-
-
-class ChangedCWD:
-    def __init__(self, path):
-        self._path = path
-
-    def __enter__(self):
-        self._orig_path = os.getcwd()
-        os.chdir(self._path)
-
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        os.chdir(self._orig_path)
 
 
 class Lock:
@@ -121,3 +110,12 @@ def with_env(fun: Callable[[Env, Namespace], int]) -> Callable[[Namespace], int]
         return fun(env, args)
 
     return wrap
+
+
+def is_task_dir(task_dir: str, pisek_directory: Optional[str]) -> bool:
+    # XXX: Safeguard, raises an exception if task_dir isn't really a task
+    # directory
+    config = load_config(
+        task_dir, suppress_warnings=True, pisek_directory=pisek_directory
+    )
+    return config is not None
