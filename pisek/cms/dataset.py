@@ -177,11 +177,10 @@ def add_stubs(session: Session, files: FileCacher, env: Env, dataset: Dataset):
     elif config.task_type == TaskType.interactive:
         stub_basename = "stub"
 
+    exts = set()
     for stub in config.cms.stubs:
         directory, target_name = path.split(stub.path)
         directory = path.normpath(directory)
-
-        exts = set()
 
         for filename in listdir(directory):
             basename, ext = path.splitext(filename)
@@ -197,18 +196,20 @@ def add_stubs(session: Session, files: FileCacher, env: Env, dataset: Dataset):
                 Manager(dataset=dataset, filename=f"{stub_basename}{ext}", digest=stub)
             )
 
+            if ext in exts:
+                raise RuntimeError(f"Multiple stubs with extension '{ext}'")
             exts.add(ext)
 
-        for ext, content in ERROR_STUBS.items():
-            if ext in exts:
-                continue
+    for ext, content in ERROR_STUBS.items():
+        if ext in exts:
+            continue
 
-            stub = files.put_file_content(
-                content.encode(), f"{stub_basename}{ext} for {config.cms.name}"
-            )
-            session.add(
-                Manager(dataset=dataset, filename=f"{stub_basename}{ext}", digest=stub)
-            )
+        stub = files.put_file_content(
+            content.encode(), f"{stub_basename}{ext} for {config.cms.name}"
+        )
+        session.add(
+            Manager(dataset=dataset, filename=f"{stub_basename}{ext}", digest=stub)
+        )
 
 
 def add_headers(session: Session, files: FileCacher, env: Env, dataset: Dataset):
