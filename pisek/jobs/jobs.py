@@ -24,11 +24,21 @@ import hashlib
 import logging
 import os.path
 import sys
-from typing import Optional, AbstractSet, MutableSet, Any, Callable, NamedTuple
+from typing import (
+    Optional,
+    AbstractSet,
+    MutableSet,
+    Any,
+    Callable,
+    NamedTuple,
+    TYPE_CHECKING,
+)
 
 from pisek.jobs.cache import Cache, CacheEntry
-from pisek.env.env import Env
 from pisek.utils.paths import TaskPath
+
+if TYPE_CHECKING:
+    from pisek.env.env import Env
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +71,7 @@ class CaptureInitParams:
         real_init = cls.__init__
 
         @wraps(real_init)
-        def wrapped_init(self, env: Env, *args, **kwargs):
+        def wrapped_init(self, env: "Env", *args, **kwargs):
             toplevel = not self._initialized
             if toplevel:
                 self._args = args
@@ -88,7 +98,7 @@ class RequiredBy(NamedTuple):
 class PipelineItem(ABC):
     """Generic PipelineItem with state and dependencies."""
 
-    _env: Env
+    _env: "Env"
     run_always: bool = False  # Runs even if prerequisites failed
 
     def __init__(self, name: str) -> None:
@@ -171,7 +181,7 @@ class Job(PipelineItem, CaptureInitParams):
     _args: list[Any]
     _kwargs: dict[str, Any]
 
-    def __init__(self, env: Env, name: str) -> None:
+    def __init__(self, env: "Env", name: str) -> None:
         self._env = env
         self._accessed_envs: MutableSet[tuple[str, ...]] = set()
         self._accessed_globs: MutableSet[str] = set()
@@ -319,7 +329,7 @@ class Job(PipelineItem, CaptureInitParams):
 class JobManager(PipelineItem):
     """Object that can create jobs and compute depending on their results."""
 
-    def create_jobs(self, env: Env) -> list[Job]:
+    def create_jobs(self, env: "Env") -> list[Job]:
         """Crates this JobManager's jobs."""
         self.result: Optional[dict[str, Any]]
         self._env = env

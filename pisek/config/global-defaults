@@ -84,5 +84,5 @@ min_submission_interval=0
 score_mode=max_subtask
 feedback_level=restricted
 
-stub=
-headers=
+stubs=@auto
+headers=@auto

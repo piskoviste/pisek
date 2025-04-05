@@ -22,7 +22,7 @@ import signal
 import sys
 from typing import Optional
 
-from pisek.utils.util import is_task_dir, clean_task_dir
+from pisek.utils.util import clean_task_dir
 from pisek.utils.text import eprint
 from pisek.utils.colors import ColorSettings
 from pisek.license import license, license_gnu
@@ -31,7 +31,7 @@ from pisek.config.config_tools import update_and_replace_config
 from pisek.version import print_version
 
 from pisek.jobs.task_pipeline import TaskPipeline
-from pisek.utils.pipeline_tools import run_pipeline, PATH, locked_folder
+from pisek.utils.pipeline_tools import run_pipeline, PATH, locked_folder, is_task_dir
 from pisek.utils.paths import INTERNALS_DIR
 
 LOG_FILE = os.path.join(INTERNALS_DIR, "log")

@@ -415,12 +415,14 @@ feedback_level=restricted
 # Specifies how much information is given to the contestants about their submission
 # May be 'full' or 'restricted' (default)
 
-stub=src/stub
+stubs=src/stub
 # Only for C/C++
-# Stub to upload to CMS (without suffix) (defaults to none)
+# Stubs to upload to CMS (without suffix)
+# @auto expands to union of [build_solution] extra_sources keys (default)
 # Used commonly for interactive tasks
 
 headers=src/a-plus-b.h
 # Only for C/C++
-# Headers to upload to CMS (defaults to none)
+# Headers to upload to CMS
+# @auto expands to union of [build_solution] headers keys (default)
 # Used commonly for interactive tasks

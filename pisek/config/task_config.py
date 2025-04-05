@@ -51,6 +51,7 @@ from pisek.config.config_types import (
 )
 from pisek.env.context import init_context
 from pisek.task_jobs.solution.solution_result import TEST_SPEC
+from pisek.task_jobs.builder.strategies import ALL_STRATEGIES
 
 
 MaybeInt = Annotated[
@@ -725,7 +726,7 @@ class CMSConfig(BaseEnv):
     score_mode: CMSScoreMode
     feedback_level: CMSFeedbackLevel
 
-    stub: OptionalTaskPathFromStr
+    stubs: ListTaskPathFromStr
     headers: ListTaskPathFromStr
 
     @classmethod
@@ -740,11 +741,31 @@ class CMSConfig(BaseEnv):
             "min_submission_interval",
             "score_mode",
             "feedback_level",
-            "stub",
+            "stubs",
             "headers",
         ]
 
-        return {key: configs.get("cms", key) for key in KEYS}
+        args = {key: configs.get("cms", key) for key in KEYS}
+
+        def get_strategy_union(key: str) -> str:
+            all_items = {
+                configs.get_from_candidates(
+                    [
+                        ("build_solution", getattr(strat, key)),
+                        ("build", getattr(strat, key)),
+                    ]
+                ).value
+                for strat in ALL_STRATEGIES.values()
+                if getattr(strat, key) is not None
+            }
+            return " ".join(sorted(all_items))
+
+        if args["stubs"].value == "@auto":
+            args["stubs"].value = get_strategy_union("extra_sources")
+        if args["headers"].value == "@auto":
+            args["headers"].value = get_strategy_union("extra_nonsources")
+
+        return args
 
     @field_validator("title", mode="before")
     @classmethod

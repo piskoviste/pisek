@@ -16,14 +16,16 @@ import logging
 import inspect
 import subprocess
 import os
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
-from pisek.env.env import Env
 from pisek.utils.util import ChangedCWD
 from pisek.utils.text import tab
 from pisek.jobs.jobs import PipelineItemFailure
 from pisek.config.config_types import BuildStrategyName
-from pisek.config.task_config import BuildConfig
+
+if TYPE_CHECKING:
+    from pisek.env.env import Env
+    from pisek.config.task_config import BuildConfig
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +37,7 @@ class BuildStrategy(ABC):
     extra_sources: Optional[str] = None
     extra_nonsources: Optional[str] = None
 
-    def __init__(self, build_section: BuildConfig, env: Env, _print) -> None:
+    def __init__(self, build_section: "BuildConfig", env: "Env", _print) -> None:
         self._build_section = build_section
         self._env = env
         self._print = _print
@@ -47,16 +49,16 @@ class BuildStrategy(ABC):
 
     @classmethod
     @abstractmethod
-    def applicable_on_files(cls, build: BuildConfig, sources: list[str]) -> bool:
+    def applicable_on_files(cls, build: "BuildConfig", sources: list[str]) -> bool:
         pass
 
     @classmethod
     @abstractmethod
-    def applicable_on_directory(cls, build: BuildConfig, directory: str) -> bool:
+    def applicable_on_directory(cls, build: "BuildConfig", directory: str) -> bool:
         pass
 
     @classmethod
-    def applicable(cls, build: BuildConfig, sources: list[str]) -> bool:
+    def applicable(cls, build: "BuildConfig", sources: list[str]) -> bool:
         directories = any(os.path.isdir(s) for s in sources)
         if not directories:
             return cls.applicable_on_files(build, sources)
@@ -112,7 +114,7 @@ class BuildStrategy(ABC):
 
 class BuildScript(BuildStrategy):
     @classmethod
-    def applicable_on_directory(cls, build: BuildConfig, directory: str) -> bool:
+    def applicable_on_directory(cls, build: "BuildConfig", directory: str) -> bool:
         return False
 
     def _build(self) -> str:
@@ -129,7 +131,7 @@ class BuildScript(BuildStrategy):
 
 class BuildBinary(BuildStrategy):
     @classmethod
-    def applicable_on_directory(cls, build: BuildConfig, directory: str) -> bool:
+    def applicable_on_directory(cls, build: "BuildConfig", directory: str) -> bool:
         return False
 
     def _run_compilation(self, args: list[str], program: str, **kwargs) -> str:
@@ -157,7 +159,7 @@ class Python(BuildScript):
     extra_sources: Optional[str] = "extra_sources_py"
 
     @classmethod
-    def applicable_on_files(cls, build: BuildConfig, sources: list[str]) -> bool:
+    def applicable_on_files(cls, build: "BuildConfig", sources: list[str]) -> bool:
         if not cls._all_end_with(sources, [".py"]):
             return False
         return True
@@ -188,7 +190,7 @@ class Shell(BuildScript):
     name = BuildStrategyName.shell
 
     @classmethod
-    def applicable_on_files(cls, build: BuildConfig, sources: list[str]) -> bool:
+    def applicable_on_files(cls, build: "BuildConfig", sources: list[str]) -> bool:
         return len(sources) == 1 and sources[0].endswith(".sh")
 
 
@@ -198,7 +200,7 @@ class C(BuildBinary):
     extra_nonsources: Optional[str] = "headers_c"
 
     @classmethod
-    def applicable_on_files(cls, build: BuildConfig, sources: list[str]) -> bool:
+    def applicable_on_files(cls, build: "BuildConfig", sources: list[str]) -> bool:
         return cls._all_end_with(sources, [".h", ".c"])
 
     def _build(self) -> str:
@@ -221,7 +223,7 @@ class Cpp(BuildBinary):
     extra_nonsources: Optional[str] = "headers_cpp"
 
     @classmethod
-    def applicable_on_files(cls, build: BuildConfig, sources: list[str]) -> bool:
+    def applicable_on_files(cls, build: "BuildConfig", sources: list[str]) -> bool:
         return cls._all_end_with(sources, [".h", ".hpp", ".cpp", ".cc"])
 
     def _build(self) -> str:
@@ -242,7 +244,7 @@ class Pascal(BuildBinary):
     name = BuildStrategyName.pascal
 
     @classmethod
-    def applicable_on_files(cls, build: BuildConfig, sources: list[str]) -> bool:
+    def applicable_on_files(cls, build: "BuildConfig", sources: list[str]) -> bool:
         return cls._all_end_with(sources, [".pas"])
 
     def _build(self) -> str:
