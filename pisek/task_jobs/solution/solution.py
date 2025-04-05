@@ -22,7 +22,7 @@ from pisek.config.config_types import ProgramType
 from pisek.config.task_config import RunConfig
 from pisek.task_jobs.program import RunResult, ProgramsJob
 from pisek.task_jobs.solution.solution_result import Verdict, SolutionResult
-from pisek.task_jobs.judge import RunCMSJudge
+from pisek.task_jobs.checker.cms_judge import RunCMSJudge
 
 
 class RunSolution(ProgramsJob):

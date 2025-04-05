@@ -1,0 +1,143 @@
+# pisek  - Tool for developing tasks for programming competitions.
+#
+# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+import os
+from decimal import Decimal, InvalidOperation
+from typing import Optional
+from tempfile import gettempdir
+from uuid import uuid4
+
+from pisek.utils.paths import InputPath, OutputPath
+from pisek.env.env import Env
+from pisek.config.task_config import RunConfig
+from pisek.config.config_types import ProgramType
+from pisek.task_jobs.run_result import RunResult
+from pisek.task_jobs.solution.solution_result import (
+    Verdict,
+    SolutionResult,
+    RelativeSolutionResult,
+)
+from pisek.task_jobs.checker.checker_base import RunChecker, RunBatchChecker
+
+
+class RunCMSJudge(RunChecker):
+    """Judge class with CMS helper functions"""
+
+    def __init__(
+        self,
+        env: Env,
+        judge: RunConfig,
+        **kwargs,
+    ) -> None:
+        super().__init__(env=env, judge_name=judge.name, **kwargs)
+        self.judge = judge
+        self.points_file = self.judge_log_file.replace_suffix(".points")
+
+    def _load_points(self, result: RunResult) -> Decimal:
+        with self._open_file(result.stdout_file) as f:
+            points_str = f.read().split("\n")[0]
+        try:
+            points = Decimal(points_str)
+        except (ValueError, InvalidOperation):
+            raise self._create_program_failure(
+                "Judge didn't write points on stdout:", result
+            )
+
+        if not 0 <= points <= 1:
+            raise self._create_program_failure(
+                "Judge must give between 0 and 1 points:", result
+            )
+
+        return points
+
+    def _load_solution_result(self, judge_run_result: RunResult) -> SolutionResult:
+        if judge_run_result.returncode == 0:
+            points = self._load_points(judge_run_result)
+            if points == 1.0:
+                verdict = Verdict.ok
+            elif points == 0.0:
+                verdict = Verdict.wrong_answer
+            else:
+                verdict = Verdict.partial_ok
+
+            with self._open_file(judge_run_result.stderr_file) as f:
+                message = f.readline().removesuffix("\n")
+
+            return RelativeSolutionResult(
+                verdict, message, self._solution_run_res, judge_run_result, points
+            )
+        else:
+            raise self._create_program_failure(
+                f"Judge failed on {self._judging_message()}:", judge_run_result
+            )
+
+
+class RunCMSBatchJudge(RunCMSJudge, RunBatchChecker):
+    """Judges solution output using judge with CMS interface."""
+
+    def __init__(
+        self,
+        env: Env,
+        judge: RunConfig,
+        test: int,
+        input_: InputPath,
+        output: OutputPath,
+        correct_output: OutputPath,
+        expected_verdict: Optional[Verdict],
+        **kwargs,
+    ) -> None:
+        super().__init__(
+            env=env,
+            judge=judge,
+            test=test,
+            input_=input_,
+            output=output,
+            correct_output=correct_output,
+            expected_verdict=expected_verdict,
+            **kwargs,
+        )
+
+    @staticmethod
+    def _invalid_path(name: str):
+        return os.path.join(gettempdir(), f"the-{name}-is-not-available-{uuid4()}")
+
+    def _judge(self) -> SolutionResult:
+        config = self._env.config
+
+        self._access_file(self.output)
+        if config.judge_needs_in:
+            self._access_file(self.input)
+        if config.judge_needs_out:
+            self._access_file(self.correct_output)
+
+        result = self._run_program(
+            ProgramType.judge,
+            self.judge,
+            args=[
+                (
+                    self.input.path
+                    if config.judge_needs_in
+                    else RunCMSBatchJudge._invalid_path("input")
+                ),
+                (
+                    self.correct_output.path
+                    if config.judge_needs_out
+                    else RunCMSBatchJudge._invalid_path("output")
+                ),
+                self.output.path,
+            ],
+            stdout=self.points_file,
+            stderr=self.judge_log_file,
+        )
+
+        sol_result = self._load_solution_result(result)
+        return sol_result

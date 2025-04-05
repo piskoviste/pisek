@@ -20,7 +20,7 @@ from typing import Any, Optional
 
 from pisek.jobs.jobs import State, Job, PipelineItemFailure
 from pisek.env.env import Env
-from pisek.utils.paths import TaskPath, InputPath, OutputPath
+from pisek.utils.paths import TaskPath, InputPath
 from pisek.config.config_types import TaskType
 from pisek.utils.text import pad, pad_left, tab
 from pisek.utils.terminal import MSG_LEN, right_aligned_text
@@ -31,12 +31,14 @@ from pisek.task_jobs.task_manager import TaskJobManager
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
 from pisek.task_jobs.generator.manager import TestcaseInfoMixin
 from pisek.task_jobs.solution.solution_result import Verdict, SolutionResult
-from pisek.task_jobs.judge import judge_job, RunJudge, RunCMSJudge, RunBatchJudge
 from pisek.task_jobs.solution.solution import (
     RunSolution,
     RunBatchSolution,
     RunInteractive,
 )
+from pisek.task_jobs.checker.checker_manager import checker_job
+from pisek.task_jobs.checker.cms_judge import RunCMSJudge
+from pisek.task_jobs.checker.checker_base import RunChecker, RunBatchChecker
 
 
 class SolutionManager(TaskJobManager, TestcaseInfoMixin):
@@ -57,7 +59,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         jobs: list[Job] = []
 
         self._sols: dict[TaskPath, RunSolution] = {}
-        self._judges: dict[TaskPath, RunJudge] = {}
+        self._judges: dict[TaskPath, RunChecker] = {}
 
         for sub_num, inputs in self._all_testcases().items():
             self.tests.append(TestJobGroup(self._env, sub_num))
@@ -119,16 +121,21 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         jobs: list[Job] = []
 
         run_sol: RunSolution
-        run_judge: RunJudge
+        run_judge: RunChecker
         if self._env.config.task_type == TaskType.batch:
             if (
                 testcase_info.generation_mode == TestcaseGenerationMode.static
                 and self._generate_inputs
             ):
-                jobs += self._check_output_jobs(
-                    testcase_info.reference_output(self._env, seed),
-                    None,
+                inp = testcase_info.input_path(self._env, seed)
+                out = testcase_info.reference_output(self._env, seed)
+                jobs += self._check_output_jobs(out, None)
+                jobs.append(
+                    judge_j := checker_job(
+                        inp, out, out, 0, None, Verdict.ok, self._env
+                    )
                 )
+                self._judges[inp] = judge_j
 
             run_batch_sol, run_judge = self._create_batch_jobs(
                 testcase_info, seed, test
@@ -172,8 +179,8 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
 
     def _create_batch_jobs(
         self, testcase_info: TestcaseInfo, seed: Optional[int], test: int
-    ) -> tuple[RunBatchSolution, RunBatchJudge]:
-        """Create RunSolution and RunBatchJudge jobs for batch task type."""
+    ) -> tuple[RunBatchSolution, RunBatchChecker]:
+        """Create RunSolution and RunBatchChecker jobs for batch task type."""
         input_path = testcase_info.input_path(
             self._env, seed, solution=self.solution_label
         )
@@ -185,7 +192,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         )
 
         out = input_path.to_output()
-        run_judge = judge_job(
+        run_judge = checker_job(
             input_path,
             out,
             testcase_info.reference_output(
@@ -312,12 +319,12 @@ class TestJobGroup(TaskHelper):
         self.num = num
         self.test = env.config.tests[num]
         self.new_run_jobs: list[RunSolution] = []
-        self.previous_jobs: list[RunJudge] = []
-        self.new_jobs: list[RunJudge] = []
+        self.previous_jobs: list[RunChecker] = []
+        self.new_jobs: list[RunChecker] = []
         self._canceled: bool = False
 
     @property
-    def all_jobs(self) -> list[RunJudge]:
+    def all_jobs(self) -> list[RunChecker]:
         return self.previous_jobs + self.new_jobs
 
     @property
@@ -338,20 +345,20 @@ class TestJobGroup(TaskHelper):
         times = map(lambda r: r.solution_rr.time, results)
         return max(times, default=0.0)
 
-    def _job_results(self, jobs: list[RunJudge]) -> list[Optional[SolutionResult]]:
+    def _job_results(self, jobs: list[RunChecker]) -> list[Optional[SolutionResult]]:
         return list(map(lambda j: j.result, jobs))
 
-    def _finished_jobs(self, jobs: list[RunJudge]) -> list[RunJudge]:
+    def _finished_jobs(self, jobs: list[RunChecker]) -> list[RunChecker]:
         return list(filter(lambda j: j.result is not None, jobs))
 
-    def _results(self, jobs: list[RunJudge]) -> list[SolutionResult]:
+    def _results(self, jobs: list[RunChecker]) -> list[SolutionResult]:
         filtered = []
         for res in self._job_results(jobs):
             if res is not None:
                 filtered.append(res)
         return filtered
 
-    def _verdicts(self, jobs: list[RunJudge]) -> list[Verdict]:
+    def _verdicts(self, jobs: list[RunChecker]) -> list[Verdict]:
         return list(map(lambda r: r.verdict, self._results(jobs)))
 
     def _jobs_points(self) -> list[Decimal]:
@@ -376,7 +383,7 @@ class TestJobGroup(TaskHelper):
 
         raise RuntimeError(f"Unknown verbosity {verbosity}")
 
-    def _verdict_summary(self, jobs: list[RunJudge]) -> str:
+    def _verdict_summary(self, jobs: list[RunChecker]) -> str:
         text = ""
         verdicts = self._verdicts(jobs)
         for verdict in Verdict:
@@ -385,7 +392,7 @@ class TestJobGroup(TaskHelper):
                 text += f"{count}{verdict.mark()}"
         return text
 
-    def _verdict_marks(self, jobs: list[RunJudge]) -> str:
+    def _verdict_marks(self, jobs: list[RunChecker]) -> str:
         return "".join(job.verdict_mark() for job in jobs)
 
     def _predecessor_summary(self) -> str:
@@ -484,7 +491,9 @@ class TestJobGroup(TaskHelper):
                 msg += f"\n{tab(breaker.message())}"
             raise PipelineItemFailure(msg)
 
-    def _as_expected(self, expected_str: str) -> tuple[bool, bool, Optional[RunJudge]]:
+    def _as_expected(
+        self, expected_str: str
+    ) -> tuple[bool, bool, Optional[RunChecker]]:
         """
         Returns tuple:
             - whether test jobs have resulted as expected
