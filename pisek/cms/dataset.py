@@ -18,12 +18,18 @@ from sqlalchemy.orm.exc import NoResultFound
 from os import path, listdir
 import re
 import datetime
+from typing import Callable
 
 from pisek.cms.testcase import create_testcase
 from pisek.env.env import Env
 from pisek.config.task_config import TaskConfig
-from pisek.config.config_types import OutCheck, TaskType
-from pisek.utils.paths import TaskPath, InputPath, OutputPath
+from pisek.config.config_types import JudgeType, OutCheck, TaskType, DataFormat
+from pisek.utils.paths import TaskPath, InputPath
+
+
+def check_key[T](name: str, value: T, condition: Callable[[T], bool]):
+    if not condition(value):
+        raise RuntimeError(f"Cannot import task with {name}={value}")
 
 
 def create_dataset(
@@ -39,6 +45,32 @@ def create_dataset(
         description = create_description()
 
     config = env.config
+
+    check_key(
+        "out_check",
+        config.out_check,
+        lambda v: v not in (OutCheck.diff, OutCheck.judge, OutCheck.tokens),
+    )
+    if config.out_check == OutCheck.tokens:
+        check_key("tokens_ignore_case", config.tokens_ignore_case, lambda v: not v)
+        check_key(
+            "tokens_ignore_newlines", config.tokens_ignore_newlines, lambda v: not v
+        )
+        check_key(
+            "tokens_float_abs_error", config.tokens_float_abs_error, lambda v: v is None
+        )
+        check_key(
+            "tokens_float_rel_error", config.tokens_float_rel_error, lambda v: v is None
+        )
+    if config.out_check == OutCheck.judge and config.task_type == TaskType.batch:
+        check_key("judge_type", config.judge_type, lambda t: t == JudgeType.cms_batch)
+    if config.out_check == OutCheck.judge and config.task_type == TaskType.interactive:
+        check_key(
+            "judge_type", config.judge_type, lambda t: t == JudgeType.cms_communication
+        )
+
+    if config.task_type == TaskType.batch:
+        check_key("out_format", config.out_format, lambda t: t == DataFormat.binary)
 
     score_params = get_group_score_parameters(config)
 
