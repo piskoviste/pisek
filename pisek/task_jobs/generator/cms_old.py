@@ -53,7 +53,7 @@ class CmsOldListInputs(GeneratorListInputs):
         for inp in self._globs_to_files(["*"], TaskPath.generated_path(self._env, ".")):
             if inp.path.endswith(".in"):
                 testcases.append(
-                    TestcaseInfo.generated(inp.path.removesuffix(".in"), seeded=False)
+                    TestcaseInfo.generated(inp.name.removesuffix(".in"), seeded=False)
                 )
         return testcases
 
