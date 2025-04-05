@@ -145,10 +145,15 @@ def resolve_solution(
 ) -> Optional[tuple[TaskPath, Language]]:
     sources = solution.run.build.sources
     if len(sources) != 1:
-        raise RuntimeError(
-            "For CMS import there must be exactly one source:\n  "
-            + " ".join(map(lambda p: p.col(env), sources))
+        eprint(
+            ColorSettings.colored(
+                "For CMS import there must be exactly one source:\n  "
+                + " ".join(map(lambda p: p.col(env), sources)),
+                "yellow",
+            )
         )
+        return None
+
     source: TaskPath = sources[0]
 
     for language_name in contest.languages:
