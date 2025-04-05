@@ -43,11 +43,13 @@ class BuildManager(TaskJobManager):
         super().__init__("Build programs")
 
     def _build_program_job(self, run: Optional[RunConfig]) -> Optional["Build"]:
-        if run is None:
+        if run is None or run.build.section_name in self._built_sections:
             return None
+        self._built_sections.add(run.build.section_name)
         return Build(self._env, run.build)
 
     def _get_jobs(self) -> list[Job]:
+        self._built_sections: set[str] = set()
         jobs: list[Job | None] = []
 
         jobs.append(self._build_program_job(self._env.config.in_gen))

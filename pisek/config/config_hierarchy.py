@@ -221,22 +221,8 @@ class ConfigHierarchy:
                         + "?)"
                     )
 
-    def check_duplicate_builds(self) -> None:
-        sections: dict[str, str] = {}
-        for config in self._configs:
-            for section in config.sections():
-                if section.startswith("build") and ":" in section:
-                    _, program = section.split(":", 1)
-                    if program in sections:
-                        raise TaskConfigError(
-                            f"Duplicate build sections [{section}] and [{sections[program]}]."
-                            "Colliding suffixes are not allowed."
-                        )
-                    sections[program] = section
-
     def check_all(self) -> None:
         self.check_unused_keys()
-        self.check_duplicate_builds()
 
     def check_todos(self) -> bool:
         """Check whether lowest config contains TODO in comments."""

@@ -29,7 +29,7 @@ from pydantic import (
     model_validator,
 )
 import re
-from typing import Optional, Any, Annotated, Union, Mapping
+from typing import Any, Annotated, ClassVar, Mapping, Optional, Union
 
 from pisek.utils.paths import TaskPath
 from pisek.utils.text import tab
@@ -632,6 +632,8 @@ class RunConfig(BaseEnv):
 
 
 class BuildConfig(BaseEnv):
+    program_names: ClassVar[dict[str, str]] = {}
+
     _section: str
     section_name: str
     build_type: str
@@ -664,6 +666,16 @@ class BuildConfig(BaseEnv):
                     f"build",
                 ]
                 break
+
+        if (
+            program.value in cls.program_names
+            and cls.program_names[program.value] != default_sections[0]
+        ):
+            raise TaskConfigError(
+                "Colliding suffixes of build sections not allowed: "
+                f"[{default_sections[0]}] and [{cls.program_names[program.value]}]."
+            )
+        cls.program_names[program.value] = default_sections[0]
 
         section_name = configs.get_from_candidates(
             [(section, None) for section in default_sections]
