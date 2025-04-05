@@ -51,7 +51,7 @@ def create_dataset(
     check_key(
         "out_check",
         config.out_check,
-        lambda v: v not in (OutCheck.diff, OutCheck.judge, OutCheck.tokens),
+        lambda v: v in (OutCheck.diff, OutCheck.judge, OutCheck.tokens),
     )
     if config.out_check == OutCheck.tokens:
         check_key("tokens_ignore_case", config.tokens_ignore_case, lambda v: not v)
