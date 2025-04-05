@@ -18,7 +18,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from os import path, listdir
 import re
 import datetime
-from typing import Callable
+from typing import Callable, TypeVar
 
 from pisek.cms.testcase import create_testcase
 from pisek.env.env import Env
@@ -26,8 +26,10 @@ from pisek.config.task_config import TaskConfig
 from pisek.config.config_types import JudgeType, OutCheck, TaskType, DataFormat
 from pisek.utils.paths import TaskPath, InputPath
 
+T = TypeVar("T")
 
-def check_key[T](name: str, value: T, condition: Callable[[T], bool]):
+
+def check_key(name: str, value: T, condition: Callable[[T], bool]):
     if not condition(value):
         raise RuntimeError(f"Cannot import task with {name}={value}")
 
