@@ -263,8 +263,8 @@ build=@auto
 
 exec=@auto
 # Filename of the program to execute (without suffix)
-# If directory is chosen directory/run is executed instead
-# @auto expands to value of the build key without program_type (default)
+# If a directory is chosen directory/run is executed instead
+# @auto expands to the value of the build key without '{program_type}:' (default)
 args=--slow
 # Additional arguments for the program. (Given before any other arguments.)
 # (defaults to empty)
@@ -417,13 +417,13 @@ feedback_level=restricted
 # May be 'full' or 'restricted' (default)
 
 stubs=src/stub
-# Only for C/C++
+# Only for C/C++/Python
 # Stubs to upload to CMS (without suffix)
-# @auto expands to union of [build_solution] extra_sources keys (default)
+# @auto expands to the union of [build_solution] extra_sources_* keys (default)
 # Used commonly for interactive tasks
 
 headers=src/a-plus-b.h
 # Only for C/C++
 # Headers to upload to CMS
-# @auto expands to union of [build_solution] headers keys (default)
+# @auto expands to the union of [build_solution] headers_* keys (default)
 # Used commonly for interactive tasks
