@@ -38,7 +38,8 @@ class FuzzingManager(TaskJobManager):
         ]["results"].items():
             testcases.append((inp, res.solution_rr.stdout_file.to_sanitized_output()))
 
-        JOBS = [(Incomplete, 50), (ChaosMonkey, 200)]
+        jt = self._env.config.checks.fuzzing_thoroughness
+        JOBS = [(Incomplete, jt // 5), (ChaosMonkey, 4 * jt // 5)]
 
         total_times = sum(map(lambda x: x[1], JOBS))
         rand_gen = random.Random(4)  # Reproducibility!

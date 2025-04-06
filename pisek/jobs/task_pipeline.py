@@ -110,7 +110,7 @@ class TaskPipeline(JobPipeline):
         fuzz_judge: tuple[Optional[FuzzingManager], Optional[str]]
         if (
             env.target == TestingTarget.all
-            and env.config.checks.judge_handles_fuzzed_outputs
+            and env.config.checks.fuzzing_thoroughness > 0
             and env.config.task_type != TaskType.interactive
             and env.config.out_check == OutCheck.judge
         ):
