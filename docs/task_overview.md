@@ -34,10 +34,12 @@ It is also recommended to write some wrong solutions to ensure they don't pass.
 The generator is used for generating inputs that the solution is tested upon.
 Ideally the generator should generate diverse enough inputs to break any wrong solution.
 
-### Judge
+### Checker
 
-The judge is used for determining whether a given solution is correct.
+The checker is used for determining whether a given solution is correct.
 It greatly differs between task types, so you can read more there.
+
+A task-specific checker provided by the task author is called a **judge**.
 
 ### Validator
 
@@ -57,14 +59,14 @@ graph TD;
     G[Generator] -->|Input| C[Validator];
     G -->|Input| S[Solution];
     G -->|Input| CS[Correct solution];
-    S -->|Output| J[Judge];
-    CS -->|Correct output| J;
+    S -->|Output| C[Checker];
+    CS -->|Correct output| C;
 ```
 
-#### Batch judges
-*More details about the batch judges are in [batch_judge.md](./batch_judge.md).*
+#### Batch checkers
+*More details about the batch judges are in [batch_checker.md](./batch_checker.md).*
 
-A batch judge gets the solution output and should say whether it is correct.
+A batch checker gets the solution output and should say whether it is correct.
 It can also get the correct output (from the primary solution) if specified in the config.
 
 ### Interactive task
