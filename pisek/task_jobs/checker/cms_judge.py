@@ -38,9 +38,9 @@ class RunCMSJudge(RunChecker):
         judge: RunConfig,
         **kwargs,
     ) -> None:
-        super().__init__(env=env, judge_name=judge.name, **kwargs)
+        super().__init__(env=env, checker_name=judge.name, **kwargs)
         self.judge = judge
-        self.points_file = self.judge_log_file.replace_suffix(".points")
+        self.points_file = self.checker_log_file.replace_suffix(".points")
 
     def _load_points(self, result: RunResult) -> Decimal:
         with self._open_file(result.stdout_file) as f:
@@ -77,12 +77,12 @@ class RunCMSJudge(RunChecker):
             )
         else:
             raise self._create_program_failure(
-                f"Judge failed on {self._judging_message()}:", judge_run_result
+                f"Judge failed on {self._checking_message()}:", judge_run_result
             )
 
 
 class RunCMSBatchJudge(RunCMSJudge, RunBatchChecker):
-    """Judges solution output using judge with CMS interface."""
+    """Checks solution output using judge with CMS interface."""
 
     def __init__(
         self,
@@ -110,7 +110,7 @@ class RunCMSBatchJudge(RunCMSJudge, RunBatchChecker):
     def _invalid_path(name: str):
         return os.path.join(gettempdir(), f"the-{name}-is-not-available-{uuid4()}")
 
-    def _judge(self) -> SolutionResult:
+    def _check(self) -> SolutionResult:
         config = self._env.config
 
         self._access_file(self.output)
@@ -136,7 +136,7 @@ class RunCMSBatchJudge(RunCMSJudge, RunBatchChecker):
                 self.output.path,
             ],
             stdout=self.points_file,
-            stderr=self.judge_log_file,
+            stderr=self.checker_log_file,
         )
 
         sol_result = self._load_solution_result(result)

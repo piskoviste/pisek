@@ -60,7 +60,7 @@ class SolutionResult(ABC):
     verdict: Verdict
     message: Optional[str]
     solution_rr: RunResult
-    judge_rr: Optional[RunResult]
+    checker_rr: Optional[RunResult]
 
     @abstractmethod
     def points(self, env: "Env", test_points: int) -> Decimal:
@@ -75,7 +75,7 @@ class RelativeSolutionResult(SolutionResult):
     verdict: Verdict
     message: Optional[str]
     solution_rr: RunResult
-    judge_rr: Optional[RunResult]
+    checker_rr: Optional[RunResult]
     relative_points: Decimal
 
     def points(self, env: "Env", test_points: int) -> Decimal:
@@ -94,7 +94,7 @@ class AbsoluteSolutionResult(SolutionResult):
     verdict: Verdict
     message: Optional[str]
     solution_rr: RunResult
-    judge_rr: Optional[RunResult]
+    checker_rr: Optional[RunResult]
     absolute_points: Decimal
 
     def points(self, env: "Env", test_points: int) -> Decimal:

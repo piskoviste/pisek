@@ -37,17 +37,17 @@ class RunChecker(ProgramsJob):
         env: Env,
         name: str,
         test: int,
-        judge_name: str,
+        checker_name: str,
         input_: InputPath,
-        judge_log_file: LogPath,
+        checker_log_file: LogPath,
         expected_verdict: Optional[Verdict],
         **kwargs,
     ) -> None:
         super().__init__(env=env, name=name, **kwargs)
         self.test = test
         self.input = input_
-        self.judge_name = judge_name
-        self.judge_log_file = judge_log_file
+        self.checker_name = checker_name
+        self.checker_log_file = checker_log_file
         self.expected_verdict = expected_verdict
 
         self.result: Optional[SolutionResult]
@@ -68,22 +68,22 @@ class RunChecker(ProgramsJob):
         pass
 
     @abstractmethod
-    def _judge(self) -> SolutionResult:
-        """Here actually do the judging."""
+    def _check(self) -> SolutionResult:
+        """Here actually do the output checking."""
         pass
 
     @abstractmethod
-    def _judging_message(self) -> str:
+    def _checking_message(self) -> str:
         pass
 
-    def _judging_message_capitalized(self) -> str:
-        msg = self._judging_message()
+    def _checking_message_capitalized(self) -> str:
+        msg = self._checking_message()
         return msg[0].upper() + msg[1:]
 
     def _run(self) -> SolutionResult:
         self._load_solution_run_res()
         if self._solution_run_res.kind == RunResultKind.OK:
-            result = self._judge()
+            result = self._check()
         elif self._solution_run_res.kind == RunResultKind.RUNTIME_ERROR:
             result = RelativeSolutionResult(
                 Verdict.error, None, self._solution_run_res, None, Decimal(0)
@@ -98,18 +98,18 @@ class RunChecker(ProgramsJob):
             and result.verdict != self.expected_verdict
         ):
             raise PipelineItemFailure(
-                f"{self._judging_message_capitalized()} should have got verdict '{self.expected_verdict}' but got '{result.verdict}'."
+                f"{self._checking_message_capitalized()} should have got verdict '{self.expected_verdict}' but got '{result.verdict}'."
             )
 
         return result
 
     def message(self) -> str:
-        """Message about how judging ended."""
+        """Message about how checking ended."""
         if self.result is None:
             raise RuntimeError(f"Job {self.name} has not finished yet.")
 
         sol_rr = self.result.solution_rr
-        judge_rr = self.result.judge_rr
+        checker_rr = self.result.checker_rr
 
         text = f"input: {self._quote_file_with_name(self.input)}"
         if isinstance(self, RunBatchChecker):
@@ -126,13 +126,13 @@ class RunChecker(ProgramsJob):
             )
         )
         text += "\n"
-        if judge_rr is not None:
+        if checker_rr is not None:
             text += (
-                f"{self.judge_name}:\n"
+                f"{self.checker_name}:\n"
                 + tab(
                     self._format_run_result(
-                        judge_rr,
-                        status=judge_rr.stderr_file is None,
+                        checker_rr,
+                        status=checker_rr.stderr_file is None,
                         stderr_force_content=True,
                     )
                 )
@@ -175,12 +175,12 @@ class RunChecker(ProgramsJob):
 
 
 class RunBatchChecker(RunChecker):
-    """Runs batch judge on single input. (Abstract class)"""
+    """Runs batch checker on single input. (Abstract class)"""
 
     def __init__(
         self,
         env: Env,
-        judge_name: str,
+        checker_name: str,
         test: int,
         input_: InputPath,
         output: OutputPath,
@@ -190,11 +190,11 @@ class RunBatchChecker(RunChecker):
     ) -> None:
         super().__init__(
             env=env,
-            name=f"Judge {output:p}",
-            judge_name=judge_name,
+            name=f"Check {output:p}",
+            checker_name=checker_name,
             test=test,
             input_=input_,
-            judge_log_file=output.to_judge_log(judge_name),
+            checker_log_file=output.to_checker_log(checker_name),
             expected_verdict=expected_verdict,
             **kwargs,
         )
@@ -206,9 +206,9 @@ class RunBatchChecker(RunChecker):
         if "run_solution" in self.prerequisites_results:
             return self.prerequisites_results["run_solution"]
         else:
-            # There is no solution (judging samples)
+            # There is no solution (checking static tests against themselves)
             # XXX: It didn't technically finish in 0 time.
             return RunResult(RunResultKind.OK, 0, 0.0, 0.0)
 
-    def _judging_message(self) -> str:
+    def _checking_message(self) -> str:
         return f"output {self.output:p} for input {self.input:p}"

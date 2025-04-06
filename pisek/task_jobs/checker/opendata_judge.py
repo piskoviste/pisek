@@ -31,7 +31,7 @@ OPENDATA_NO_SEED = "-"
 
 
 class RunOpendataJudge(RunBatchChecker):
-    """Judges solution output using judge with the opendata interface. (Abstract class)"""
+    """Checks solution output using judge with the opendata interface. (Abstract class)"""
 
     @property
     @abstractmethod
@@ -57,7 +57,7 @@ class RunOpendataJudge(RunBatchChecker):
     ) -> None:
         super().__init__(
             env=env,
-            judge_name=judge.name,
+            checker_name=judge.name,
             test=test,
             input_=input_,
             output=output,
@@ -68,7 +68,7 @@ class RunOpendataJudge(RunBatchChecker):
         self.judge = judge
         self.seed = seed
 
-    def _judge(self) -> SolutionResult:
+    def _check(self) -> SolutionResult:
         envs = {}
         if self._env.config.judge_needs_in:
             envs["TEST_INPUT"] = self.input.path
@@ -85,7 +85,7 @@ class RunOpendataJudge(RunBatchChecker):
                 f"{self.seed:016x}" if self.seed is not None else OPENDATA_NO_SEED,
             ],
             stdin=self.output,
-            stderr=self.judge_log_file,
+            stderr=self.checker_log_file,
             env=envs,
         )
         if result.returncode == self.return_code_ok:
@@ -103,7 +103,7 @@ class RunOpendataJudge(RunBatchChecker):
 
 
 class RunOpendataV1Judge(RunOpendataJudge):
-    """Judges solution output using judge with the opendataV1 interface."""
+    """Checks solution output using judge with the opendataV1 interface."""
 
     @property
     def return_code_ok(self) -> int:

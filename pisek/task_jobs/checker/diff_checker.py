@@ -28,7 +28,7 @@ from pisek.task_jobs.checker.checker_base import RunBatchChecker
 
 
 class RunDiffChecker(RunBatchChecker):
-    """Judges solution output and correct output using diff."""
+    """Checks solution output and correct output using diff."""
 
     def __init__(
         self,
@@ -41,7 +41,7 @@ class RunDiffChecker(RunBatchChecker):
     ) -> None:
         super().__init__(
             env=env,
-            judge_name="diff",
+            checker_name="diff",
             test=test,
             input_=input_,
             output=output,
@@ -49,7 +49,7 @@ class RunDiffChecker(RunBatchChecker):
             expected_verdict=expected_verdict,
         )
 
-    def _judge(self) -> SolutionResult:
+    def _check(self) -> SolutionResult:
         self._access_file(self.output)
         self._access_file(self.correct_output)
         diff = subprocess.run(

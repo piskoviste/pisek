@@ -20,7 +20,7 @@ from typing import Any, Optional
 
 from pisek.jobs.jobs import State, Job, PipelineItemFailure
 from pisek.env.env import Env
-from pisek.utils.paths import TaskPath, InputPath
+from pisek.utils.paths import InputPath
 from pisek.config.config_types import TaskType
 from pisek.utils.text import pad, pad_left, tab
 from pisek.utils.terminal import MSG_LEN, right_aligned_text
@@ -36,7 +36,7 @@ from pisek.task_jobs.solution.solution import (
     RunBatchSolution,
     RunInteractive,
 )
-from pisek.task_jobs.checker.checker_manager import checker_job
+from pisek.task_jobs.checker.checker import checker_job
 from pisek.task_jobs.checker.cms_judge import RunCMSJudge
 from pisek.task_jobs.checker.checker_base import RunChecker, RunBatchChecker
 
@@ -58,8 +58,9 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
 
         jobs: list[Job] = []
 
-        self._sols: dict[TaskPath, RunSolution] = {}
-        self._judges: dict[TaskPath, RunChecker] = {}
+        self._sols: dict[InputPath, RunSolution] = {}
+        self._judges: dict[InputPath, RunChecker] = {}
+        self._static_out_judges: dict[InputPath, RunChecker] = {}
 
         for sub_num, inputs in self._all_testcases().items():
             self.tests.append(TestJobGroup(self._env, sub_num))
@@ -132,10 +133,10 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
                 jobs += self._check_output_jobs(out, None)
                 jobs.append(
                     judge_j := checker_job(
-                        inp, out, out, 0, None, Verdict.ok, self._env
+                        inp, out, out, test, seed, Verdict.ok, self._env
                     )
                 )
-                self._judges[inp] = judge_j
+                self._static_out_judges[inp] = judge_j
 
             run_batch_sol, run_judge = self._create_batch_jobs(
                 testcase_info, seed, test
@@ -290,21 +291,26 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
     def _compute_result(self) -> dict[str, Any]:
         result: dict[str, Any] = super()._compute_result()
 
-        result["results"] = {}
-        result["judge_outs"] = set()
-        for inp, judge_job in self._judges.items():
-            result["results"][inp] = judge_job.result
-
-            if judge_job.result is None or judge_job.result.verdict not in (
+        def add_checker_out(cj: RunChecker) -> None:
+            if cj.result is None or cj.result.verdict not in (
                 Verdict.ok,
                 Verdict.partial_ok,
                 Verdict.wrong_answer,
             ):
-                continue
+                return
 
-            if isinstance(judge_job, RunCMSJudge):
-                result["judge_outs"].add(judge_job.points_file)
-            result["judge_outs"].add(judge_job.judge_log_file)
+            if isinstance(checker_job, RunCMSJudge):
+                result["checker_outs"].add(cj.points_file)
+            result["checker_outs"].add(cj.checker_log_file)
+
+        result["results"] = {}
+        result["checker_outs"] = set()
+        for inp, checker_job in self._judges.items():
+            result["results"][inp] = checker_job.result
+            add_checker_out(checker_job)
+
+        for checker_job in self._static_out_judges.values():
+            add_checker_out(checker_job)
 
         result["tests"] = self._tests_results
 

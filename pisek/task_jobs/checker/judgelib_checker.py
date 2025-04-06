@@ -29,19 +29,19 @@ from pisek.task_jobs.checker.checker_base import RunBatchChecker
 
 
 class RunJudgeLibChecker(RunBatchChecker):
-    """Judges solution output and correct output using judgelib checker."""
+    """Checks solution output and correct output using judgelib checker."""
 
     @abstractmethod
     def _get_flags(self) -> list[str]:
         pass
 
-    def _judge(self) -> SolutionResult:
+    def _check(self) -> SolutionResult:
         self._access_file(self.output)
         self._access_file(self.correct_output)
 
-        executable = TaskPath.executable_path(self._env, self.judge_name)
+        executable = TaskPath.executable_path(self._env, self.checker_name)
 
-        judge = subprocess.run(
+        checker = subprocess.run(
             [
                 executable.path,
                 *self._get_flags(),
@@ -52,32 +52,32 @@ class RunJudgeLibChecker(RunBatchChecker):
             stderr=subprocess.PIPE,
         )
 
-        stderr = judge.stderr.decode("utf-8")
+        stderr = checker.stderr.decode("utf-8")
 
         # XXX: Okay, it didn't finish in no time, but this is not meant to be used
         rr = RunResult(
             RunResultKind.OK,
-            judge.returncode,
+            checker.returncode,
             0,
             0,
             status=(stderr.strip() or "Files are equivalent")
             + f": {self.output.col(self._env)} {self.correct_output.col(self._env)}",
         )
 
-        if judge.returncode == 42:
+        if checker.returncode == 42:
             return RelativeSolutionResult(
                 Verdict.ok, None, self._solution_run_res, rr, Decimal(1)
             )
-        elif judge.returncode == 43:
+        elif checker.returncode == 43:
             return RelativeSolutionResult(
                 Verdict.wrong_answer, None, self._solution_run_res, rr, Decimal(0)
             )
         else:
-            raise PipelineItemFailure(f"{self.judge_name} failed:\n{tab(stderr)}")
+            raise PipelineItemFailure(f"{self.checker_name} failed:\n{tab(stderr)}")
 
 
 class RunTokenChecker(RunJudgeLibChecker):
-    """Judges solution output and correct output using judge-token."""
+    """Checks solution output and correct output using judge-token."""
 
     def __init__(
         self,
@@ -90,7 +90,7 @@ class RunTokenChecker(RunJudgeLibChecker):
     ) -> None:
         super().__init__(
             env=env,
-            judge_name="judge-token",
+            checker_name="judge-token",
             test=test,
             input_=input_,
             output=output,
@@ -118,7 +118,7 @@ class RunTokenChecker(RunJudgeLibChecker):
 
 
 class RunShuffleChecker(RunJudgeLibChecker):
-    """Judges solution output and correct output using judge-shuffle."""
+    """Checks solution output and correct output using judge-shuffle."""
 
     def __init__(
         self,
@@ -131,7 +131,7 @@ class RunShuffleChecker(RunJudgeLibChecker):
     ) -> None:
         super().__init__(
             env=env,
-            judge_name="judge-shuffle",
+            checker_name="judge-shuffle",
             test=test,
             input_=input_,
             output=output,

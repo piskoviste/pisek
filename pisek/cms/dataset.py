@@ -183,12 +183,14 @@ def add_judge(session: Session, files: FileCacher, env: Env, dataset: Dataset):
     ).path
 
     if config.task_type == TaskType.batch:
-        judge_name = "checker"
+        checker_name = "checker"
     elif config.task_type == TaskType.interactive:
-        judge_name = "manager"
+        checker_name = "manager"
 
-    judge = files.put_file_from_path(judge_path, f"{judge_name} for {config.cms.name}")
-    session.add(Manager(dataset=dataset, filename=judge_name, digest=judge))
+    judge = files.put_file_from_path(
+        judge_path, f"{checker_name} for {config.cms.name}"
+    )
+    session.add(Manager(dataset=dataset, filename=checker_name, digest=judge))
 
 
 MISSING_STUB_ERROR = "Language not supported"
