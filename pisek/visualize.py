@@ -224,7 +224,7 @@ class SolutionResults:
 
         return fails
 
-    def get_timeout_range(self, num: int) -> tuple[float, float]:
+    def get_time_limit_range(self, num: int) -> tuple[float, float]:
         results = self.get_by_test()[num]
         times = [0] + list(map(lambda r: r.time, results))
         times.sort()
@@ -354,7 +354,7 @@ def visualize(
     max_possible = inf
     for sol, sol_res in results.items():
         for num in config.tests:
-            a, b = sol_res.get_timeout_range(num)
+            a, b = sol_res.get_time_limit_range(num)
             min_possible = max(a, min_possible)
             max_possible = min(b, max_possible)
 

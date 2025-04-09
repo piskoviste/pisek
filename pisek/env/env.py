@@ -46,7 +46,7 @@ class Env(BaseEnv):
         strict: Whether to interpret warnings as failures
         testing_log: Whether to produce testing_log.json after running
         solutions: List of all solutions to be tested
-        timeout: Timeout for solutions in seconds. Overrides task config if specified. (Must be >= 0)
+        time_limit: Time limit for solutions in seconds. Overrides task config if specified. (Must be >= 0)
         all_inputs: Finish testing all inputs of a solution
         repeat: Test task REPEAT times giving generator different seeds. (Changes seeded inputs only.)
         iteration: Current iteration of task testing. (0 <= iteration < repeat)
@@ -62,7 +62,7 @@ class Env(BaseEnv):
     strict: bool
     testing_log: bool
     solutions: list[str]
-    timeout: Optional[float] = Field(ge=0)
+    time_limit: Optional[float] = Field(ge=0)
     all_inputs: bool
     repeat: int = Field(ge=1)
     iteration: int = Field(ge=0)
@@ -80,7 +80,7 @@ class Env(BaseEnv):
         strict: bool = False,
         testing_log: bool = False,
         solutions: Optional[list[str]] = None,
-        timeout: Optional[float] = None,
+        time_limit: Optional[float] = None,
         repeat: int = 1,
         iteration: int = 0,
         pisek_dir: Optional[str] = None,
@@ -113,7 +113,7 @@ class Env(BaseEnv):
             strict=strict,
             testing_log=testing_log,
             solutions=expanded_solutions,
-            timeout=timeout,
+            time_limit=time_limit,
             all_inputs=all_inputs,
             repeat=repeat,
             iteration=iteration,

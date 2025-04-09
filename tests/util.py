@@ -115,9 +115,9 @@ class TestFixtureVariant(TestFixture):
         self.modify_task()
         self.log_files()
 
-        # We lower the timeout to make the self-tests run faster. The solutions
+        # We lower the time limit to make the self-tests run faster. The solutions
         # run instantly, with the exception of `solve_slow_4b`, which takes 10 seconds
-        # and we want to consider it a timeout
+        # and we want to consider it a time limit
         @mock.patch("sys.stdout", new_callable=io.StringIO)
         @mock.patch("sys.stderr", new_callable=io.StringIO)
         def run(*args):
@@ -126,7 +126,7 @@ class TestFixtureVariant(TestFixture):
                 inputs=1,
                 strict=False,
                 full=False,
-                timeout=0.2,
+                time_limit=0.2,
                 plain=False,
             )
 

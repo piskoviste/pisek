@@ -177,10 +177,10 @@ def main(argv):
         help="show file contents on error",
     )
     parser_test.add_argument(
-        "--timeout",
+        "--time-limit",
         "-t",
         type=float,
-        help="override time limit for solutions to TIMEOUT seconds",
+        help="override time limit for solutions to TIME_LIMIT seconds",
     )
     parser_test.add_argument(
         "--full", "-f", action="store_true", help="don't stop on first failure"
