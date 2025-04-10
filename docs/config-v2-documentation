@@ -52,7 +52,7 @@ out_check=judge
 #   - shuffle: like tokens, but allow permutation of tokens
 #   - judge: check with a custom program (called a 'judge')
 # In communication, only judge is allowed
-# For more see docs/batch_judge.md or docs/communication_judge.md
+# For more see docs/batch_checker.md or docs/communication_judge.md
 
 out_judge=judge
 # Only for out_check=judge (required in that case)

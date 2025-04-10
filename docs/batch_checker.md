@@ -1,16 +1,16 @@
-# Batch judge
+# Batch checker
 
-The batch judge gets the contestants output, the input and the correct output.
+The batch checker gets the contestants output, the input and the correct output.
 It should say whether the contestant output is correct.
 
-There are various types of judges you can use:
+There are various types of checkers you can use:
 - `tokens` - fast, versatile file equality checker
 - `diff` - file equality checker based on the `diff` command line tool (don't use, as it has a quadratic time complexity)
-- `judge` - custom judge
+- `judge` - custom checker
 
 If there is only a single correct output (eg. the minimum of an array), `tokens` is strongly recommended.
 Otherwise, when there are multiple correct outputs (eg. the shortest path in a graph),
-writing a custom judge is necessary. Set `out_check` in the config accordingly.
+writing a judge is necessary. Set `out_check` in the config accordingly.
 
 ## Tokens judge
 
@@ -30,9 +30,9 @@ Similarly to the tokens judge, the shuffle judge compares the output with the co
 Allows permutations of tokens (permutations can be configured with `shuffle_mode`).
 Use `shuffle_ignore_case` for case insensitivity.
 
-## Diff judge
+## Diff checker
 
-An equality judge based on the `diff` tool. Runs `diff -Bbq` under the hood.
+An equality checker based on the `diff` tool. Runs `diff -Bbq` under the hood.
 Ignores whitespace and empty lines.
 
 **Use is strongly discouraged because of the quadratic complexity of `diff`.**

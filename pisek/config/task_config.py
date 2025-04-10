@@ -815,7 +815,7 @@ class ChecksConfig(BaseEnv):
     all_inputs_in_last_test: bool
     generator_respects_seed: bool
     one_input_in_each_nonsample_test: bool
-    judge_handles_fuzzed_outputs: bool
+    fuzzing_thoroughness: int
 
     @classmethod
     def load_dict(cls, configs: ConfigHierarchy) -> ConfigValuesDict:

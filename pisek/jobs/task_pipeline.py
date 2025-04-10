@@ -15,16 +15,18 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from collections import deque
+from typing import Optional
 
 from pisek.jobs.job_pipeline import JobPipeline
 from pisek.env.env import Env, TestingTarget
+from pisek.config.config_types import TaskType, OutCheck
 from pisek.utils.paths import InputPath
 from pisek.task_jobs.task_manager import (
     TOOLS_MAN_CODE,
     INPUTS_MAN_CODE,
     BUILD_MAN_CODE,
     GENERATOR_MAN_CODE,
-    JUDGE_MAN_CODE,
+    FUZZ_MAN_CODE,
     SOLUTION_MAN_CODE,
 )
 
@@ -36,7 +38,7 @@ from pisek.task_jobs.generator.manager import (
     RunGenerator,
     TestcaseInfoMixin,
 )
-from pisek.task_jobs.judge import JudgeManager
+from pisek.task_jobs.checker.fuzzing_manager import FuzzingManager
 from pisek.task_jobs.builder.build import BuildManager
 from pisek.task_jobs.solution.manager import SolutionManager
 from pisek.task_jobs.testing_log import CreateTestingLog
@@ -71,9 +73,6 @@ class TaskPipeline(JobPipeline):
             self.input_generator = gen_inputs[0]
 
         else:
-            named_pipeline.append(judge := (JudgeManager(), JUDGE_MAN_CODE))
-            judge[0].add_prerequisite(*inputs)
-
             # First solution generates inputs
             assert (
                 not env.config.judge_needs_out
@@ -87,7 +86,6 @@ class TaskPipeline(JobPipeline):
                 )
             )
             solutions.append(first_solution)
-            first_solution[0].add_prerequisite(*judge)
             self.input_generator = first_solution[0]
 
             for sol_name in env.solutions[1:]:
@@ -109,9 +107,21 @@ class TaskPipeline(JobPipeline):
             for solution in solutions:
                 testing_log[0].add_prerequisite(*solution)
 
-        if solutions:
+        fuzz_judge: tuple[Optional[FuzzingManager], Optional[str]]
+        if (
+            env.target == TestingTarget.all
+            and env.config.checks.fuzzing_thoroughness > 0
+            and env.config.task_type != TaskType.interactive
+            and env.config.out_check == OutCheck.judge
+        ):
+            named_pipeline.append(fuzz_judge := (FuzzingManager(), FUZZ_MAN_CODE))
+            fuzz_judge[0].add_prerequisite(*first_solution)
+        else:
+            fuzz_judge = (None, None)
+
+        if solutions and env.target == TestingTarget.all:
             named_pipeline.append(completeness_check := (CompletenessCheck(), ""))
-            completeness_check[0].add_prerequisite(*judge)
+            completeness_check[0].add_prerequisite(*fuzz_judge)
             for solution in solutions:
                 completeness_check[0].add_prerequisite(*solution)
 

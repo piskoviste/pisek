@@ -68,7 +68,7 @@ no_unused_inputs=on
 all_inputs_in_last_test=off
 generator_respects_seed=on
 one_input_in_each_nonsample_test=off
-judge_handles_fuzzed_outputs=on
+fuzzing_thoroughness=250
 
 [cms]
 name=

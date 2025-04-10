@@ -115,7 +115,7 @@ class TaskPath:
 
 
 class JudgeablePath(TaskPath):
-    def to_judge_log(self, judge: str) -> "LogPath":
+    def to_checker_log(self, judge: str) -> "LogPath":
         return LogPath(self.replace_suffix(f".{os.path.basename(judge)}.log").path)
 
 

@@ -22,7 +22,7 @@ from pisek.config.config_types import ProgramType
 from pisek.config.task_config import RunConfig
 from pisek.task_jobs.program import RunResult, ProgramsJob
 from pisek.task_jobs.solution.solution_result import Verdict, SolutionResult
-from pisek.task_jobs.judge import RunCMSJudge
+from pisek.task_jobs.checker.cms_judge import RunCMSJudge
 
 
 class RunSolution(ProgramsJob):
@@ -108,7 +108,7 @@ class RunInteractive(RunCMSJudge, RunSolution):
             test=test,
             input_=input_,
             expected_verdict=expected_verdict,
-            judge_log_file=self.sol_log_file.to_judge_log(judge.name),
+            checker_log_file=self.sol_log_file.to_checker_log(judge.name),
             solution=solution,
             is_primary=is_primary,
             **kwargs,
@@ -135,7 +135,7 @@ class RunInteractive(RunCMSJudge, RunSolution):
                 self.judge,
                 stdin=self.input,
                 stdout=self.points_file,
-                stderr=self.judge_log_file,
+                stderr=self.checker_log_file,
                 args=[fifo_from_solution, fifo_to_solution],
             )
 
@@ -159,8 +159,8 @@ class RunInteractive(RunCMSJudge, RunSolution):
 
             return sol_res
 
-    def _judge(self) -> SolutionResult:
+    def _check(self) -> SolutionResult:
         return self._load_solution_result(self._judge_run_result)
 
-    def _judging_message(self) -> str:
+    def _checking_message(self) -> str:
         return f"solution {self.solution.name} on input {self.input:p}"

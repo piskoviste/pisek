@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from pisek.utils.paths import TaskPath, InputPath, OutputPath
+from pisek.utils.paths import InputPath, OutputPath
 from pisek.config.task_config import TestConfig
 from pisek.jobs.status import StatusJobManager
 from pisek.task_jobs.task_job import TaskHelper
@@ -21,9 +21,9 @@ TOOLS_MAN_CODE = "tools"
 GENERATOR_MAN_CODE = "generator"
 INPUTS_MAN_CODE = "inputs"
 BUILD_MAN_CODE = "build"
-JUDGE_MAN_CODE = "judge"
 SOLUTION_MAN_CODE = "solution_"
 DATA_MAN_CODE = "data"
+FUZZ_MAN_CODE = "fuzz"
 
 
 class TaskJobManager(StatusJobManager, TaskHelper):

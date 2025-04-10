@@ -21,8 +21,7 @@ import subprocess
 
 from pisek.jobs.jobs import Job, PipelineItemFailure
 from pisek.env.env import Env
-from pisek.utils.paths import TaskPath, SanitizablePath
-from pisek.config.task_config import ProgramType
+from pisek.utils.paths import TaskPath
 from pisek.task_jobs.task_job import TaskJob
 from pisek.task_jobs.task_manager import TaskJobManager
 from pisek.task_jobs.program import ProgramsJob
@@ -102,12 +101,12 @@ class PrepareTextPreprocessor(TaskJob):
             raise PipelineItemFailure("Text preprocessor compilation failed.")
 
 
-class PrepareJudgeLibJudge(TaskJob):
+class PrepareJudgeLibChecker(TaskJob):
     """Compiles judge from judgelib."""
 
-    def __init__(self, env: Env, judge_name: str, judge: str, **kwargs) -> None:
+    def __init__(self, env: Env, checker_name: str, judge: str, **kwargs) -> None:
         self.judge = judge
-        super().__init__(env=env, name=f"Prepare {judge_name}", **kwargs)
+        super().__init__(env=env, name=f"Prepare {checker_name}", **kwargs)
 
     def _run(self):
         source_files = ["util.cc", "io.cc", "token.cc", "random.cc", f"{self.judge}.cc"]
@@ -135,24 +134,24 @@ class PrepareJudgeLibJudge(TaskJob):
         )
 
         if gpp.returncode != 0:
-            raise PipelineItemFailure(f"{self.judge_name} compilation failed.")
+            raise PipelineItemFailure(f"{self.checker_name} compilation failed.")
 
 
-class PrepareTokenJudge(PrepareJudgeLibJudge):
+class PrepareTokenJudge(PrepareJudgeLibChecker):
     """Compiles judge-token from judgelib."""
 
     def __init__(self, env: Env, **kwargs) -> None:
         super().__init__(
-            env=env, judge_name="token judge", judge="judge-token", **kwargs
+            env=env, checker_name="token judge", judge="judge-token", **kwargs
         )
 
 
-class PrepareShuffleJudge(PrepareJudgeLibJudge):
+class PrepareShuffleJudge(PrepareJudgeLibChecker):
     """Compiles judge-shuffle from judgelib."""
 
     def __init__(self, env: Env, **kwargs) -> None:
         super().__init__(
-            env=env, judge_name="shuffle judge", judge="judge-shuffle", **kwargs
+            env=env, checker_name="shuffle judge", judge="judge-shuffle", **kwargs
         )
 
 

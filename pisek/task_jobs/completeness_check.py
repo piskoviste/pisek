@@ -17,7 +17,7 @@ from pisek.task_jobs.solution.solution_result import Verdict
 from pisek.jobs.jobs import Job
 from pisek.task_jobs.task_manager import (
     TaskJobManager,
-    JUDGE_MAN_CODE,
+    FUZZ_MAN_CODE,
     SOLUTION_MAN_CODE,
 )
 
@@ -31,13 +31,15 @@ class CompletenessCheck(TaskJobManager):
     def _get_jobs(self) -> list[Job]:
         return []
 
-    def _get_judge_outs(self) -> set[TaskPath]:
-        judge_outs = self.prerequisites_results[JUDGE_MAN_CODE]["judge_outs"]
+    def _get_checker_outs(self) -> set[TaskPath]:
+        checker_outs: set[TaskPath] = set()
+        if FUZZ_MAN_CODE in self.prerequisites_results:
+            checker_outs |= self.prerequisites_results[FUZZ_MAN_CODE]["checker_outs"]
         for solution in self._env.solutions:
-            judge_outs |= self.prerequisites_results[f"{SOLUTION_MAN_CODE}{solution}"][
-                "judge_outs"
-            ]
-        return judge_outs
+            checker_outs |= self.prerequisites_results[
+                f"{SOLUTION_MAN_CODE}{solution}"
+            ]["checker_outs"]
+        return checker_outs
 
     def _check_solution_succeeds_only_on(self, sol_name: str, tests: list[int]) -> bool:
         tests_res = self.prerequisites_results[f"{SOLUTION_MAN_CODE}{sol_name}"][
@@ -74,7 +76,7 @@ class CompletenessCheck(TaskJobManager):
             JudgeType.cms_batch,
             JudgeType.cms_communication,
         ):
-            for judge_out in self._get_judge_outs():
+            for judge_out in self._get_checker_outs():
                 with open(judge_out.path) as f:
                     lines = f.read().rstrip().split("\n")
                 if len(lines) > 1 or lines[0] == "":  # Python splitting is weird
