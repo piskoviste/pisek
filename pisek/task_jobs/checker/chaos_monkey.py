@@ -23,7 +23,7 @@ from pisek.task_jobs.task_job import TaskJob
 
 
 class Invalidate(TaskJob):
-    """Abstract Job for Invalidating an output."""
+    """Abstract Job for invalidating an output."""
 
     def __init__(
         self, env: Env, name: str, from_file: TaskPath, to_file: TaskPath, seed: int
@@ -79,7 +79,7 @@ class ChaosMonkey(Invalidate):
             letters = string.ascii_lowercase
             return "".join(rand_gen.choice(letters) for _ in range(length))
 
-        NUMER_MODIFIERS = [
+        NUMBER_MODIFIERS = [
             lambda _: 0,
             lambda x: int(x) + 1,
             lambda x: int(x) - 1,
@@ -109,7 +109,6 @@ class ChaosMonkey(Invalidate):
         if len(lines) == 0:
             lines = [[str(rand_gen.choice(CREATE_MODIFIERS)(""))]]
         else:
-            line = random.randint(0, min(2, len(lines) - 1))
             if len(lines) <= 2 or rand_gen.randint(1, 10) == 1:
                 line = random.randint(0, len(lines) - 1)
             else:
@@ -119,7 +118,7 @@ class ChaosMonkey(Invalidate):
             modifiers = CREATE_MODIFIERS + CHANGE_MODIFIERS
             try:
                 int(lines[line][token])
-                modifiers += NUMER_MODIFIERS
+                modifiers += NUMBER_MODIFIERS
             except ValueError:
                 pass
             lines[line][token] = str(rand_gen.choice(modifiers)(lines[line][token]))
