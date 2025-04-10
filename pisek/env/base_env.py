@@ -51,7 +51,7 @@ class BaseEnv(ContextModel):
         def is_env(item: Any) -> bool:
             return isinstance(item, BaseEnv)
 
-        for key in self.model_fields:
+        for key in type(self).model_fields:
             item = getattr(self, key)
             if is_env(item):
                 self._direct_subenvs.append(key)
@@ -83,8 +83,9 @@ class BaseEnv(ContextModel):
 
     def get_accessed(self) -> set[tuple[str, ...]]:
         """Get all accessed field names in this env (and all subenvs)."""
+        cls = type(self)
         accessed = set()
-        self._accessed &= set(self.model_fields) | set(self.model_computed_fields)
+        self._accessed &= set(cls.model_fields) | set(cls.model_computed_fields)
         for key in self._accessed:
             item = getattr(self, key)
             if isinstance(item, BaseEnv):
