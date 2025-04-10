@@ -185,9 +185,6 @@ solve_slow: 60.0 points (should be 0)
 
 Any result that doesn't match the constraints defined in the config file will be highlighted in red.
 
-Note that CMS doesn't differentiate between wrong answers and timeouts or runtime errors,
-so any error will be reported as "wrong".
-
 ### Generating a testing log
 
 You can also generate a JSON file with details on how each solution did on each testcase.
@@ -201,5 +198,3 @@ Again, set the `-d`/`--dataset` argument to the description of the target datase
 (Or `-a/--active-dataset` for the active dataset.)
 
 The format is compatible with the file generated when running Pisek with the `--testing-log` argument.
-Note that if the submission failed for any reason, the `result` key will be set to `wrong_answer`,
-even if the submission timed out or crashed.
