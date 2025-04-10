@@ -64,7 +64,7 @@ graph TD;
 ```
 
 #### Batch checkers
-*More details about the batch judges are in [batch_checker.md](./batch_checker.md).*
+*More details about the batch checkers are in [batch_checker.md](./batch_checker.md).*
 
 A batch checker gets the solution output and should say whether it is correct.
 It can also get the correct output (from the primary solution) if specified in the config.
