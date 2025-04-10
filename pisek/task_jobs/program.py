@@ -148,15 +148,15 @@ class ProgramsJob(TaskJob):
         env={},
     ) -> None:
         """Adds program to execution pool."""
-        timeout: Optional[float] = None
+        time_limit: Optional[float] = None
         if program_type.is_solution():
-            timeout = self._env.timeout
+            time_limit = self._env.time_limit
 
         self._load_executable(
             executable=TaskPath.executable_file(self._env, program.exec.path),
             args=program.args + args,
-            time_limit=program.time_limit if timeout is None else timeout,
-            clock_limit=program.clock_limit(timeout),
+            time_limit=program.time_limit if time_limit is None else time_limit,
+            clock_limit=program.clock_limit(time_limit),
             mem_limit=program.mem_limit,
             process_limit=program.process_limit,
             stdin=stdin,
@@ -243,7 +243,7 @@ class ProgramsJob(TaskJob):
                         )
                     )
                 elif meta["status"] == "TO":
-                    timeout = (
+                    time_limit = (
                         f"{pool_item.time_limit}s"
                         if t > pool_item.time_limit
                         else f"{pool_item.clock_limit}ws"
@@ -256,7 +256,7 @@ class ProgramsJob(TaskJob):
                             wt,
                             pool_item.stdout,
                             pool_item.stderr,
-                            f"Timeout after {timeout}",
+                            f"Timeout after {time_limit}",
                         )
                     )
                 else:
