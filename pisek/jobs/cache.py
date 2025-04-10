@@ -136,7 +136,8 @@ class Cache:
 
     def export(self) -> None:
         """Export cache into a file."""
-        with open(CACHE_CONTENT_FILE + ".tmp", "wb") as f:
+        temporary_path = CACHE_CONTENT_FILE + ".tmp"
+        with open(temporary_path, "wb") as f:
             pickle.dump(self.cache, f)
-        os.rename(CACHE_CONTENT_FILE + ".tmp", CACHE_CONTENT_FILE)
+        os.rename(temporary_path, CACHE_CONTENT_FILE)
         self.last_save = time.time()
