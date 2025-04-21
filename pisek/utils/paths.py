@@ -51,6 +51,10 @@ class TaskPath:
     def name(self) -> str:
         return os.path.basename(self.path)
 
+    @property
+    def abspath(self) -> str:
+        return os.path.abspath(self.path)
+
     def __format__(self, __format_spec: str) -> str:
         match __format_spec:
             case "":
