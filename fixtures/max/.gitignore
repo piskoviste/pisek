@@ -1,4 +1,5 @@
 build/
 generated/
 tests/
+solve_py_cpp/target/
 .pisek/
