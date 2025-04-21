@@ -22,7 +22,7 @@ import signal
 import sys
 from typing import Optional
 
-from pisek.utils.util import clean_task_dir
+from pisek.utils.util import clean_task_dir, log_level_mapper
 from pisek.utils.text import eprint
 from pisek.utils.colors import ColorSettings
 from pisek.license import license, license_gnu
@@ -344,11 +344,12 @@ def main(argv):
         clean_directory(args)
 
     os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
+    log_level = os.getenv("LOG_LEVEL")
     open(LOG_FILE, "w").close()
     logging.basicConfig(
         filename=LOG_FILE,
         encoding="utf-8",
-        level=logging.INFO,
+        level=log_level_mapper(log_level),
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
 

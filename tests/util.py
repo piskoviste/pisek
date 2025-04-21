@@ -19,6 +19,7 @@ class TestFixture(unittest.TestCase):
 
     def setUp(self):
         os.environ["PISEK_DIRECTORY"] = "../pisek"
+        os.environ["LOG_LEVEL"] = "debug"
 
         if not self.fixture_path():
             return
