@@ -197,7 +197,11 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
             input_path,
             out,
             testcase_info.reference_output(
-                self._env, seed, solution=self.solution_label
+                self._env,
+                seed,
+                solution=(
+                    self.solution_label if self._env.config.judge_needs_out else None
+                ),
             ),
             test,
             seed,
