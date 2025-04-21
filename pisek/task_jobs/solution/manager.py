@@ -59,8 +59,8 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         jobs: list[Job] = []
 
         self._sols: dict[InputPath, RunSolution] = {}
-        self._judges: dict[InputPath, RunChecker] = {}
-        self._static_out_judges: dict[InputPath, RunChecker] = {}
+        self._checkers: dict[InputPath, RunChecker] = {}
+        self._static_out_checkers: dict[InputPath, RunChecker] = {}
 
         for sub_num, inputs in self._all_testcases().items():
             self.tests.append(TestJobGroup(self._env, sub_num))
@@ -77,10 +77,10 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         )
         if self._env.config.tests[test].new_in_test(input_path.name):
             self.tests[-1].new_run_jobs.append(self._sols[input_path])
-            self.tests[-1].new_jobs.append(self._judges[input_path])
+            self.tests[-1].new_jobs.append(self._checkers[input_path])
             self._sols[input_path].require()
         else:
-            self.tests[-1].previous_jobs.append(self._judges[input_path])
+            self.tests[-1].previous_jobs.append(self._checkers[input_path])
 
     def _generate_input_jobs(
         self,
@@ -122,7 +122,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         jobs: list[Job] = []
 
         run_sol: RunSolution
-        run_judge: RunChecker
+        run_checker: RunChecker
         if self._env.config.task_type == TaskType.batch:
             if (
                 testcase_info.generation_mode == TestcaseGenerationMode.static
@@ -132,13 +132,13 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
                 out = testcase_info.reference_output(self._env, seed)
                 jobs += self._check_output_jobs(out, None)
                 jobs.append(
-                    judge_j := checker_job(
+                    checker_j := checker_job(
                         inp, out, out, test, seed, Verdict.ok, self._env
                     )
                 )
-                self._static_out_judges[inp] = judge_j
+                self._static_out_checkers[inp] = checker_j
 
-            run_batch_sol, run_judge = self._create_batch_jobs(
+            run_batch_sol, run_checker = self._create_batch_jobs(
                 testcase_info, seed, test
             )
             run_sol = run_batch_sol
@@ -148,7 +148,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
             for add_job in self._check_output_jobs(
                 run_batch_sol.output.to_sanitized_output(), run_batch_sol
             ):
-                run_judge.add_prerequisite(add_job)
+                run_checker.add_prerequisite(add_job)
                 jobs.append(add_job)
 
             if self._env.config.judge_needs_out:
@@ -161,19 +161,19 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
                 )
                 jobs.append(link)
                 link.add_prerequisite(run_batch_sol)
-                run_judge.add_prerequisite(link)
+                run_checker.add_prerequisite(link)
             else:
-                run_judge.add_prerequisite(run_batch_sol)
+                run_checker.add_prerequisite(run_batch_sol)
 
-            jobs.append(run_judge)
+            jobs.append(run_checker)
 
         elif self._env.config.task_type == TaskType.interactive:
-            run_sol = run_judge = self._create_interactive_jobs(input_path, test)
+            run_sol = run_checker = self._create_interactive_jobs(input_path, test)
             jobs.append(run_sol)
 
         self._sols[input_path] = run_sol
-        self._judges[input_path] = run_judge
-        self.tests[-1].new_jobs.append(run_judge)
+        self._checkers[input_path] = run_checker
+        self.tests[-1].new_jobs.append(run_checker)
         self.tests[-1].new_run_jobs.append(run_sol)
 
         return jobs
@@ -193,7 +193,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         )
 
         out = input_path.to_output()
-        run_judge = checker_job(
+        run_checker = checker_job(
             input_path,
             out,
             testcase_info.reference_output(
@@ -204,9 +204,9 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
             None,
             self._env,
         )
-        run_judge.add_prerequisite(run_solution, name="run_solution")
+        run_checker.add_prerequisite(run_solution, name="run_solution")
 
-        return (run_solution, run_judge)
+        return (run_solution, run_checker)
 
     def _create_interactive_jobs(self, inp: InputPath, test: int) -> RunInteractive:
         """Create RunInteractive job for interactive task type."""
@@ -305,11 +305,11 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
 
         result["results"] = {}
         result["checker_outs"] = set()
-        for inp, checker_job in self._judges.items():
+        for inp, checker_job in self._checkers.items():
             result["results"][inp] = checker_job.result
             add_checker_out(checker_job)
 
-        for checker_job in self._static_out_judges.values():
+        for checker_job in self._static_out_checkers.values():
             add_checker_out(checker_job)
 
         result["tests"] = self._tests_results
