@@ -59,7 +59,7 @@ class ProgramPoolItem:
         for std in ("stdin", "stdout", "stderr"):
             attr = getattr(self, std)
             if isinstance(attr, TaskPath):
-                minibox_args.append(f"--{std}={attr.path}")
+                minibox_args.append(f"--{std}={attr.abspath}")
             elif getattr(self, std) is None:
                 minibox_args.append(f"--{std}=/dev/null")
 
@@ -75,7 +75,10 @@ class ProgramPoolItem:
         minibox_args.append(f"--meta={meta_file}")
 
         result["args"] = (
-            [minibox] + minibox_args + ["--run", "--", self.executable.path] + self.args
+            [minibox]
+            + minibox_args
+            + ["--run", "--", self.executable.abspath]
+            + self.args
         )
         return result
 
@@ -174,15 +177,19 @@ class ProgramsJob(TaskJob):
         """Runs all programs in execution pool."""
         running_pool: list[subprocess.Popen] = []
         meta_files: list[str] = []
-        minibox = TaskPath.executable_path(self._env, "minibox").path
+        tmp_dirs: list[str] = []
+        minibox = TaskPath.executable_path(self._env, "minibox").abspath
         for pool_item in self._program_pool:
             fd, meta_file = tempfile.mkstemp()
             os.close(fd)
             meta_files.append(meta_file)
 
             popen = pool_item.to_popen(minibox, meta_file)
-            logger.debug("Executing './" + " ".join(popen["args"]) + "'")
-            running_pool.append(subprocess.Popen(**popen))
+            logger.debug("Executing '" + " ".join(popen["args"]) + "'")
+
+            tmp_dir = tempfile.mkdtemp(prefix="pisek_")
+            tmp_dirs.append(tmp_dir)
+            running_pool.append(subprocess.Popen(**popen, cwd=tmp_dir))
 
         callback_exec = False
         while True:
@@ -196,8 +203,8 @@ class ProgramsJob(TaskJob):
                 break
 
         run_results = []
-        for pool_item, (process, meta_file) in zip(
-            self._program_pool, zip(running_pool, meta_files)
+        for pool_item, process, tmp_dir, meta_file in zip(
+            self._program_pool, running_pool, tmp_dirs, meta_files
         ):
             process.wait()
             assert process.stderr is not None  # To make mypy happy
@@ -206,7 +213,9 @@ class ProgramsJob(TaskJob):
                 meta_raw = f.read().strip().split("\n")
 
             assert meta_file.startswith("/tmp")  # Better safe then sorry
+            assert tmp_dir.startswith("/tmp")
             os.remove(meta_file)
+            os.removedirs(tmp_dir)
 
             meta = {key: val for key, val in map(lambda x: x.split(":", 1), meta_raw)}
             if process.returncode == 0:

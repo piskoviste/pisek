@@ -124,16 +124,16 @@ class RunCMSBatchJudge(RunCMSJudge, RunBatchChecker):
             self.judge,
             args=[
                 (
-                    self.input.path
+                    self.input.abspath
                     if config.judge_needs_in
                     else RunCMSBatchJudge._invalid_path("input")
                 ),
                 (
-                    self.correct_output.path
+                    self.correct_output.abspath
                     if config.judge_needs_out
                     else RunCMSBatchJudge._invalid_path("output")
                 ),
-                self.output.path,
+                self.output.abspath,
             ],
             stdout=self.points_file,
             stderr=self.checker_log_file,
