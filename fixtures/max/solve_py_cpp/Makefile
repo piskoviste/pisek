@@ -1,13 +1,13 @@
-all: out/run out/solve
+all: target/run target/solve
 
-out/run: run.py
-	@mkdir -p out
+target/run: run.py
+	@mkdir -p target
 	cp run.py $@
 	chmod +x $@
 
-out/solve: solve.c
-	@mkdir -p out
+target/solve: solve.c
+	@mkdir -p target
 	gcc $^ -o $@
 
 clean:
-	rm -rf out
+	rm -rf target

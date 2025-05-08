@@ -259,6 +259,7 @@ class Pascal(BuildBinary):
 
 class Make(BuildStrategy):
     name = BuildStrategyName.make
+    target_subdir: str = "target"
 
     @classmethod
     def applicable_on_files(cls, build: "BuildConfig", sources: list[str]) -> bool:
@@ -272,9 +273,11 @@ class Make(BuildStrategy):
         directory = os.listdir()[0]
         with ChangedCWD(directory):
             self._run_subprocess(["make"], self._build_section.program_name)
-            if not os.path.isdir("out"):
-                raise PipelineItemFailure("Makefile must create 'out/' directory")
-        return os.path.join(directory, "out")
+            if not os.path.isdir(self.target_subdir):
+                raise PipelineItemFailure(
+                    f"Makefile must create '{self.target_subdir}/' directory"
+                )
+        return os.path.join(directory, self.target_subdir)
 
 
 AUTO_STRATEGIES: list[type[BuildStrategy]] = [Python, Shell, C, Cpp, Pascal, Make]
