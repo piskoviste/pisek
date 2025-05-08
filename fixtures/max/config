@@ -40,6 +40,8 @@ tests=@all
 [solution_solve_bash]
 tests=@all
 
+[solution_solve_py_cpp]
+tests=@all
 
 [run_solution]
 time_limit=0.2
@@ -48,6 +50,9 @@ time_limit=0.2
 build=solve_judge
 [run_solution:solve_judge]
 build=solve_judge
+
+[run_solution:solve_py_cpp]
+process_limit=0
 
 [build_gen:gen]
 sources=gen/gen gen/random
