@@ -36,6 +36,11 @@ def eprint(msg, *args, **kwargs):
     print(msg, *args, file=sys.stderr, **kwargs)
 
 
+def fatal_user_error(msg, *args, **kwargs):
+    eprint(ColorSettings.colored(msg, "red"), *args, **kwargs)
+    exit(2)
+
+
 def warn(msg: str, err: type, strict: bool = False) -> None:
     """Warn if strict is False, otherwise raise error."""
     if strict:
