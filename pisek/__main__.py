@@ -25,7 +25,6 @@ from typing import Optional
 from pisek.utils.util import clean_task_dir
 from pisek.utils.text import eprint
 from pisek.utils.colors import ColorSettings
-from pisek.license import license, license_gnu
 from pisek.visualize import visualize
 from pisek.config.config_tools import update_and_replace_config
 from pisek.version import print_version
@@ -271,13 +270,6 @@ def main(argv):
         help="print bars SEGMENTS characters wide",
     )
 
-    # ------------------------------- pisek license -------------------------------
-
-    parser_license = subparsers.add_parser("license", help="print license")
-    parser_license.add_argument(
-        "--print", action="store_true", help="print entire license"
-    )
-
     # ------------------------------- pisek cms -------------------------------
 
     parser_cms = subparsers.add_parser("cms", help="import task into CMS")
@@ -332,9 +324,6 @@ def main(argv):
 
     if args.subcommand == "version":
         return print_version()
-    elif args.subcommand == "license":
-        print(license_gnu if args.print else license)
-        return 0
 
     if not is_task_dir(PATH, args.pisek_dir):
         # !!! Ensure this is always run before clean_directory !!!
