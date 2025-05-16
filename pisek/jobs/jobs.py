@@ -209,6 +209,7 @@ class Job(PipelineItem, CaptureInitParams):
         paths: AbstractSet[str],
         globs: AbstractSet[str],
         results: dict[str, Any],
+        cache: Cache,
     ) -> tuple[Optional[str], Optional[str]]:
         """Compute a signature (i.e. hash) of given envs, files and prerequisites results."""
         sign = hashlib.sha256()
@@ -231,9 +232,7 @@ class Job(PipelineItem, CaptureInitParams):
                 )
 
             if os.path.isfile(path):
-                with open(path, "rb") as f:
-                    file_sign = hashlib.file_digest(f, "sha256")
-                sign.update(f"{path}={file_sign.hexdigest()}\n".encode())
+                sign.update(f"{path}={cache.file_hash(path)}\n".encode())
             elif os.path.isdir(path):
                 sign.update(f"{path} is directory\n".encode())
             else:
@@ -254,26 +253,28 @@ class Job(PipelineItem, CaptureInitParams):
 
         return (sign.hexdigest(), None)
 
-    def _find_entry(self, cache_entries: list[CacheEntry]) -> Optional[CacheEntry]:
+    def _find_entry(self, cache: Cache) -> Optional[CacheEntry]:
         """Finds a corresponding CacheEntry for this Job."""
-        for cache_entry in cache_entries:
+        for cache_entry in cache[self.name]:
             sign, err = self._signature(
                 set(cache_entry.envs),
                 set(cache_entry.files),
                 set(cache_entry.globs),
                 self.prerequisites_results,
+                cache,
             )
             if cache_entry.signature == sign:
                 return cache_entry
         return None
 
-    def _export(self, result: Any) -> CacheEntry:
+    def _export(self, result: Any, cache: Cache) -> CacheEntry:
         """Export this job into CacheEntry."""
         sign, err = self._signature(
             self._accessed_envs,
             self._accessed_files,
             self._accessed_globs,
             self.prerequisites_results,
+            cache,
         )
         if sign is None:
             raise RuntimeError(
@@ -298,7 +299,7 @@ class Job(PipelineItem, CaptureInitParams):
         self.state = State.running
 
         cached = False
-        if self.name in cache and (entry := self._find_entry(cache[self.name])):
+        if self.name in cache and (entry := self._find_entry(cache)):
             logger.info(f"Loading cached '{self.name}'")
             cached = True
             cache.move_to_top(entry)
@@ -317,7 +318,7 @@ class Job(PipelineItem, CaptureInitParams):
 
         if self.state != State.failed:
             if not cached:
-                cache.add(self._export(self.result))
+                cache.add(self._export(self.result, cache))
             self.state = State.succeeded
 
     @abstractmethod

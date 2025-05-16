@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import hashlib
 import time
 from typing import Any, Iterable
 import os
@@ -27,6 +28,7 @@ from pisek.utils.paths import INTERNALS_DIR
 
 CACHE_VERSION_FILE = os.path.join(INTERNALS_DIR, "cache_version")
 CACHE_CONTENT_FILE = os.path.join(INTERNALS_DIR, "cache")
+HASH_INDEX_FILE = os.path.join(INTERNALS_DIR, "hash_index")
 SAVED_LAST_SIGNATURES = 5
 CACHE_SAVE_INTERVAL = 1  # seconds
 
@@ -63,21 +65,30 @@ class CacheEntry:
 
 
 class Cache:
-    """Object representing all cached jobs."""
+    """Object for caching jobs and file hashes."""
 
     def __init__(self) -> None:
         os.makedirs(INTERNALS_DIR, exist_ok=True)
         with open(CACHE_VERSION_FILE, "w") as f:
             f.write(f"{__version__}\n")
         self.cache: dict[str, list[CacheEntry]] = {}
+        self.hash_index: dict[str, tuple[float, str]] = {}
         self.last_save = time.time()
 
     @classmethod
     def load(cls) -> "Cache":
         """Load cache file."""
-        if not os.path.exists(CACHE_VERSION_FILE) or not os.path.exists(
-            CACHE_CONTENT_FILE
-        ):
+        CACHE_FILES = [CACHE_VERSION_FILE, CACHE_CONTENT_FILE, HASH_INDEX_FILE]
+        cache_existence = list(map(os.path.exists, CACHE_FILES))
+
+        if not all(cache_existence):
+            if any(cache_existence):
+                eprint(
+                    ColorSettings.colored(
+                        "Incomplete cache found. Starting from scratch...",
+                        "yellow",
+                    )
+                )
             return Cache()
 
         with open(CACHE_VERSION_FILE) as f:
@@ -86,15 +97,15 @@ class Cache:
         if version != __version__:
             eprint(
                 ColorSettings.colored(
-                    "Different version of .pisek_cache file found. Starting from scratch...",
+                    "Different version of cache found. Starting from scratch...",
                     "yellow",
                 )
             )
             return Cache()
 
         cache = Cache()
-        with open(CACHE_CONTENT_FILE, "rb") as f:
-            cache.cache = pickle.load(f)
+        cache.cache = cls.pickle_load(CACHE_CONTENT_FILE)
+        cache.hash_index = cls.pickle_load(HASH_INDEX_FILE)
         return cache
 
     def add(self, cache_entry: CacheEntry):
@@ -134,10 +145,30 @@ class Cache:
                 f"Cannot move to top entry which is not in Cache:\n{entry}"
             )
 
+    @staticmethod
+    def pickle_load(path: str) -> Any:
+        with open(path, "rb") as f:
+            return pickle.load(f)
+
+    @staticmethod
+    def pickle_dump(obj: Any, path: str) -> None:
+        """Atomic pickle.dump."""
+        tmp_path = path + ".tmp"
+        with open(tmp_path, "wb") as f:
+            pickle.dump(obj, f)
+        os.rename(tmp_path, path)
+
     def export(self) -> None:
         """Export cache into a file."""
-        temporary_path = CACHE_CONTENT_FILE + ".tmp"
-        with open(temporary_path, "wb") as f:
-            pickle.dump(self.cache, f)
-        os.rename(temporary_path, CACHE_CONTENT_FILE)
+        self.pickle_dump(self.cache, CACHE_CONTENT_FILE)
+        self.pickle_dump(self.hash_index, HASH_INDEX_FILE)
         self.last_save = time.time()
+
+    def file_hash(self, path: str):
+        mtime = os.path.getmtime(path)
+        if path not in self.hash_index or self.hash_index[path][0] != mtime:
+            with open(path, "rb") as f:
+                file_sign = hashlib.file_digest(f, "sha256")
+            self.hash_index[path] = (mtime, file_sign.hexdigest())
+
+        return self.hash_index[path][1]
