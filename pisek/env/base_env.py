@@ -64,10 +64,10 @@ class BaseEnv(ContextModel):
         function: Callable[["BaseEnv"], None],
     ) -> Callable[["BaseEnv"], None]:
         def recursive(self: "BaseEnv") -> None:
-            for direct_subenv in self._direct_subenvs:
+            for direct_subenv in super().__getattribute__("_direct_subenvs"):
                 recursive(super().__getattribute__(direct_subenv))
 
-            for dict_subenv in self._dict_subenvs:
+            for dict_subenv in super().__getattribute__("_dict_subenvs"):
                 subenv = super().__getattribute__(dict_subenv)
                 for subitem in subenv.values():
                     recursive(subitem)
@@ -79,7 +79,7 @@ class BaseEnv(ContextModel):
     @_recursive_call
     def clear_accesses(self) -> None:
         """Remove all logged accesses."""
-        self._accessed.clear()
+        super().__getattribute__("_accessed").clear()
 
     def get_accessed(self) -> set[tuple[str, ...]]:
         """Get all accessed field names in this env (and all subenvs)."""
