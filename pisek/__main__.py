@@ -23,7 +23,7 @@ import sys
 from typing import Optional
 
 from pisek.utils.util import clean_task_dir
-from pisek.utils.text import eprint
+from pisek.utils.text import eprint, fatal_user_error
 from pisek.utils.colors import ColorSettings
 from pisek.visualize import visualize
 from pisek.config.config_tools import update_and_replace_config
@@ -38,7 +38,7 @@ LOG_FILE = os.path.join(INTERNALS_DIR, "log")
 
 def sigint_handler(sig, frame):
     eprint("\rStopping...")
-    sys.exit(2)
+    sys.exit(130)
 
 
 @locked_folder
@@ -52,9 +52,10 @@ def test_task_path(path, solutions: Optional[list[str]] = None, **env_args):
 
 def test_solution(args):
     if args.solution is None:
-        eprint("Specify a solution name to test.")
-        eprint("Example:   pisek [--all_tests] test solution solve_slow_4b")
-        return 1
+        fatal_user_error(
+            "Specify a solution name to test.\n"
+            "Example:   pisek [--all_tests] test solution solve_slow_4b"
+        )
 
     eprint(f"Testing solution: {args.solution}")
     return test_task(args, solutions=[args.solution])
@@ -72,7 +73,7 @@ def clean_directory(args) -> bool:
     return clean_task_dir(task_dir, args.pisek_dir)
 
 
-def main(argv):
+def main(argv) -> int:
     parser = argparse.ArgumentParser(
         description=(
             "Tool for developing tasks for programming competitions. "
@@ -327,7 +328,7 @@ def main(argv):
 
     if not is_task_dir(PATH, args.pisek_dir):
         # !!! Ensure this is always run before clean_directory !!!
-        return 1
+        return 2
 
     if args.clean:
         clean_directory(args)
@@ -349,14 +350,13 @@ def main(argv):
         elif args.target == "all":
             result = test_task(args, solutions=None)
         else:
-            eprint(f"Unknown testing target: {args.target}")
-            exit(1)
+            raise RuntimeError(f"Unknown testing target: {args.target}")
 
     elif args.subcommand == "config":
         if args.config_subcommand == "update":
             result = not update_and_replace_config(PATH, args.pisek_dir)
         else:
-            raise RuntimeError(f"Unknown config command {args.config_subcommand}")
+            raise RuntimeError(f"Unknown config subcommand: {args.config_subcommand}")
 
     elif args.subcommand == "cms":
         args, unknown_args = parser.parse_known_args()
@@ -403,9 +403,7 @@ def main(argv):
 def main_wrapped():
     signal.signal(signal.SIGINT, sigint_handler)
     result = main(sys.argv[1:])
-
-    if result:
-        exit(1)
+    exit(result)
 
 
 if __name__ == "__main__":
