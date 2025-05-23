@@ -71,10 +71,10 @@ class RunOpendataJudge(RunBatchChecker):
     def _check(self) -> SolutionResult:
         envs = {}
         if self._env.config.judge_needs_in:
-            envs["TEST_INPUT"] = self.input.path
+            envs["TEST_INPUT"] = self.input.abspath
             self._access_file(self.input)
         if self._env.config.judge_needs_out:
-            envs["TEST_OUTPUT"] = self.correct_output.path
+            envs["TEST_OUTPUT"] = self.correct_output.abspath
             self._access_file(self.correct_output)
 
         result = self._run_program(

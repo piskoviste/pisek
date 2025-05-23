@@ -41,7 +41,7 @@ class CmsOldListInputs(GeneratorListInputs):
         run_result = self._run_program(
             ProgramType.gen,
             self.generator,
-            args=[gen_dir.path],
+            args=[gen_dir.abspath],
             stderr=LogPath.generator_log(self.generator.name),
         )
         self._access_dir(gen_dir)
