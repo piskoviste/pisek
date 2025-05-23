@@ -22,7 +22,7 @@ import signal
 import sys
 from typing import Optional
 
-from pisek.utils.util import clean_task_dir,log_level_mapper
+from pisek.utils.util import clean_task_dir, log_level_mapper
 from pisek.utils.text import eprint, fatal_user_error
 from pisek.utils.colors import ColorSettings
 from pisek.visualize import visualize
