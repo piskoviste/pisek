@@ -71,4 +71,4 @@ def log_level_mapper(log_level: str) -> int:
     elif log_level == "critical":
         return logging.CRITICAL
     else:
-        fatal_user_error(f"Invalid log level - {log_level}!, Please set a valid log level.")
+        fatal_user_error(f"Invalid log level - {log_level}.")

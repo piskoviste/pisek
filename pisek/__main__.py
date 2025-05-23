@@ -22,7 +22,7 @@ import signal
 import sys
 from typing import Optional
 
-from pisek.utils.util import clean_task_dir,log_level_mapper
+from pisek.utils.util import clean_task_dir, log_level_mapper
 from pisek.utils.text import eprint, fatal_user_error
 from pisek.utils.colors import ColorSettings
 from pisek.visualize import visualize
@@ -30,7 +30,12 @@ from pisek.config.config_tools import update_and_replace_config
 from pisek.version import print_version
 
 from pisek.jobs.task_pipeline import TaskPipeline
-from pisek.utils.pipeline_tools import run_pipeline, PATH, locked_folder, is_task_dir
+from pisek.utils.pipeline_tools import (
+    run_pipeline,
+    PATH,
+    locked_folder,
+    is_task_dir
+)
 from pisek.utils.paths import INTERNALS_DIR
 
 LOG_FILE = os.path.join(INTERNALS_DIR, "log")
@@ -93,7 +98,7 @@ def main(argv) -> int:
             "--time-limit",
             "-t",
             type=float,
-            help="override the time limit when importing to TIME_LIMIT seconds",
+            help="override the time limit when importing to TIME_LIMIT seconds"
         )
 
     def add_argument_dataset(parser):
@@ -146,11 +151,14 @@ def main(argv) -> int:
         help="subcommand to run", dest="subcommand", required=True
     )
 
-    # ------------------------------- pisek version -------------------------------
+    # --------------------------- pisek version ---------------------------
 
-    parser_version = subparsers.add_parser("version", help="print current version")
+    subparsers.add_parser(
+        "version",
+        help="print current version"
+    )
 
-    # ------------------------------- pisek test -------------------------------
+    # ----------------------------- pisek test -----------------------------
 
     parser_test = subparsers.add_parser("test", help="test task")
     parser_test.add_argument(
@@ -195,7 +203,10 @@ def main(argv) -> int:
         "-n",
         type=int,
         default=1,
-        help="test task REPEAT times giving generator different seeds. (Changes seeded inputs only.)",
+        help=(
+            "test task REPEAT times giving generator different seeds. "
+            "(Changes seeded inputs only.)",
+        )
     )
     parser_test.add_argument(
         "--all-inputs",
@@ -210,11 +221,11 @@ def main(argv) -> int:
         help="write test results to testing_log.json",
     )
 
-    # ------------------------------- pisek clean -------------------------------
+    # ---------------------------- pisek clean ----------------------------
 
-    parser_clean = subparsers.add_parser("clean", help="clean task directory")
+    subparsers.add_parser("clean", help="clean task directory")
 
-    # ------------------------------- pisek config -------------------------------
+    # ---------------------------- pisek config ----------------------------
 
     parser_config = subparsers.add_parser("config", help="manage task config")
     config_subparsers = parser_config.add_subparsers(
@@ -224,7 +235,7 @@ def main(argv) -> int:
         "update", help="update config to newest version (replaces the config)"
     )
 
-    # ------------------------------- pisek visualize -------------------------------
+    # ---------------------------- pisek visualize ---------------------------
 
     parser_visualize = subparsers.add_parser(
         "visualize", help="show solution statistics and closeness to limit"
@@ -278,10 +289,13 @@ def main(argv) -> int:
         help="subcommand to run", dest="cms_subcommand", required=True
     )
 
-    parser_cms_create = subparsers_cms.add_parser("create", help="create a new task")
+    parser_cms_create = subparsers_cms.add_parser(
+        "create",
+        help="create a new task"
+        )
     add_cms_import_arguments(parser_cms_create)
 
-    parser_cms_update = subparsers_cms.add_parser(
+    subparsers_cms.add_parser(
         "update", help="update the basic properties of an existing task"
     )
 
@@ -356,7 +370,9 @@ def main(argv) -> int:
         if args.config_subcommand == "update":
             result = not update_and_replace_config(PATH, args.pisek_dir)
         else:
-            raise RuntimeError(f"Unknown config subcommand: {args.config_subcommand}")
+            raise RuntimeError(
+                f"Unknown config subcommand: {args.config_subcommand}"
+            )
 
     elif args.subcommand == "cms":
         args, unknown_args = parser.parse_known_args()
