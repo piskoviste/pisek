@@ -338,7 +338,7 @@ def main(argv) -> int:
     logging.basicConfig(
         filename=LOG_FILE,
         encoding="utf-8",
-        level=log_level_mapper(os.getenv("LOG_LEVEL")),
+        level=log_level_mapper(os.getenv("LOG_LEVEL", "info")),
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
 
