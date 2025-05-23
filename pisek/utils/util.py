@@ -58,7 +58,7 @@ def clean_non_relevant_files(accessed_files: set[str]) -> None:
                 os.remove(path)
 
 
-def log_level_mapper(log_level: str) -> Union[int, None]:
+def log_level_mapper(log_level: str) -> int:
     log_level = log_level.lower()
     if log_level == "debug":
         return logging.DEBUG
