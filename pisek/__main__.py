@@ -334,12 +334,11 @@ def main(argv) -> int:
         clean_directory(args)
 
     os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
-    log_level = os.getenv("LOG_LEVEL")
     open(LOG_FILE, "w").close()
     logging.basicConfig(
         filename=LOG_FILE,
         encoding="utf-8",
-        level=log_level_mapper(log_level),
+        level=log_level_mapper(os.getenv("LOG_LEVEL")),
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
 

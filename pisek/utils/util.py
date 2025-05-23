@@ -20,7 +20,7 @@ import logging
 from typing import Optional
 
 from pisek.utils.paths import BUILD_DIR, TESTS_DIR, INTERNALS_DIR
-from pisek.utils.errors import ConfigError
+from pisek.utils.text import fatal_user_error
 
 
 class ChangedCWD:
@@ -71,4 +71,4 @@ def log_level_mapper(log_level: str) -> int:
     elif log_level == "critical":
         return logging.CRITICAL
     else:
-        ConfigError(f"Invalid log level - {log_level}!, Please set a valid log level.")
+        fatal_user_error(f"Invalid log level - {log_level}!, Please set a valid log level.")
