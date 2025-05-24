@@ -19,6 +19,7 @@ static_subdir=.
 name=@auto
 in_globs=@ith
 predecessors=
+skip_validation=false
 
 [test00]
 name=Samples

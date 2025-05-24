@@ -118,25 +118,31 @@ class DataManager(TaskJobManager, TestcaseInfoMixin):
                 jobs.extend(self._check_output_jobs(output_target_path, link))
 
         if self._env.config.validator is None:
-            self._warn(
-                "No validator specified in config.\n"
-                "It is recommended to set `validator` is section [tests]"
+            skips_all_validation = all(
+                test_config.skip_validation
+                for test_config in self._env.config.tests.values()
             )
+            if not skips_all_validation:
+                self._warn(
+                    "No validator specified in config.\n"
+                    "It is recommended to set `validator` is section [tests]"
+                )
         else:
             for test_num, testcases in self._testcase_infos.items():
                 for testcase in testcases:
                     if testcase.generation_mode == TestcaseGenerationMode.generated:
                         continue
+                    if self._env.config.tests[test_num].skip_validation:
+                        continue
 
-                    if test_num > 0:
-                        jobs.append(
-                            ValidatorJob(
-                                self._env,
-                                self._env.config.validator,
-                                testcase.input_path(self._env, None),
-                                test_num,
-                            )
+                    jobs.append(
+                        ValidatorJob(
+                            self._env,
+                            self._env.config.validator,
+                            testcase.input_path(self._env, None),
+                            test_num,
                         )
+                    )
 
         return jobs
 

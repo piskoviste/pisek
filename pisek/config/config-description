@@ -42,6 +42,7 @@ static_subdir=
 name=
 in_globs=
 predecessors=
+skip_validation=
 
 [test\d{2}]
 #!regex
