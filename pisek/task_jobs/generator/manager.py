@@ -202,9 +202,14 @@ class TestcaseInfoMixin(JobManager):
         if testcase_info.generation_mode == TestcaseGenerationMode.generated:
             jobs += self._check_input_jobs(input_path)
 
-        if self._env.config.validator is not None and test > 0:
+        if (
+            testcase_info.generation_mode == TestcaseGenerationMode.generated
+            and self._env.config.validator is not None
+        ):
             for t in range(self._env.config.tests_count):
                 if not self._env.config.tests[t].in_test(input_path.name):
+                    continue
+                if self._env.config.tests[t].skip_validation:
                     continue
 
                 jobs.append(
