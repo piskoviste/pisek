@@ -176,6 +176,10 @@ predecessors=
 # Inputs from these test are included into this test as well
 # @previous expands to previous test (or nothing if test has number <= 1)
 
+skip_validation=false
+# If true, do not validate this test
+# Defaults to false
+
 [test01]
 # Section for each test (indexed from one)
 # Keys default to [tests] keys if not set
@@ -183,6 +187,7 @@ name=Test 1
 points=3
 in_globs=01*.in
 predecessors=
+skip_validation=false
 
 [test00]
 # Section for samples test
@@ -259,7 +264,7 @@ tests=@auto
 build=@auto
 # Reference to the build section specifying how to build this program
 # @auto expands to '{program_type}:{subdir}/{program}', e.g. 'solution:solutions/solve' (default)
-# See [build] for more 
+# See [build] for more
 
 exec=@auto
 # Filename of the program to execute (without suffix)
@@ -399,7 +404,7 @@ fuzzing_thoroughness=250
 name=a-plus-b
 # Name of task, which will appear in the task URL (required for CMS commands)
 title=A plus B
-# The name of the task shown on the task description page 
+# The name of the task shown on the task description page
 # @name expands to the task name (default)
 submission_format=adder.%l
 # The name of the submitted file
