@@ -186,7 +186,7 @@ predecessors=
 
 [test00]
 # Section for samples test
-# Can be omitted and has the following defaults: (doesn't use [tests] defaults)
+# Can be omitted and has the following defaults:
 name=Samples
 points=0
 in_globs=sample*.in
