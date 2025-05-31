@@ -29,7 +29,7 @@ from pisek.task_jobs.solution.verdicts_eval import evaluate_verdicts
 from pisek.task_jobs.task_job import TaskHelper
 from pisek.task_jobs.task_manager import TaskJobManager
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
-from pisek.task_jobs.generator.manager import TestcaseInfoMixin
+from pisek.task_jobs.generator.generator_manager import TestcaseInfoMixin
 from pisek.task_jobs.solution.solution_result import Verdict, SolutionResult
 from pisek.task_jobs.solution.solution import (
     RunSolution,
