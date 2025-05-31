@@ -261,7 +261,7 @@ class Pascal(BuildBinary):
 
 class Make(BuildStrategy):
     name = BuildStrategyName.make
-    target_subdir: str = "target"
+    _target_subdir: str = "target"
 
     @classmethod
     def applicable_on_files(cls, build: "BuildConfig", sources: list[str]) -> bool:
@@ -274,17 +274,51 @@ class Make(BuildStrategy):
     def _build(self) -> str:
         directory = os.listdir()[0]
         with ChangedCWD(directory):
-            if os.path.exists(self.target_subdir):
+            if os.path.exists(self._target_subdir):
                 raise PipelineItemFailure(
-                    f"Makefile strategy: '{self.target_subdir}' already exists"
+                    f"Makefile strategy: '{self._target_subdir}' already exists"
                 )
-            os.makedirs(self.target_subdir)
+            os.makedirs(self._target_subdir)
             self._run_subprocess(["make"], self._build_section.program_name)
-            if not os.path.isdir(self.target_subdir):
+            if not os.path.isdir(self._target_subdir):
                 raise PipelineItemFailure(
-                    f"Makefile must create '{self.target_subdir}/' directory"
+                    f"Makefile must create '{self._target_subdir}/' directory"
                 )
-        return os.path.join(directory, self.target_subdir)
+        return os.path.join(directory, self._target_subdir)
 
 
-AUTO_STRATEGIES: list[type[BuildStrategy]] = [Python, Shell, C, Cpp, Pascal, Make]
+class Cargo(BuildStrategy):
+    name = BuildStrategyName.cargo
+    _target_subdir: str = "target"
+
+    @classmethod
+    def applicable_on_files(cls, build: "BuildConfig", sources: list[str]) -> bool:
+        return False
+
+    @classmethod
+    def applicable_on_directory(cls, build: "BuildConfig", directory: str) -> bool:
+        return os.path.exists(os.path.join(directory, "Cargo.toml"))
+
+    def _build(self) -> str:
+        directory = os.listdir()[0]
+        with ChangedCWD(directory):
+            if os.path.exists(self._target_subdir):
+                raise PipelineItemFailure(
+                    f"Cargo strategy: '{self._target_subdir}' already exists"
+                )
+            self._run_subprocess(
+                ["cargo", "build", "--release", "--workspace", "--bins"],
+                self._build_section.program_name,
+            )
+        return os.path.join(directory, self._target_subdir, "release")
+
+
+AUTO_STRATEGIES: list[type[BuildStrategy]] = [
+    Python,
+    Shell,
+    C,
+    Cpp,
+    Pascal,
+    Make,
+    Cargo,
+]

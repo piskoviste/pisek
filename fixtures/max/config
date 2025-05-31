@@ -43,6 +43,9 @@ tests=@all
 [solution_solve_py_cpp]
 tests=@all
 
+[solution_solve_rs]
+tests=@all
+
 [run_solution]
 time_limit=0.2
 
@@ -53,6 +56,9 @@ build=solve_judge
 
 [run_solution:solve_py_cpp]
 process_limit=0
+
+[run_solution:solve_rs]
+exec=solve_rs/solve_max
 
 [build_gen:gen]
 sources=gen/gen gen/random
