@@ -32,8 +32,8 @@ from pisek.task_jobs.task_manager import (
 
 from pisek.jobs.jobs import JobManager
 from pisek.task_jobs.tools import ToolsManager
-from pisek.task_jobs.data.manager import DataManager
-from pisek.task_jobs.generator.manager import (
+from pisek.task_jobs.data.data_manager import DataManager
+from pisek.task_jobs.generator.generator_manager import (
     PrepareGenerator,
     RunGenerator,
     TestcaseInfoMixin,
