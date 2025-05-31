@@ -111,6 +111,26 @@ class BuildStrategy(ABC):
         except FileNotFoundError:
             raise PipelineItemFailure(f"Missing tool: {tool}")
 
+    def _run_subprocess(self, args: list[str], program: str, **kwargs) -> None:
+        self._check_tool(args[0])
+
+        logger.debug("Building '" + " ".join(args) + "'")
+        comp = subprocess.Popen(
+            args, **kwargs, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        while comp.stderr is not None:
+            line = comp.stderr.readline().decode()
+            if not line:
+                break
+            self._print(line, end="", stderr=True)
+
+        comp.wait()
+        if comp.returncode != 0:
+            raise PipelineItemFailure(
+                f"Build of {program} failed.\n"
+                + tab(self._env.colored(" ".join(args), "yellow"))
+            )
+
 
 class BuildScript(BuildStrategy):
     @classmethod
@@ -133,25 +153,6 @@ class BuildBinary(BuildStrategy):
     @classmethod
     def applicable_on_directory(cls, build: "BuildConfig", directory: str) -> bool:
         return False
-
-    def _run_compilation(self, args: list[str], program: str, **kwargs) -> str:
-        self._check_tool(args[0])
-
-        logger.debug("Compiling '" + " ".join(args) + "'")
-        comp = subprocess.Popen(args, **kwargs, stderr=subprocess.PIPE)
-        while comp.stderr is not None:
-            line = comp.stderr.readline().decode()
-            if not line:
-                break
-            self._print(line, end="", stderr=True)
-
-        comp.wait()
-        if comp.returncode != 0:
-            raise PipelineItemFailure(
-                f"Compilation of {program} failed.\n"
-                + tab(self._env.colored(" ".join(args), "yellow"))
-            )
-        return self.target
 
 
 class Python(BuildScript):
@@ -209,12 +210,13 @@ class C(BuildBinary):
             "-fdiagnostics-color=" + ("never" if self._env.no_colors else "always")
         )
 
-        return self._run_compilation(
+        self._run_subprocess(
             ["gcc", *self.sources, "-o", self.target, "-I."]
             + c_flags
             + self._build_section.comp_args,
             self._build_section.program_name,
         )
+        return self.target
 
 
 class Cpp(BuildBinary):
@@ -232,12 +234,13 @@ class Cpp(BuildBinary):
             "-fdiagnostics-color=" + ("never" if self._env.no_colors else "always")
         )
 
-        return self._run_compilation(
+        self._run_subprocess(
             ["g++", *self.sources, "-o", self.target, "-I."]
             + cpp_flags
             + self._build_section.comp_args,
             self._build_section.program_name,
         )
+        return self.target
 
 
 class Pascal(BuildBinary):
@@ -249,10 +252,39 @@ class Pascal(BuildBinary):
 
     def _build(self) -> str:
         pas_flags = ["-gl", "-O3", "-Sg", "-o" + self.target, "-FE."]
-        return self._run_compilation(
+        self._run_subprocess(
             ["fpc"] + pas_flags + self.sources + self._build_section.comp_args,
             self._build_section.program_name,
         )
+        return self.target
 
 
-AUTO_STRATEGIES: list[type[BuildStrategy]] = [Python, Shell, C, Cpp, Pascal]
+class Make(BuildStrategy):
+    name = BuildStrategyName.make
+    target_subdir: str = "target"
+
+    @classmethod
+    def applicable_on_files(cls, build: "BuildConfig", sources: list[str]) -> bool:
+        return False
+
+    @classmethod
+    def applicable_on_directory(cls, build: "BuildConfig", directory: str) -> bool:
+        return os.path.exists(os.path.join(directory, "Makefile"))
+
+    def _build(self) -> str:
+        directory = os.listdir()[0]
+        with ChangedCWD(directory):
+            if os.path.exists(self.target_subdir):
+                raise PipelineItemFailure(
+                    f"Makefile strategy: '{self.target_subdir}' already exists"
+                )
+            os.makedirs(self.target_subdir)
+            self._run_subprocess(["make"], self._build_section.program_name)
+            if not os.path.isdir(self.target_subdir):
+                raise PipelineItemFailure(
+                    f"Makefile must create '{self.target_subdir}/' directory"
+                )
+        return os.path.join(directory, self.target_subdir)
+
+
+AUTO_STRATEGIES: list[type[BuildStrategy]] = [Python, Shell, C, Cpp, Pascal, Make]
