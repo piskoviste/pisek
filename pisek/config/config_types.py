@@ -75,6 +75,7 @@ class BuildStrategyName(StrEnum):
     cpp = auto()
     pascal = auto()
     make = auto()
+    cargo = auto()
     auto = auto()
 
 
