@@ -63,9 +63,6 @@ build=solve_judge
 [run_solution:solve_py_cpp]
 process_limit=0
 
-[run_solution:solve_rs_simple]
-exec=solve_rs_simple/solve_max
-
 [run_solution:solve_rs_complex_min]
 build=solve_rs_complex
 exec=solve_rs_complex/min
