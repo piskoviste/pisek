@@ -118,14 +118,14 @@ class BuildStrategy(ABC):
 
         logger.debug("Building '" + " ".join(args) + "'")
         comp = subprocess.Popen(
-            args, **kwargs, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            args, **kwargs, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
         )
 
         assert comp.stderr is not None
         assert comp.stdout is not None
 
         while True:
-            line = comp.stderr.readline().decode()
+            line = comp.stderr.readline()
             if not line:
                 break
             self._print(line, end="", stderr=True)
