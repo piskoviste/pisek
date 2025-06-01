@@ -1,0 +1,17 @@
+[package]
+name = "solve"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "max"
+path = "src/bin/max.rs"
+
+[[bin]]
+name = "min"
+path = "src/bin/min.rs"
+
+[dependencies]
+anyhow = "1.0.98"
+minmax = { version = "0.1.0", path = "../minmax" }
+token-read = "0.2.0"

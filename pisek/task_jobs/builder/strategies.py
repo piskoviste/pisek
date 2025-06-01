@@ -16,6 +16,8 @@ import logging
 import inspect
 import subprocess
 import os
+import json
+import shutil
 from typing import Optional, TYPE_CHECKING
 
 from pisek.utils.util import ChangedCWD
@@ -111,7 +113,7 @@ class BuildStrategy(ABC):
         except FileNotFoundError:
             raise PipelineItemFailure(f"Missing tool: {tool}")
 
-    def _run_subprocess(self, args: list[str], program: str, **kwargs) -> None:
+    def _run_subprocess(self, args: list[str], program: str, **kwargs) -> str:
         self._check_tool(args[0])
 
         logger.debug("Building '" + " ".join(args) + "'")
@@ -130,6 +132,7 @@ class BuildStrategy(ABC):
                 f"Build of {program} failed.\n"
                 + tab(self._env.colored(" ".join(args), "yellow"))
             )
+        return comp.stdout.read()
 
 
 class BuildScript(BuildStrategy):
@@ -290,6 +293,7 @@ class Make(BuildStrategy):
 class Cargo(BuildStrategy):
     name = BuildStrategyName.cargo
     _target_subdir: str = "target"
+    _artifact_dir: str = ".pisek-executables"
 
     @classmethod
     def applicable_on_files(cls, build: "BuildConfig", sources: list[str]) -> bool:
@@ -301,16 +305,45 @@ class Cargo(BuildStrategy):
 
     def _build(self) -> str:
         directory = os.listdir()[0]
+
         with ChangedCWD(directory):
             if os.path.exists(self._target_subdir):
                 raise PipelineItemFailure(
                     f"Cargo strategy: '{self._target_subdir}' already exists"
                 )
-            self._run_subprocess(
-                ["cargo", "build", "--release", "--workspace", "--bins"],
+
+            output = self._run_subprocess(
+                [
+                    "cargo",
+                    "build",
+                    "--release",
+                    "--workspace",
+                    "--bins",
+                    "--message-format",
+                    "json",
+                    "--quiet",
+                    "--color",
+                    ("never" if self._env.no_colors else "always"),
+                ],
                 self._build_section.program_name,
             )
-        return os.path.join(directory, self._target_subdir, "release")
+
+        os.mkdir(self._artifact_dir)
+
+        for line in output.splitlines():
+            content = json.loads(line)
+
+            if content["reason"] != "compiler-artifact":
+                continue
+            if "bin" not in content["target"]["kind"]:
+                continue
+            exectable = content["executable"]
+
+            shutil.copy(
+                exectable, os.path.join(self._artifact_dir, os.path.basename(exectable))
+            )
+
+        return self._artifact_dir
 
 
 AUTO_STRATEGIES: list[type[BuildStrategy]] = [
