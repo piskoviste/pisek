@@ -17,8 +17,6 @@ from pisek.jobs.jobs import Job, PipelineItemFailure
 from pisek.config.config_types import TaskType
 from pisek.task_jobs.task_manager import TaskJobManager, GENERATOR_MAN_CODE
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
-from pisek.task_jobs.validator import ValidatorJob
-from pisek.task_jobs.generator.manager import TestcaseInfoMixin
 
 from .data import LinkData
 
@@ -26,7 +24,7 @@ TEST_SEED = 25265
 SHORTEN_INPUTS_CUTOFF = 3
 
 
-class DataManager(TaskJobManager, TestcaseInfoMixin):
+class DataManager(TaskJobManager):
     """Moves data to correct folders."""
 
     def __init__(self) -> None:
@@ -96,26 +94,24 @@ class DataManager(TaskJobManager, TestcaseInfoMixin):
             if mode in (TestcaseGenerationMode.static, TestcaseGenerationMode.mixed):
                 input_target_path = InputPath(self._env, f"{name}.in")
                 jobs.append(
-                    link := LinkData(
+                    LinkData(
                         self._env,
                         TaskPath.static_path(self._env, f"{name}.in"),
                         input_target_path.to_raw(self._env.config.in_format),
                     )
                 )
-                jobs.extend(self._check_input_jobs(input_target_path, link))
             if (
                 mode == TestcaseGenerationMode.static
                 and self._env.config.task_type != TaskType.interactive
             ):
                 output_target_path = OutputPath.static(f"{name}.out")
                 jobs.append(
-                    link := LinkData(
+                    LinkData(
                         self._env,
                         TaskPath.static_path(self._env, f"{name}.out"),
                         output_target_path.to_raw(self._env.config.out_format),
                     )
                 )
-                jobs.extend(self._check_output_jobs(output_target_path, link))
 
         if self._env.config.validator is None:
             skips_all_validation = all(
@@ -127,22 +123,6 @@ class DataManager(TaskJobManager, TestcaseInfoMixin):
                     "No validator specified in config.\n"
                     "It is recommended to set `validator` is section [tests]"
                 )
-        else:
-            for test_num, testcases in self._testcase_infos.items():
-                for testcase in testcases:
-                    if testcase.generation_mode == TestcaseGenerationMode.generated:
-                        continue
-                    if self._env.config.tests[test_num].skip_validation:
-                        continue
-
-                    jobs.append(
-                        ValidatorJob(
-                            self._env,
-                            self._env.config.validator,
-                            testcase.input_path(self._env, None),
-                            test_num,
-                        )
-                    )
 
         return jobs
 
