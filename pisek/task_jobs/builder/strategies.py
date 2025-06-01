@@ -120,7 +120,11 @@ class BuildStrategy(ABC):
         comp = subprocess.Popen(
             args, **kwargs, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        while comp.stderr is not None:
+
+        assert comp.stderr is not None
+        assert comp.stdout is not None
+
+        while True:
             line = comp.stderr.readline().decode()
             if not line:
                 break
@@ -329,6 +333,7 @@ class Cargo(BuildStrategy):
             )
 
         os.mkdir(self._artifact_dir)
+        exectables = []
 
         for line in output.splitlines():
             content = json.loads(line)
@@ -337,10 +342,17 @@ class Cargo(BuildStrategy):
                 continue
             if "bin" not in content["target"]["kind"]:
                 continue
-            exectable = content["executable"]
+            path = content["executable"]
 
-            shutil.copy(
-                exectable, os.path.join(self._artifact_dir, os.path.basename(exectable))
+            name = os.path.basename(path)
+            exectables.append(os.path.basename(name))
+
+            shutil.copy(path, os.path.join(self._artifact_dir, name))
+
+        if len(exectables) == 1 and exectables != ["run"]:
+            os.symlink(
+                exectables[0],
+                os.path.join(self._artifact_dir, "run"),
             )
 
         return self._artifact_dir
