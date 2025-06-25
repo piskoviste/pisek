@@ -123,14 +123,14 @@ class JudgeablePath(TaskPath):
         return LogPath(self.replace_suffix(f".{os.path.basename(judge)}.log").path)
 
 
-class SanitizablePath(TaskPath):
+class SanitizedPath(TaskPath):
     def to_raw(self, format: DataFormat) -> "RawPath":
         if format == DataFormat.binary:
             return RawPath(self.path)
         return RawPath(self.path + ".raw")
 
 
-class InputPath(SanitizablePath):
+class InputPath(SanitizedPath):
     def __init__(self, env: "Env", *path, solution: Optional[str] = None) -> None:
         if solution is None:
             super().__init__(TESTS_DIR, INPUTS_SUBDIR, *path)
@@ -144,7 +144,7 @@ class InputPath(SanitizablePath):
         return LogPath(self.replace_suffix(f".{os.path.basename(program)}.log").path)
 
 
-class OutputPath(JudgeablePath, SanitizablePath):
+class OutputPath(JudgeablePath, SanitizedPath):
     @staticmethod
     def static(*path) -> "OutputPath":
         return OutputPath(TESTS_DIR, INPUTS_SUBDIR, *path)
@@ -175,3 +175,6 @@ class RawPath(TaskPath):
 
     def to_second(self) -> TaskPath:
         return self.replace_suffix(".raw2")
+
+    def to_sanitization_log(self) -> LogPath:
+        return LogPath(self.replace_suffix(".sanitizer.log").path)

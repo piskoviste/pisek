@@ -18,16 +18,14 @@ from typing import cast, Any, Optional
 from hashlib import blake2b
 
 from pisek.env.env import Env
-from pisek.utils.paths import InputPath, OutputPath, SanitizablePath
+from pisek.utils.paths import InputPath, OutputPath, SanitizedPath
 from pisek.config.config_types import GenType, DataFormat
 from pisek.config.task_config import RunConfig
 from pisek.jobs.jobs import Job, JobManager
 from pisek.task_jobs.task_manager import TaskJobManager
-from pisek.task_jobs.program import RunResultKind
-from pisek.task_jobs.data.data import InputSmall, OutputSmall, LinkData
+from pisek.task_jobs.data.data import InputSmall, OutputSmall
 from pisek.task_jobs.tools import IsClean, Sanitize
 from pisek.task_jobs.validator import ValidatorJob
-from pisek.task_jobs.solution.solution import RunBatchSolution
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
 
 from .base_classes import (
@@ -289,7 +287,7 @@ class TestcaseInfoMixin(JobManager):
 
         return jobs
 
-    def _sanitize_job(self, path: SanitizablePath, format: DataFormat) -> Optional[Job]:
+    def _sanitize_job(self, path: SanitizedPath, format: DataFormat) -> Optional[Job]:
         if format == DataFormat.text:
             return Sanitize(self._env, path.to_raw(format), path)
         elif format == DataFormat.strict_text:
