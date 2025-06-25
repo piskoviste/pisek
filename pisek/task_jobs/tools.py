@@ -15,13 +15,15 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from abc import abstractmethod
+from dataclasses import dataclass
+from enum import Enum, auto
 from importlib.resources import files
 import os
 import subprocess
 
 from pisek.jobs.jobs import Job, PipelineItemFailure
 from pisek.env.env import Env
-from pisek.utils.paths import TaskPath
+from pisek.utils.paths import TaskPath, RawPath, SanitizedPath
 from pisek.task_jobs.task_job import TaskJob
 from pisek.task_jobs.task_manager import TaskJobManager
 from pisek.task_jobs.program import ProgramsJob
@@ -155,10 +157,25 @@ class PrepareShuffleJudge(PrepareJudgeLibChecker):
         )
 
 
+class SanitizationResultKind(Enum):
+    ok = auto()
+    changed = auto()
+    invalid = auto()
+    skipped = auto()
+
+
+@dataclass(frozen=True)
+class SanitizationResult:
+    kind: SanitizationResultKind
+    msg: str | None = None
+
+
 class TextPreprocAbstract(ProgramsJob):
     """Abstract job that has method for file sanitization."""
 
-    def _run_text_preproc(self, input_: TaskPath, output: TaskPath) -> None:
+    def _run_text_preproc(
+        self, input_: RawPath, output: SanitizedPath
+    ) -> SanitizationResult:
         try:
             os.remove(output.path)
         except FileNotFoundError:
@@ -168,11 +185,18 @@ class TextPreprocAbstract(ProgramsJob):
             "text-preproc",
             stdin=input_,
             stdout=output,
+            stderr=input_.to_sanitization_log(),
         )
-        if result.returncode != 42:
-            raise self._create_program_failure(
-                f"Text preprocessor failed on file: {input_:p}", result
-            )
+        msg = self._read_file(result.stderr_file)
+        if result.returncode == 42:
+            if self._files_equal(input_, output):
+                return SanitizationResult(SanitizationResultKind.ok, msg)
+            else:
+                return SanitizationResult(SanitizationResultKind.changed, msg)
+        elif result.returncode == 43:
+            return SanitizationResult(SanitizationResultKind.invalid, msg)
+        else:
+            raise RuntimeError(f"Text preprocessor failed on file {input_:p}.")
 
 
 class SanitizeAbstact(TaskJob):
@@ -181,23 +205,25 @@ class SanitizeAbstact(TaskJob):
         self.output = output
         super().__init__(env=env, **kwargs)
 
-    def _run(self) -> None:
+    def _run(self) -> SanitizationResult:
         result = self.prerequisites_results.get("create_source", None)
         if isinstance(result, RunResult) and result.kind != RunResultKind.OK:
             self._copy_file(self.input, self.output)
-            return
+            return SanitizationResult(SanitizationResultKind.skipped)
 
-        self._sanitize()
+        return self._sanitize()
 
     @abstractmethod
-    def _sanitize(self) -> None:
+    def _sanitize(self) -> SanitizationResult:
         pass
 
 
 class Sanitize(SanitizeAbstact, TextPreprocAbstract):
     """Sanitize text file using Text Preprocessor."""
 
-    def __init__(self, env: Env, input_: TaskPath, output: TaskPath, **kwargs) -> None:
+    def __init__(
+        self, env: Env, input_: RawPath, output: SanitizedPath, **kwargs
+    ) -> None:
         super().__init__(
             env, input_, output, name=f"Sanitize {input_:p} -> {output:p}", **kwargs
         )
@@ -209,14 +235,16 @@ class Sanitize(SanitizeAbstact, TextPreprocAbstract):
 class IsClean(SanitizeAbstact, TextPreprocAbstract):
     """Check that file is same after sanitizing with Text Preprocessor."""
 
-    def __init__(self, env: Env, input_: TaskPath, output: TaskPath, **kwargs) -> None:
+    def __init__(
+        self, env: Env, input_: RawPath, output: SanitizedPath, **kwargs
+    ) -> None:
         super().__init__(
             env, input_, output, name=f"Check {input_:p} is clean", **kwargs
         )
 
     def _sanitize(self):
-        self._run_text_preproc(self.input, self.output)
-        if not self._files_equal(self.input, self.output):
+        result = self._run_text_preproc(self.input, self.output)
+        if result.kind != SanitizationResultKind.ok:
             raise PipelineItemFailure(
                 f"File {self.input:p} is not clean. Check encoding, missing newline at the end or \\r."
             )
