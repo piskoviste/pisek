@@ -116,7 +116,7 @@ class RunChecker(ProgramsJob):
             ):
                 return RelativeSolutionResult(
                     Verdict.normalization_fail,
-                    "Output not normalized. (Check \\r\\n, missing last newline, BOM,...)",
+                    f"Output not normalized. (Check encoding, missing newline at the end or '\\r'.)",
                     self._solution_run_res,
                     None,
                     Decimal(0),

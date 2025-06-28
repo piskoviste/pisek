@@ -246,5 +246,5 @@ class IsClean(SanitizeAbstact, TextPreprocAbstract):
         result = self._run_text_preproc(self.input, self.output)
         if result.kind != SanitizationResultKind.ok:
             raise PipelineItemFailure(
-                f"File {self.input:p} is not clean. Check encoding, missing newline at the end or \\r."
+                f"File {self.input:p} not normalized. (Check encoding, missing newline at the end or '\\r'.)"
             )
