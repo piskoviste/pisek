@@ -187,7 +187,7 @@ class TextPreprocAbstract(ProgramsJob):
             stdout=output,
             stderr=input_.to_sanitization_log(),
         )
-        msg = self._read_file(result.stderr_file)
+        msg = self._read_file(result.stderr_file).strip()
         if result.returncode == 42:
             if self._files_equal(input_, output):
                 return SanitizationResult(SanitizationResultKind.ok, msg)
