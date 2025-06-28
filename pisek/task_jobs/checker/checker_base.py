@@ -18,6 +18,8 @@ from functools import cache
 from pisek.utils.text import tab
 from pisek.utils.paths import InputPath, OutputPath, LogPath
 from pisek.env.env import Env
+from pisek.config.config_types import DataFormat
+from pisek.task_jobs.tools import SanitizationResultKind
 from pisek.jobs.jobs import State, PipelineItemFailure
 from pisek.task_jobs.run_result import RunResult, RunResultKind
 from pisek.task_jobs.program import ProgramsJob
@@ -82,16 +84,7 @@ class RunChecker(ProgramsJob):
 
     def _run(self) -> SolutionResult:
         self._load_solution_run_res()
-        if self._solution_run_res.kind == RunResultKind.OK:
-            result = self._check()
-        elif self._solution_run_res.kind == RunResultKind.RUNTIME_ERROR:
-            result = RelativeSolutionResult(
-                Verdict.error, None, self._solution_run_res, None, Decimal(0)
-            )
-        elif self._solution_run_res.kind == RunResultKind.TIMEOUT:
-            result = RelativeSolutionResult(
-                Verdict.timeout, None, self._solution_run_res, None, Decimal(0)
-            )
+        result = self._get_solution_result()
 
         if (
             self.expected_verdict is not None
@@ -102,6 +95,46 @@ class RunChecker(ProgramsJob):
             )
 
         return result
+
+    def _get_solution_result(self) -> SolutionResult:
+        if self._solution_run_res.kind == RunResultKind.OK:
+            out_form = self._env.config.out_format
+            san_res = self.prerequisites_results.get("sanitize")
+            if san_res is None:
+                pass
+            elif san_res.kind == SanitizationResultKind.invalid:
+                return RelativeSolutionResult(
+                    Verdict.normalization_fail,
+                    san_res.msg,
+                    self._solution_run_res,
+                    None,
+                    Decimal(0),
+                )
+            elif (
+                out_form == DataFormat.strict_text
+                and san_res.kind == SanitizationResultKind.changed
+            ):
+                return RelativeSolutionResult(
+                    Verdict.normalization_fail,
+                    "Output not normalized. (Check \\r\\n, missing last newline, BOM,...)",
+                    self._solution_run_res,
+                    None,
+                    Decimal(0),
+                )
+
+            return self._check()
+        elif self._solution_run_res.kind == RunResultKind.RUNTIME_ERROR:
+            return RelativeSolutionResult(
+                Verdict.error, None, self._solution_run_res, None, Decimal(0)
+            )
+        elif self._solution_run_res.kind == RunResultKind.TIMEOUT:
+            return RelativeSolutionResult(
+                Verdict.timeout, None, self._solution_run_res, None, Decimal(0)
+            )
+
+        raise ValueError(
+            f"Invalid solution run result kind: '{self._solution_run_res.kind}'"
+        )
 
     def message(self) -> str:
         """Message about how checking ended."""

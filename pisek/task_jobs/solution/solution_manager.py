@@ -130,12 +130,12 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
             ):
                 inp = testcase_info.input_path(self._env, seed)
                 out = testcase_info.reference_output(self._env, seed)
-                jobs += self._check_output_jobs(out, None)
-                jobs.append(
-                    checker_j := checker_job(
-                        inp, out, out, test, seed, Verdict.ok, self._env
-                    )
+
+                checker_j = checker_job(
+                    inp, out, out, test, seed, Verdict.ok, self._env
                 )
+                jobs += self._check_output_jobs(out, checker_j, None)
+                jobs.append(checker_j)
                 self._static_out_checkers[inp] = checker_j
 
             run_batch_sol, run_checker = self._create_batch_jobs(
@@ -145,11 +145,9 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
 
             jobs.append(run_batch_sol)
 
-            for add_job in self._check_output_jobs(
-                run_batch_sol.output.to_sanitized_output(), run_batch_sol
-            ):
-                run_checker.add_prerequisite(add_job)
-                jobs.append(add_job)
+            jobs += self._check_output_jobs(
+                run_batch_sol.output.to_sanitized_output(), run_checker, run_batch_sol
+            )
 
             if self._env.config.judge_needs_out:
                 link = SymlinkData(
