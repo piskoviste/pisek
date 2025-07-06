@@ -40,7 +40,7 @@ from pisek.task_jobs.generator.generator_manager import (
 )
 from pisek.task_jobs.checker.fuzzing_manager import FuzzingManager
 from pisek.task_jobs.builder.build import BuildManager
-from pisek.task_jobs.solution.manager import SolutionManager
+from pisek.task_jobs.solution.solution_manager import SolutionManager
 from pisek.task_jobs.testing_log import CreateTestingLog
 from pisek.task_jobs.completeness_check import CompletenessCheck
 
