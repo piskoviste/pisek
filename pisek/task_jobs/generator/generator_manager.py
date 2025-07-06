@@ -205,7 +205,7 @@ class TestcaseInfoMixin(JobManager):
             for t in range(self._env.config.tests_count):
                 if not self._env.config.test_sections[t].in_test(input_path.name):
                     continue
-                if self._env.config.test_sections[t].skip_validation:
+                if not self._env.config.test_sections[t].checks_validate:
                     continue
 
                 jobs.append(

@@ -20,7 +20,8 @@ static_subdir=.
 name=@auto
 in_globs=@ith
 predecessors=
-skip_validation=false
+checks.validate=on
+checks.different_outputs=on
 
 [test00]
 name=Samples

@@ -17,14 +17,14 @@ static_subdir=.
 name=@auto
 in_globs=@ith
 predecessors=
-skip_validation=false
+checks.validate=on
 
 [test00]
 name=Samples
 points=0
 in_globs=sample*.in
 predecessors=
-skip_validation=true
+checks.validate=off
 
 [solutions]
 run=@auto

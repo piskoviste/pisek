@@ -398,7 +398,8 @@ class TestSection(BaseEnv):
     all_globs: list[str] = []
     direct_predecessors: list[int]
     all_predecessors: list[int] = []
-    skip_validation: bool
+    checks_validate: bool
+    checks_different_outputs: bool
 
     def in_test(self, filename: str) -> bool:
         return any(fnmatch.fnmatch(filename, g) for g in self.all_globs)
@@ -410,9 +411,18 @@ class TestSection(BaseEnv):
 
     @staticmethod
     def load_dict(number: ConfigValue, configs: ConfigHierarchy) -> ConfigValuesDict:
-        KEYS = ["name", "points", "in_globs", "predecessors", "skip_validation"]
-        args: dict[str, ConfigValue] = {
-            key: configs.get_from_candidates([(number.section, key), ("tests", key)])
+        KEYS = [
+            "name",
+            "points",
+            "in_globs",
+            "predecessors",
+            "checks.validate",
+            "checks.different_outputs",
+        ]
+        args: dict[str, Any] = {
+            key.replace(".", "_"): configs.get_from_candidates(
+                [(number.section, key), ("tests", key)]
+            )
             for key in KEYS
         }
         args["direct_predecessors"] = args.pop("predecessors")
