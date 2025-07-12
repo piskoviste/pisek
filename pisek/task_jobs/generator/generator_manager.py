@@ -25,7 +25,7 @@ from pisek.jobs.jobs import Job, JobManager
 from pisek.task_jobs.task_manager import TaskJobManager
 from pisek.task_jobs.data.data import InputSmall, OutputSmall
 from pisek.task_jobs.tools import IsClean, Sanitize
-from pisek.task_jobs.validator import ValidatorJob
+from pisek.task_jobs.validator.simple_validator import Simple0Validate
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
 from pisek.task_jobs.checker.checker_base import RunChecker
 
@@ -208,7 +208,7 @@ class TestcaseInfoMixin(JobManager):
                     continue
 
                 jobs.append(
-                    check_input := ValidatorJob(
+                    check_input := Simple0Validate(
                         self._env,
                         self._env.config.validator,
                         input_path,

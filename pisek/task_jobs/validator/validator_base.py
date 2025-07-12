@@ -1,9 +1,5 @@
 # pisek  - Tool for developing tasks for programming competitions.
 #
-# Copyright (c)   2019 - 2022 Václav Volhejn <vaclav.volhejn@gmail.com>
-# Copyright (c)   2019 - 2022 Jiří Beneš <mail@jiribenes.com>
-# Copyright (c)   2020 - 2022 Michal Töpfer <michal.topfer@gmail.com>
-# Copyright (c)   2022        Jiří Kalvoda <jirikalvoda@kam.mff.cuni.cz>
 # Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
 
 # This program is free software: you can redistribute it and/or modify
@@ -14,15 +10,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from abc import abstractmethod
+
 from pisek.env.env import Env
 from pisek.utils.paths import InputPath
 from pisek.config.task_config import ProgramType, RunConfig
-from pisek.task_jobs.run_result import RunResult, RunResultKind
+from pisek.task_jobs.run_result import RunResult
 from pisek.task_jobs.program import ProgramsJob
 
 
 class ValidatorJob(ProgramsJob):
-    """Runs validator on single input."""
+    """Runs validator on single input. (Abstract class)"""
 
     def __init__(
         self,
@@ -38,20 +36,28 @@ class ValidatorJob(ProgramsJob):
         self.input = input_
         self.log_file = input_.to_log(f"{validator.name}{test}")
 
+    @property
+    @abstractmethod
+    def _expected_returncode(self) -> int:
+        pass
+
+    @abstractmethod
+    def _validation_args(self) -> list[str]:
+        pass
+
     def _validate(self) -> RunResult:
         return self._run_program(
             ProgramType.validator,
             self.validator,
-            args=[str(self.test)],
+            args=self._validation_args(),
             stdin=self.input,
             stderr=self.log_file,
         )
 
-    def _run(self) -> RunResult:
+    def _run(self) -> None:
         result = self._validate()
-        if result.kind != RunResultKind.OK:
+        if result.returncode != self._expected_returncode:
             raise self._create_program_failure(
                 f"Validator failed on {self.input:p} (test {self.test}):",
                 result,
             )
-        return result
