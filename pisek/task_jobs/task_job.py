@@ -142,6 +142,11 @@ class TaskJob(Job, TaskHelper):
         return open(filename.path, mode, **kwargs)
 
     @_file_access(1)
+    def _read_file(self, filename: TaskPath):
+        with self._open_file(filename) as f:
+            return f.read()
+
+    @_file_access(1)
     def _exists(self, path: TaskPath) -> bool:
         return os.path.exists(path.path)
 

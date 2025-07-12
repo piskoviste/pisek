@@ -33,10 +33,16 @@ class Verdict(Enum):
     partial_ok = 2
     timeout = 3
     wrong_answer = 4
-    error = 5
+    normalization_fail = 5
+    error = 6
 
     def is_zero_point(self) -> bool:
-        return self in (Verdict.timeout, Verdict.wrong_answer, Verdict.error)
+        return self in (
+            Verdict.timeout,
+            Verdict.wrong_answer,
+            Verdict.error,
+            Verdict.normalization_fail,
+        )
 
     def mark(self) -> str:
         return {
@@ -45,6 +51,7 @@ class Verdict(Enum):
             Verdict.timeout: "T",
             Verdict.wrong_answer: "W",
             Verdict.error: "!",
+            Verdict.normalization_fail: "N",
         }[self]
 
     @staticmethod
@@ -136,6 +143,10 @@ TEST_SPEC: dict[str, tuple[Callable[[Verdict], bool], Callable[[Verdict], bool]]
     "W": (
         verdict_always,
         partial(specific_verdict, verdict=Verdict.wrong_answer),
+    ),
+    "N": (
+        verdict_always,
+        partial(specific_verdict, verdict=Verdict.normalization_fail),
     ),
     "!": (verdict_always, partial(specific_verdict, verdict=Verdict.error)),
     "T": (verdict_always, partial(specific_verdict, verdict=Verdict.timeout)),

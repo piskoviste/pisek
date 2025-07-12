@@ -18,17 +18,16 @@ from typing import cast, Any, Optional
 from hashlib import blake2b
 
 from pisek.env.env import Env
-from pisek.utils.paths import InputPath, OutputPath, SanitizablePath
+from pisek.utils.paths import InputPath, OutputPath, SanitizedPath
 from pisek.config.config_types import GenType, DataFormat
 from pisek.config.task_config import RunConfig
 from pisek.jobs.jobs import Job, JobManager
 from pisek.task_jobs.task_manager import TaskJobManager
-from pisek.task_jobs.program import RunResultKind
-from pisek.task_jobs.data.data import InputSmall, OutputSmall, LinkData
+from pisek.task_jobs.data.data import InputSmall, OutputSmall
 from pisek.task_jobs.tools import IsClean, Sanitize
 from pisek.task_jobs.validator import ValidatorJob
-from pisek.task_jobs.solution.solution import RunBatchSolution
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
+from pisek.task_jobs.checker.checker_base import RunChecker
 
 from .base_classes import (
     GeneratorListInputs,
@@ -262,7 +261,7 @@ class TestcaseInfoMixin(JobManager):
     ) -> list[Job]:
         jobs: list[Job] = []
 
-        sanitize = self._sanitize_job(input_path, self._env.config.in_format)
+        sanitize = self._sanitize_job(input_path, self._env.config.in_format, True)
         if sanitize is not None:
             jobs.append(sanitize)
             sanitize.add_prerequisite(prerequisite)
@@ -274,28 +273,37 @@ class TestcaseInfoMixin(JobManager):
         return jobs
 
     def _check_output_jobs(
-        self, output_path: OutputPath, prerequisite: Optional[Job]
+        self,
+        output_path: OutputPath,
+        checker_job: Optional[RunChecker] = None,
+        prerequisite: Optional[Job] = None,
     ) -> list[Job]:
         jobs: list[Job] = []
 
-        sanitize = self._sanitize_job(output_path, self._env.config.out_format)
+        sanitize = self._sanitize_job(output_path, self._env.config.out_format, False)
         if sanitize is not None:
             jobs.append(sanitize)
             sanitize.add_prerequisite(prerequisite, name="create_source")
+            if checker_job is not None:
+                checker_job.add_prerequisite(sanitize, name="sanitize")
 
         if self._env.config.limits.output_max_size != 0:
             jobs.append(out_small := OutputSmall(self._env, output_path))
             out_small.add_prerequisite(prerequisite)
+            if checker_job is not None:
+                checker_job.add_prerequisite(out_small)
 
         return jobs
 
-    def _sanitize_job(self, path: SanitizablePath, format: DataFormat) -> Optional[Job]:
-        if format == DataFormat.text:
-            return Sanitize(self._env, path.to_raw(format), path)
-        elif format == DataFormat.strict_text:
+    def _sanitize_job(
+        self, path: SanitizedPath, format: DataFormat, is_input: bool
+    ) -> Optional[Job]:
+        if format == DataFormat.binary:
+            return None
+        elif format == DataFormat.strict_text and is_input:
             return IsClean(self._env, path.to_raw(format), path)
         else:
-            return None
+            return Sanitize(self._env, path.to_raw(format), path)
 
     def _compute_result(self) -> dict[str, Any]:
         return {"inputs": list(sorted(self.inputs, key=lambda i: i.name))}

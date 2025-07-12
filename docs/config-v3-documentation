@@ -77,6 +77,9 @@ out_format=text
 #   strict-text ASCII printable characters. (default for in_format)
 #               All lines (including the last one) must already be terminated with a LF character.
 #   binary      Can be anything.
+#
+# If the input does not conform to in_format, failure is immediately reported.
+# If the output does not conform to out_format, it gets the 'normalization fail' verdict.
 
 validator=validate
 # Reference to the run section specifying how to run the validator
@@ -229,6 +232,7 @@ tests=X10
 # W - wrong answer
 # ! - runtime error
 # T - timeout
+# N - normalization fail
 # X - any result
 #
 # The result of a test is the result of the worst testcase.
