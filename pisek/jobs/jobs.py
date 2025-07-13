@@ -213,6 +213,7 @@ class Job(PipelineItem, CaptureInitParams):
     ) -> tuple[Optional[str], Optional[str]]:
         """Compute a signature (i.e. hash) of given envs, files and prerequisites results."""
         sign = hashlib.sha256()
+        sign.update(f"{self.__class__.__name__}\n".encode())
         for i, arg in enumerate(self._args):
             sign.update(f"{i}={arg}\n".encode())
         for key, val in self._kwargs.items():
