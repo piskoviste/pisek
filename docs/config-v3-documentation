@@ -87,6 +87,12 @@ validator=validate
 #
 # No value means no checking (default)
 
+validator_type=simple-42
+# Specifies the validator type (required for non-empty validator)
+# - simple-42 (recommended)
+# - simple-0
+# For more see docs/validator.md
+
 out_check=judge
 # Describes how to check outputs (required)
 #   - diff: compare with correct output (discouraged, can be slow in some cases)
@@ -194,7 +200,6 @@ skip_validation=false
 
 [test00]
 # Section for samples test
-# Can be omitted and has the following defaults:
 name=Samples
 points=0
 in_globs=sample*.in
