@@ -10,6 +10,7 @@ gen_type=
 in_format=
 out_format=
 validator=
+validator_type=
 
 out_check=
 out_judge=

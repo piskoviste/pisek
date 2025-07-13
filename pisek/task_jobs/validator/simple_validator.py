@@ -14,11 +14,22 @@ from pisek.task_jobs.validator.validator_base import ValidatorJob
 
 
 class Simple0Validate(ValidatorJob):
-    """Runs validator on single input."""
+    """Runs simple-0 validator on single input."""
 
     @property
     def _expected_returncode(self):
         return 0
+
+    def _validation_args(self):
+        return [str(self.test)]
+
+
+class Simple42Validate(ValidatorJob):
+    """Runs simple-42 validator on single input."""
+
+    @property
+    def _expected_returncode(self):
+        return 42
 
     def _validation_args(self):
         return [str(self.test)]

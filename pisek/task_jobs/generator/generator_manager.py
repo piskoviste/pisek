@@ -25,7 +25,8 @@ from pisek.jobs.jobs import Job, JobManager
 from pisek.task_jobs.task_manager import TaskJobManager
 from pisek.task_jobs.data.data import InputSmall, OutputSmall
 from pisek.task_jobs.tools import IsClean, Sanitize
-from pisek.task_jobs.validator.simple_validator import Simple0Validate
+from pisek.task_jobs.validator.validator_base import ValidatorJob
+from pisek.task_jobs.validator.validators import VALIDATORS
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
 from pisek.task_jobs.checker.checker_base import RunChecker
 
@@ -208,9 +209,7 @@ class TestcaseInfoMixin(JobManager):
                     continue
 
                 jobs.append(
-                    check_input := Simple0Validate(
-                        self._env,
-                        self._env.config.validator,
+                    check_input := self._validate(
                         input_path,
                         t,
                     )
@@ -218,6 +217,14 @@ class TestcaseInfoMixin(JobManager):
                 check_input.add_prerequisite(gen_inp)
 
         return jobs
+
+    def _validate(self, input_path: InputPath, test_num: int) -> ValidatorJob:
+        assert self._env.config.validator is not None
+        assert self._env.config.validator_type is not None
+
+        return VALIDATORS[self._env.config.validator_type](
+            self._env, self._env.config.validator, input_path, test_num
+        )
 
     def _generate_input_job(
         self, testcase_info: TestcaseInfo, seed: Optional[int]
