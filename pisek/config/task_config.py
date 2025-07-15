@@ -40,6 +40,7 @@ from pisek.config.config_hierarchy import ConfigValue, TaskConfigError, ConfigHi
 from pisek.config.config_types import (
     TaskType,
     GenType,
+    ValidatorType,
     OutCheck,
     JudgeType,
     ShuffleMode,
@@ -68,7 +69,11 @@ OptionalTaskPathFromStr = Annotated[
 ListTaskPathFromStr = Annotated[
     list[TaskPath], BeforeValidator(lambda s: [TaskPath(p) for p in s.split()])
 ]
-OptionalJudgeType = Annotated[Optional[JudgeType], BeforeValidator(lambda t: t or None)]
+
+OptionalValidatorType = Annotated[
+    ValidatorType | None, BeforeValidator(lambda t: t or None)
+]
+OptionalJudgeType = Annotated[JudgeType | None, BeforeValidator(lambda t: t or None)]
 OptionalShuffleMode = Annotated[
     Optional[ShuffleMode], BeforeValidator(lambda t: t or None)
 ]
@@ -105,17 +110,18 @@ class TaskConfig(BaseEnv):
     in_gen: OptionalRunConfig
     gen_type: GenType
     validator: OptionalRunConfig
+    validator_type: OptionalValidatorType
     out_check: OutCheck
     out_judge: OptionalRunConfig
     judge_type: OptionalJudgeType
-    judge_needs_in: Optional[bool]
-    judge_needs_out: Optional[bool]
-    tokens_ignore_newlines: Optional[bool]
-    tokens_ignore_case: Optional[bool]
+    judge_needs_in: bool | None
+    judge_needs_out: bool | None
+    tokens_ignore_newlines: bool | None
+    tokens_ignore_case: bool | None
     tokens_float_rel_error: OptionalFloat
     tokens_float_abs_error: OptionalFloat
     shuffle_mode: OptionalShuffleMode
-    shuffle_ignore_case: Optional[bool]
+    shuffle_ignore_case: bool | None
 
     in_format: DataFormat
     out_format: DataFormat
@@ -173,6 +179,7 @@ class TaskConfig(BaseEnv):
             ("tests", "in_gen"),
             ("tests", "gen_type"),
             ("tests", "validator"),
+            ("tests", "validator_type"),
             ("tests", "out_check"),
             ("tests", "in_format"),
             ("tests", "out_format"),
@@ -245,6 +252,12 @@ class TaskConfig(BaseEnv):
 
     @model_validator(mode="after")
     def validate_model(self):
+        if self.validator is not None and self.validator_type is None:
+            raise PydanticCustomError(
+                "no_validator_type",
+                "Missing validator_type",
+                {"validator": self.validator.name, "validator_type": ""},
+            )
         if self.task_type == TaskType.interactive and self.out_check != OutCheck.judge:
             raise PydanticCustomError(
                 "interactive_must_have_judge",

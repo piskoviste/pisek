@@ -31,6 +31,11 @@ class GenType(StrEnum):
     pisek_v1 = "pisek-v1"
 
 
+class ValidatorType(StrEnum):
+    simple_0 = "simple-0"
+    simple_42 = "simple-42"
+
+
 class JudgeType(StrEnum):
     cms_batch = "cms-batch"
     cms_communication = "cms-communication"

@@ -27,7 +27,7 @@ class ApplicabilityCondition(ABC):
         pass
 
 
-class HasKeyValue(ApplicabilityCondition):
+class KeyValueCond(ApplicabilityCondition):
     def __init__(
         self,
         section: "ConfigSectionDescription",
@@ -39,12 +39,26 @@ class HasKeyValue(ApplicabilityCondition):
         self.value = value
         super().__init__()
 
+    @abstractmethod
+    def _op(self, current_value) -> bool:
+        pass
+
     def check(self, section: str, config: "ConfigHierarchy") -> str:
         section = self.section.transform_name(section)
         current_value = self.key.get(config, section=section)
-        if current_value == self.value:
+        if self._op(current_value):
             return ""
         return f"[{section}] {self.key.key}={current_value}\n"
+
+
+class KeyHasValue(KeyValueCond):
+    def _op(self, current_value):
+        return self.value == current_value
+
+
+class KeyHasNotValue(KeyValueCond):
+    def _op(self, current_value):
+        return self.value != current_value
 
 
 class ConfigSectionDescription:
@@ -120,13 +134,27 @@ class ConfigKeysHelper:
                     elif fun == "if":
                         assert section is not None
                         assert last_key is not None
-                        if len(args) != 2 or args[1].count("=") != 1:
+
+                        if len(args) == 2 and args[1].count("==") == 1:
+                            key_name, value = args[1].split("==")
+                            add_applicability_conditions.append(
+                                (
+                                    last_key,
+                                    self._gen_key_has_value(args[0], key_name, value),
+                                )
+                            )
+                        elif len(args) == 2 and args[1].count("!=") == 1:
+                            key_name, value = args[1].split("!=")
+                            add_applicability_conditions.append(
+                                (
+                                    last_key,
+                                    self._gen_key_has_not_value(
+                                        args[0], key_name, value
+                                    ),
+                                )
+                            )
+                        else:
                             self._invalid_function_args(fun, args)
-                        key_name, value = args[1].split("=")
-                        # Key with key_name might not exist yet
-                        add_applicability_conditions.append(
-                            (last_key, self._gen_has_keyvalue(args[0], key_name, value))
-                        )
                     elif fun == "default":
                         if last_key is None:
                             if len(args) != 1:
@@ -170,13 +198,19 @@ class ConfigKeysHelper:
         for key, lambda_cond in add_applicability_conditions:
             key.applicability_conditions.append(lambda_cond())
 
-    def _gen_has_keyvalue(
+    def _gen_key_has_value(
         self, section: str, key: str, value: str
-    ) -> Callable[[], HasKeyValue]:
-        def f():
-            return HasKeyValue(self.sections[section], self.keys[(section, key)], value)
+    ) -> Callable[[], KeyValueCond]:
+        return lambda: KeyHasValue(
+            self.sections[section], self.keys[(section, key)], value
+        )
 
-        return f
+    def _gen_key_has_not_value(
+        self, section: str, key: str, value: str
+    ) -> Callable[[], KeyValueCond]:
+        return lambda: KeyHasNotValue(
+            self.sections[section], self.keys[(section, key)], value
+        )
 
     def _invalid_function_args(self, fun_name: str, args: list[str]) -> None:
         raise ValueError(
