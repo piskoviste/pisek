@@ -52,14 +52,14 @@ class BuildManager(TaskJobManager):
         self._built_sections: set[str] = set()
         jobs: list[Job | None] = []
 
-        jobs.append(self._build_program_job(self._env.config.in_gen))
-        jobs.append(self._build_program_job(self._env.config.validator))
+        jobs.append(self._build_program_job(self._env.config.tests.in_gen))
+        jobs.append(self._build_program_job(self._env.config.tests.validator))
         if self._env.target in (TestingTarget.solution, TestingTarget.all):
-            if self._env.config.out_check == OutCheck.judge:
-                jobs.append(self._build_program_job(self._env.config.out_judge))
-            elif self._env.config.out_check == OutCheck.tokens:
+            if self._env.config.tests.out_check == OutCheck.judge:
+                jobs.append(self._build_program_job(self._env.config.tests.out_judge))
+            elif self._env.config.tests.out_check == OutCheck.tokens:
                 jobs.append(PrepareTokenJudge(self._env))
-            elif self._env.config.out_check == OutCheck.shuffle:
+            elif self._env.config.tests.out_check == OutCheck.shuffle:
                 jobs.append(PrepareShuffleJudge(self._env))
 
             for solution in self._env.solutions:

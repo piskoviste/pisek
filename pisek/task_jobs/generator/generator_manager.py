@@ -60,9 +60,9 @@ class PrepareGenerator(TaskJobManager):
         super().__init__("Prepare generator")
 
     def _get_jobs(self) -> list[Job]:
-        assert self._env.config.in_gen is not None
+        assert self._env.config.tests.in_gen is not None
         jobs: list[Job] = [
-            list_inputs := list_inputs_job(self._env, self._env.config.in_gen),
+            list_inputs := list_inputs_job(self._env, self._env.config.tests.in_gen),
         ]
         self._list_inputs = list_inputs
 
@@ -79,7 +79,7 @@ def list_inputs_job(env: Env, generator: RunSection) -> GeneratorListInputs:
         GenType.pisek_v1: PisekV1ListInputs,
     }
 
-    return LIST_INPUTS[env.config.gen_type](env=env, generator=generator)
+    return LIST_INPUTS[env.config.tests.gen_type](env=env, generator=generator)
 
 
 def generate_input(
@@ -89,7 +89,7 @@ def generate_input(
         GenType.opendata_v1: OpendataV1Generate,
         GenType.cms_old: CmsOldGenerate,
         GenType.pisek_v1: PisekV1Generate,
-    }[env.config.gen_type](
+    }[env.config.tests.gen_type](
         env=env, generator=generator, testcase_info=testcase_info, seed=seed
     )
 
@@ -102,9 +102,9 @@ def generator_test_determinism(
         GenType.pisek_v1: PisekV1TestDeterminism,
     }
 
-    if env.config.gen_type not in TEST_DETERMINISM:
+    if env.config.tests.gen_type not in TEST_DETERMINISM:
         return None
-    return TEST_DETERMINISM[env.config.gen_type](
+    return TEST_DETERMINISM[env.config.tests.gen_type](
         env=env, generator=generator, testcase_info=testcase_info, seed=seed
     )
 
@@ -191,9 +191,9 @@ class TestcaseInfoMixin(JobManager):
             testcase_info.generation_mode == TestcaseGenerationMode.generated
             and test_determinism
         ):
-            assert self._env.config.in_gen is not None
+            assert self._env.config.tests.in_gen is not None
             test_det = generator_test_determinism(
-                self._env, self._env.config.in_gen, testcase_info, seed
+                self._env, self._env.config.tests.in_gen, testcase_info, seed
             )
             if test_det is not None:
                 jobs.append(test_det)
@@ -201,11 +201,11 @@ class TestcaseInfoMixin(JobManager):
 
         jobs += self._check_input_jobs(input_path)
 
-        if self._env.config.validator is not None:
+        if self._env.config.tests.validator is not None:
             for t in range(self._env.config.tests_count):
-                if not self._env.config.tests[t].in_test(input_path.name):
+                if not self._env.config.test_sections[t].in_test(input_path.name):
                     continue
-                if self._env.config.tests[t].skip_validation:
+                if self._env.config.test_sections[t].skip_validation:
                     continue
 
                 jobs.append(
@@ -219,19 +219,19 @@ class TestcaseInfoMixin(JobManager):
         return jobs
 
     def _validate(self, input_path: InputPath, test_num: int) -> ValidatorJob:
-        assert self._env.config.validator is not None
-        assert self._env.config.validator_type is not None
+        assert self._env.config.tests.validator is not None
+        assert self._env.config.tests.validator_type is not None
 
-        return VALIDATORS[self._env.config.validator_type](
-            self._env, self._env.config.validator, input_path, test_num
+        return VALIDATORS[self._env.config.tests.validator_type](
+            self._env, self._env.config.tests.validator, input_path, test_num
         )
 
     def _generate_input_job(
         self, testcase_info: TestcaseInfo, seed: Optional[int]
     ) -> GenerateInput:
-        assert self._env.config.in_gen is not None
+        assert self._env.config.tests.in_gen is not None
         gen_inp = generate_input(
-            self._env, self._env.config.in_gen, testcase_info, seed
+            self._env, self._env.config.tests.in_gen, testcase_info, seed
         )
         self._gen_inputs_job[seed] = gen_inp
         return gen_inp
@@ -268,7 +268,9 @@ class TestcaseInfoMixin(JobManager):
     ) -> list[Job]:
         jobs: list[Job] = []
 
-        sanitize = self._sanitize_job(input_path, self._env.config.in_format, True)
+        sanitize = self._sanitize_job(
+            input_path, self._env.config.tests.in_format, True
+        )
         if sanitize is not None:
             jobs.append(sanitize)
             sanitize.add_prerequisite(prerequisite)
@@ -287,7 +289,9 @@ class TestcaseInfoMixin(JobManager):
     ) -> list[Job]:
         jobs: list[Job] = []
 
-        sanitize = self._sanitize_job(output_path, self._env.config.out_format, False)
+        sanitize = self._sanitize_job(
+            output_path, self._env.config.tests.out_format, False
+        )
         if sanitize is not None:
             jobs.append(sanitize)
             sanitize.add_prerequisite(prerequisite, name="create_source")

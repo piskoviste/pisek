@@ -55,13 +55,13 @@ class TaskPipeline(JobPipeline):
             build := (BuildManager(), BUILD_MAN_CODE),
         ]
         build[0].add_prerequisite(*tools)
-        if env.config.in_gen is not None:
+        if env.config.tests.in_gen is not None:
             named_pipeline.append(generator := (PrepareGenerator(), GENERATOR_MAN_CODE))
             generator[0].add_prerequisite(*build)
         named_pipeline.append(inputs := (DataManager(), INPUTS_MAN_CODE))
 
         inputs[0].add_prerequisite(*build)
-        if env.config.in_gen is not None:
+        if env.config.tests.in_gen is not None:
             inputs[0].add_prerequisite(*generator)
 
         solutions = []
@@ -75,7 +75,7 @@ class TaskPipeline(JobPipeline):
         else:
             # First solution generates inputs
             assert (
-                not env.config.judge_needs_out
+                not env.config.tests.judge_needs_out
                 or env.solutions[0] == env.config.primary_solution
             )
 
@@ -111,8 +111,8 @@ class TaskPipeline(JobPipeline):
         if (
             env.target == TestingTarget.all
             and env.config.checks.fuzzing_thoroughness > 0
-            and env.config.task_type != TaskType.interactive
-            and env.config.out_check == OutCheck.judge
+            and env.config.task.task_type != TaskType.interactive
+            and env.config.tests.out_check == OutCheck.judge
         ):
             named_pipeline.append(fuzz_judge := (FuzzingManager(), FUZZ_MAN_CODE))
             fuzz_judge[0].add_prerequisite(*first_solution)

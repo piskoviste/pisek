@@ -36,7 +36,7 @@ class TaskJobManager(StatusJobManager, TaskHelper):
                 inp.input_path(self._env),
                 inp.reference_output(self._env),
             )
-            for inp in self._test_testcases(self._env.config.tests[0])
+            for inp in self._test_testcases(self._env.config.test_sections[0])
         ]
 
     def _test_testcases(self, test: TestSection) -> list[TestcaseInfo]:

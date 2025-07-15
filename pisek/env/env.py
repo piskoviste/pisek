@@ -99,7 +99,7 @@ class Env(BaseEnv):
             eprint(ColorSettings.colored(str(err), "red"))
             return None
 
-        if config.judge_needs_out:
+        if config.tests.judge_needs_out:
             if config.primary_solution in expanded_solutions:
                 expanded_solutions.remove(config.primary_solution)
             expanded_solutions.insert(0, config.primary_solution)

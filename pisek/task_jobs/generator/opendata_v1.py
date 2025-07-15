@@ -31,7 +31,7 @@ class OpendataV1ListInputs(GeneratorListInputs):
     def _run(self) -> list[TestcaseInfo]:
         return [
             TestcaseInfo.generated(f"{test:02}")
-            for test in self._env.config.tests
+            for test in self._env.config.test_sections
             if test != 0
         ]
 
@@ -58,7 +58,7 @@ class OpendataV1GeneratorJob(ProgramsJob):
             ProgramType.gen,
             self.generator,
             args=[str(test), f"{self.seed:016x}"],
-            stdout=self.input_path.to_raw(self._env.config.in_format),
+            stdout=self.input_path.to_raw(self._env.config.tests.in_format),
             stderr=self.input_path.to_log(self.generator.name),
         )
         if result.kind != RunResultKind.OK:

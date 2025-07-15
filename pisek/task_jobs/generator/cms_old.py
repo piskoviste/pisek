@@ -79,6 +79,6 @@ class CmsOldGenerate(GenerateInput):
     def _gen(self):
         self._link_file(
             TaskPath.generated_path(self._env, self.input_path.name),
-            self.input_path.to_raw(self._env.config.in_format),
+            self.input_path.to_raw(self._env.config.tests.in_format),
             overwrite=True,
         )

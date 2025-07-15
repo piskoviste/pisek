@@ -98,7 +98,7 @@ class TaskPath:
 
     @staticmethod
     def static_path(env: "Env", *path: str) -> "TaskPath":
-        return env.config.static_subdir.join(*path)
+        return env.config.tests.static_subdir.join(*path)
 
     @staticmethod
     def executable_path(env: "Env", *path: str) -> "TaskPath":

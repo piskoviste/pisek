@@ -114,9 +114,9 @@ class RunCMSBatchJudge(RunCMSJudge, RunBatchChecker):
         config = self._env.config
 
         self._access_file(self.output)
-        if config.judge_needs_in:
+        if config.tests.judge_needs_in:
             self._access_file(self.input)
-        if config.judge_needs_out:
+        if config.tests.judge_needs_out:
             self._access_file(self.correct_output)
 
         result = self._run_program(
@@ -125,12 +125,12 @@ class RunCMSBatchJudge(RunCMSJudge, RunBatchChecker):
             args=[
                 (
                     self.input.abspath
-                    if config.judge_needs_in
+                    if config.tests.judge_needs_in
                     else RunCMSBatchJudge._invalid_path("input")
                 ),
                 (
                     self.correct_output.abspath
-                    if config.judge_needs_out
+                    if config.tests.judge_needs_out
                     else RunCMSBatchJudge._invalid_path("output")
                 ),
                 self.output.abspath,

@@ -129,7 +129,9 @@ class SolutionResults:
 
     def _get_test(self, result: LoggedResult) -> int:
         return min(
-            i for i, sub in self._config.tests.items() if sub.new_in_test(result.test)
+            i
+            for i, sub in self._config.test_sections.items()
+            if sub.new_in_test(result.test)
         )
 
     def _evaluate_results(
@@ -179,7 +181,7 @@ class SolutionResults:
             [] for _ in range(self._config.tests_count)
         ]
         for res in self._results:
-            for num, sub in self._config.tests.items():
+            for num, sub in self._config.test_sections.items():
                 if sub.in_test(res.test):
                     by_test[num].append(res)
 
@@ -198,7 +200,7 @@ class SolutionResults:
     def check_points(self) -> Optional[str]:
         achieved = Decimal(0)
         results = self.get_by_test()
-        for num, sub in self._config.tests.items():
+        for num, sub in self._config.test_sections.items():
             achieved += min(map(lambda r: r.points(sub.points), results[num]))
 
         points = self._solution.points
@@ -216,9 +218,9 @@ class SolutionResults:
 
     def check_all(self) -> list[str]:
         fails = []
-        for num in self._config.tests:
+        for num in self._config.test_sections:
             if (err := self.check_test(num)) is not None:
-                fails.append(f"{err} on {self._config.tests[num].name}")
+                fails.append(f"{err} on {self._config.test_sections[num].name}")
         if (err := self.check_points()) is not None:
             fails.append(f"get {err}")
 
@@ -324,7 +326,7 @@ def visualize(
                     err_msg = ColorSettings.colored(f" should result {test_err}", "red")
                     wrong_solutions[sol] = True
 
-                print(tab(f"{config.tests[num].name}{err_msg}"))
+                print(tab(f"{config.test_sections[num].name}{err_msg}"))
                 for res in filter_fn(group_res):
                     print(
                         tab(tab(res.to_str(time_limit, segment_cnt, max_test_length)))
@@ -353,7 +355,7 @@ def visualize(
     min_possible = 0.0
     max_possible = inf
     for sol, sol_res in results.items():
-        for num in config.tests:
+        for num in config.test_sections:
             a, b = sol_res.get_time_limit_range(num)
             min_possible = max(a, min_possible)
             max_possible = min(b, max_possible)

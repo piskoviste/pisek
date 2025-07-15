@@ -50,31 +50,49 @@ def create_dataset(
 
     check_key(
         "out_check",
-        config.out_check,
+        config.tests.out_check,
         lambda v: v in (OutCheck.diff, OutCheck.judge, OutCheck.tokens),
     )
-    if config.out_check == OutCheck.tokens:
-        check_key("tokens_ignore_case", config.tokens_ignore_case, lambda v: not v)
+    if config.tests.out_check == OutCheck.tokens:
         check_key(
-            "tokens_ignore_newlines", config.tokens_ignore_newlines, lambda v: not v
+            "tokens_ignore_case", config.tests.tokens_ignore_case, lambda v: not v
         )
         check_key(
-            "tokens_float_abs_error", config.tokens_float_abs_error, lambda v: v is None
+            "tokens_ignore_newlines",
+            config.tests.tokens_ignore_newlines,
+            lambda v: not v,
         )
         check_key(
-            "tokens_float_rel_error", config.tokens_float_rel_error, lambda v: v is None
+            "tokens_float_abs_error",
+            config.tests.tokens_float_abs_error,
+            lambda v: v is None,
         )
-    if config.out_check == OutCheck.judge and config.task_type == TaskType.batch:
-        check_key("judge_type", config.judge_type, lambda t: t == JudgeType.cms_batch)
-    if config.out_check == OutCheck.judge and config.task_type == TaskType.interactive:
         check_key(
-            "judge_type", config.judge_type, lambda t: t == JudgeType.cms_communication
+            "tokens_float_rel_error",
+            config.tests.tokens_float_rel_error,
+            lambda v: v is None,
+        )
+    if (
+        config.tests.out_check == OutCheck.judge
+        and config.task.task_type == TaskType.batch
+    ):
+        check_key(
+            "judge_type", config.tests.judge_type, lambda t: t == JudgeType.cms_batch
+        )
+    if (
+        config.tests.out_check == OutCheck.judge
+        and config.task.task_type == TaskType.interactive
+    ):
+        check_key(
+            "judge_type",
+            config.tests.judge_type,
+            lambda t: t == JudgeType.cms_communication,
         )
 
-    if config.task_type == TaskType.batch:
+    if config.task.task_type == TaskType.batch:
         check_key(
             "out_format",
-            config.out_format,
+            config.tests.out_format,
             lambda t: t in (DataFormat.strict_text, DataFormat.binary),
         )
 
@@ -83,18 +101,18 @@ def create_dataset(
     task_type: str
     task_params: Any
 
-    if config.task_type == TaskType.batch:
+    if config.task.task_type == TaskType.batch:
         task_type = "Batch"
         task_params = (
             "grader" if config.cms.stubs else "alone",
             ("", ""),
-            "comparator" if config.out_check == OutCheck.judge else "diff",
+            "comparator" if config.tests.out_check == OutCheck.judge else "diff",
         )
-    elif config.task_type == TaskType.interactive:
+    elif config.task.task_type == TaskType.interactive:
         task_type = "Communication"
         task_params = (1, "stub" if config.cms.stubs else "alone", "std_io")
     else:
-        raise RuntimeError(f"Cannot upload {config.task_type} task to CMS")
+        raise RuntimeError(f"Cannot upload {config.task.task_type} task to CMS")
 
     dataset = Dataset(
         description=description,
@@ -112,7 +130,9 @@ def create_dataset(
 
     files = FileCacher()
 
-    outputs_needed = config.task_type == TaskType.batch and config.judge_needs_out
+    outputs_needed = (
+        config.task.task_type == TaskType.batch and config.tests.judge_needs_out
+    )
 
     for input_ in testcases:
         name = input_.name.removesuffix(".in")
@@ -136,7 +156,7 @@ def create_dataset(
 def get_group_score_parameters(config: TaskConfig) -> list[tuple[int, str]]:
     params = []
 
-    for subtask in config.tests.values():
+    for subtask in config.test_sections.values():
         globs = map(strip_input_extention, subtask.all_globs)
         params.append((subtask.points, globs_to_regex(globs)))
 
@@ -172,19 +192,19 @@ def globs_to_regex(globs: Iterator[str]) -> str:
 def add_judge(session: Session, files: FileCacher, env: Env, dataset: Dataset):
     config: TaskConfig = env.config
 
-    if config.out_check != OutCheck.judge:
+    if config.tests.out_check != OutCheck.judge:
         return
 
-    assert config.out_judge is not None
+    assert config.tests.out_judge is not None
 
-    run_section = config.out_judge
+    run_section = config.tests.out_judge
     judge_path = TaskPath.executable_path(
         env, path.splitext(run_section.exec.name)[0]
     ).path
 
-    if config.task_type == TaskType.batch:
+    if config.task.task_type == TaskType.batch:
         judge_name = "checker"
-    elif config.task_type == TaskType.interactive:
+    elif config.task.task_type == TaskType.interactive:
         judge_name = "manager"
 
     judge = files.put_file_from_path(judge_path, f"{judge_name} for {config.cms.name}")
@@ -211,9 +231,9 @@ def add_stubs(session: Session, files: FileCacher, env: Env, dataset: Dataset):
     if not config.cms.stubs:
         return
 
-    if config.task_type == TaskType.batch:
+    if config.task.task_type == TaskType.batch:
         stub_basename = "grader"
-    elif config.task_type == TaskType.interactive:
+    elif config.task.task_type == TaskType.interactive:
         stub_basename = "stub"
 
     exts = set()

@@ -138,7 +138,7 @@ def check_results(session: Session, env: Env, dataset: Dataset) -> bool:
 
         print(message)
 
-        subtasks: list[tuple[int, TestSection]] = list(config.tests.items())
+        subtasks: list[tuple[int, TestSection]] = list(config.test_sections.items())
         fractions = get_subtask_score_fractions(result.score_details)
 
         if fractions is None or len(fractions) != len(subtasks):

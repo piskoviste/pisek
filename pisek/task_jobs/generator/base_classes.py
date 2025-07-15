@@ -92,7 +92,7 @@ class GeneratorTestDeterminism(ProgramsJob):
         )
 
     def _run(self) -> None:
-        input_path = self.input_path.to_raw(self._env.config.in_format)
+        input_path = self.input_path.to_raw(self._env.config.tests.in_format)
         original = input_path.to_second()
         self._rename_file(input_path, original)
         self._gen()
@@ -122,10 +122,10 @@ class GeneratorRespectsSeed(TaskJob):
         self.seed1 = seed1
         self.seed2 = seed2
         self.input1 = testcase_info.input_path(self._env, seed1).to_raw(
-            env.config.in_format
+            env.config.tests.in_format
         )
         self.input2 = testcase_info.input_path(self._env, seed2).to_raw(
-            env.config.in_format
+            env.config.tests.in_format
         )
         super().__init__(
             env=env,
