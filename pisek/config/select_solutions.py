@@ -15,14 +15,14 @@ from typing import Optional
 
 from pisek.utils.text import tab
 from pisek.config.config_errors import TaskConfigError
-from pisek.config.task_config import TaskConfig, SolutionConfig
+from pisek.config.task_config import TaskConfig, SolutionSection
 
 
 class UnknownSolutions(TaskConfigError):
     def __init__(
-        self, unknown: list[str], solutions: dict[str, "SolutionConfig"]
+        self, unknown: list[str], solutions: dict[str, "SolutionSection"]
     ) -> None:
-        def format_solution(s: SolutionConfig) -> str:
+        def format_solution(s: SolutionSection) -> str:
             if s.name == s.run:
                 return s.name
             else:

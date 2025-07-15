@@ -22,7 +22,7 @@ from pisek.utils.colors import ColorSettings
 from pisek.env.env import Env
 from pisek.task_jobs.testing_log import TESTING_LOG
 from pisek.task_jobs.solution.solution_result import Verdict
-from pisek.config.task_config import SolutionConfig, TestConfig
+from pisek.config.task_config import SolutionSection, TestSection
 from pisek.utils.text import eprint, tab
 
 RUNTIME_ERROR_MESSAGES = [
@@ -106,7 +106,7 @@ def check_results(session: Session, env: Env, dataset: Dataset) -> bool:
 
     success = True
 
-    solution: SolutionConfig
+    solution: SolutionSection
     for name, solution in config.solutions.items():
         try:
             result = get_submission_result(session, files, env, solution, dataset)
@@ -138,7 +138,7 @@ def check_results(session: Session, env: Env, dataset: Dataset) -> bool:
 
         print(message)
 
-        subtasks: list[tuple[int, TestConfig]] = list(config.tests.items())
+        subtasks: list[tuple[int, TestSection]] = list(config.tests.items())
         fractions = get_subtask_score_fractions(result.score_details)
 
         if fractions is None or len(fractions) != len(subtasks):
@@ -212,7 +212,7 @@ def get_submission_result(
     session: Session,
     files: FileCacher,
     env: Env,
-    solution: SolutionConfig,
+    solution: SolutionSection,
     dataset: Dataset,
 ) -> SubmissionResult:
     submission = get_submission(session, files, env, solution, dataset.task)

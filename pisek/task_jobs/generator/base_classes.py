@@ -15,7 +15,7 @@ from typing import Optional
 
 from pisek.env.env import Env
 from pisek.jobs.jobs import PipelineItemFailure
-from pisek.config.task_config import RunConfig
+from pisek.config.task_config import RunSection
 from pisek.task_jobs.task_job import TaskJob
 from pisek.task_jobs.program import ProgramsJob
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
@@ -25,7 +25,7 @@ class GeneratorListInputs(ProgramsJob):
     """Lists all inputs generator can generate."""
 
     def __init__(
-        self, env: Env, generator: RunConfig, *, name: str = "", **kwargs
+        self, env: Env, generator: RunSection, *, name: str = "", **kwargs
     ) -> None:
         self.generator = generator
         super().__init__(env=env, name=name or "List generator inputs", **kwargs)
@@ -41,7 +41,7 @@ class GenerateInput(ProgramsJob):
     def __init__(
         self,
         env: Env,
-        generator: RunConfig,
+        generator: RunSection,
         testcase_info: TestcaseInfo,
         seed: Optional[int],
         *,
@@ -72,7 +72,7 @@ class GeneratorTestDeterminism(ProgramsJob):
     def __init__(
         self,
         env: Env,
-        generator: RunConfig,
+        generator: RunSection,
         testcase_info: TestcaseInfo,
         seed: Optional[int],
         *,

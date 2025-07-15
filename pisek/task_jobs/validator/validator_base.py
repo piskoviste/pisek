@@ -14,7 +14,7 @@ from abc import abstractmethod
 
 from pisek.env.env import Env
 from pisek.utils.paths import InputPath
-from pisek.config.task_config import ProgramType, RunConfig
+from pisek.config.task_config import ProgramType, RunSection
 from pisek.task_jobs.run_result import RunResult
 from pisek.task_jobs.program import ProgramsJob
 
@@ -25,7 +25,7 @@ class ValidatorJob(ProgramsJob):
     def __init__(
         self,
         env: Env,
-        validator: RunConfig,
+        validator: RunSection,
         input_: InputPath,
         test: int,
         **kwargs,

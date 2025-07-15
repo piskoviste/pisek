@@ -33,10 +33,8 @@ from typing import (
 
 import subprocess
 from pisek.env.env import Env
-from pisek.config.task_config import RunConfig
 from pisek.utils.paths import TaskPath
 from pisek.utils.text import tab
-from pisek.config.task_config import ProgramType
 from pisek.jobs.jobs import Job
 
 T = TypeVar("T")

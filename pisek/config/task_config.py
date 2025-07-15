@@ -77,8 +77,8 @@ OptionalJudgeType = Annotated[JudgeType | None, BeforeValidator(lambda t: t or N
 OptionalShuffleMode = Annotated[
     Optional[ShuffleMode], BeforeValidator(lambda t: t or None)
 ]
-OptionalRunConfig = Annotated[
-    Optional["RunConfig"], BeforeValidator(lambda t: t or None)
+OptionalRunSection = Annotated[
+    Optional["RunSection"], BeforeValidator(lambda t: t or None)
 ]
 
 MISSING_VALIDATION_CONTEXT = "Missing validation context."
@@ -107,12 +107,12 @@ class TaskConfig(BaseEnv):
 
     static_subdir: TaskPathFromStr
 
-    in_gen: OptionalRunConfig
+    in_gen: OptionalRunSection
     gen_type: GenType
-    validator: OptionalRunConfig
+    validator: OptionalRunSection
     validator_type: OptionalValidatorType
     out_check: OutCheck
-    out_judge: OptionalRunConfig
+    out_judge: OptionalRunSection
     judge_type: OptionalJudgeType
     judge_needs_in: bool | None
     judge_needs_out: bool | None
@@ -126,17 +126,17 @@ class TaskConfig(BaseEnv):
     in_format: DataFormat
     out_format: DataFormat
 
-    tests: dict[int, "TestConfig"]
+    tests: dict[int, "TestSection"]
 
-    solutions: dict[str, "SolutionConfig"]
+    solutions: dict[str, "SolutionSection"]
 
     solution_time_limit: float = Field(ge=0)  # Needed for visualization
 
-    limits: "LimitsConfig"
+    limits: "LimitsSection"
 
-    cms: "CMSConfig"
+    cms: "CMSSection"
 
-    checks: "ChecksConfig"
+    checks: "ChecksSection"
 
     @computed_field  # type: ignore[misc]
     @cached_property
@@ -219,7 +219,7 @@ class TaskConfig(BaseEnv):
         ]
         for t, program in PROGRAMS:
             if args[program].value:
-                args[program] = RunConfig.load_dict(t, args[program], configs)
+                args[program] = RunSection.load_dict(t, args[program], configs)
 
         # Load tests
         args["tests"] = tests = {}
@@ -228,7 +228,7 @@ class TaskConfig(BaseEnv):
             section_name = section.value
             if m := re.fullmatch(r"test(\d{2})", section_name):
                 num = m[1]
-                tests[int(num)] = TestConfig.load_dict(
+                tests[int(num)] = TestSection.load_dict(
                     ConfigValue(str(int(num)), section.config, section.section, None),
                     configs,
                 )
@@ -236,13 +236,13 @@ class TaskConfig(BaseEnv):
         args["solutions"] = solutions = {}
         for section in section_names:
             if m := re.fullmatch(r"solution_(.+)", section.value):
-                solutions[m[1]] = SolutionConfig.load_dict(
+                solutions[m[1]] = SolutionSection.load_dict(
                     ConfigValue(m[1], section.config, section.section, None), configs
                 )
 
-        args["limits"] = LimitsConfig.load_dict(configs)
-        args["cms"] = CMSConfig.load_dict(configs)
-        args["checks"] = ChecksConfig.load_dict(configs)
+        args["limits"] = LimitsSection.load_dict(configs)
+        args["cms"] = CMSSection.load_dict(configs)
+        args["checks"] = ChecksSection.load_dict(configs)
 
         args["solution_time_limit"] = configs.get_from_candidates(
             [("run_solution", "time_limit"), ("run", "time_limit")]
@@ -352,7 +352,7 @@ class TaskConfig(BaseEnv):
             compute_test(i)
 
 
-class TestConfig(BaseEnv):
+class TestSection(BaseEnv):
     """Configuration of one test (group of testcases)."""
 
     _section: str
@@ -438,13 +438,13 @@ class TestConfig(BaseEnv):
         return self
 
 
-class SolutionConfig(BaseEnv):
+class SolutionSection(BaseEnv):
     """Configuration of one solution."""
 
     _section: str
     name: str
     primary: bool
-    run: "RunConfig"
+    run: "RunSection"
     points: MaybeInt
     points_min: MaybeInt
     points_max: MaybeInt
@@ -491,7 +491,7 @@ class SolutionConfig(BaseEnv):
             "_section": configs.get(name.section, None),
             "name": name,
             **args,
-            "run": RunConfig.load_dict(sol_type, args["run"], configs),
+            "run": RunSection.load_dict(sol_type, args["run"], configs),
         }
 
     @field_validator("name", mode="after")
@@ -573,7 +573,7 @@ def get_run_defaults(program_type: ProgramType, program_name: str) -> list[str]:
         ]
 
 
-class RunConfig(BaseEnv):
+class RunSection(BaseEnv):
     """Configuration of running an program"""
 
     _section: str
@@ -581,7 +581,7 @@ class RunConfig(BaseEnv):
     program_type: ProgramType
     name: str
     subdir: str
-    build: "BuildConfig"
+    build: "BuildSection"
     exec: TaskPathFromStr
     time_limit: float = Field(ge=0)  # [seconds]
     clock_mul: float = Field(ge=0)  # [1]
@@ -625,7 +625,7 @@ class RunConfig(BaseEnv):
             ),
             "name": name,
             **args,
-            "build": BuildConfig.load_dict(args["build"], configs),
+            "build": BuildSection.load_dict(args["build"], configs),
         }
 
     @field_validator("exec", mode="before")
@@ -638,7 +638,7 @@ class RunConfig(BaseEnv):
             return value
 
 
-class BuildConfig(BaseEnv):
+class BuildSection(BaseEnv):
     program_names: ClassVar[dict[str, str]] = {}
 
     _section: str
@@ -714,7 +714,7 @@ class BuildConfig(BaseEnv):
             return value
 
 
-class LimitsConfig(BaseEnv):
+class LimitsSection(BaseEnv):
     """Configuration of input and output size limits."""
 
     _section: str = "limits"
@@ -727,7 +727,7 @@ class LimitsConfig(BaseEnv):
         return {key: configs.get("limits", key) for key in cls.model_fields}
 
 
-class CMSConfig(BaseEnv):
+class CMSSection(BaseEnv):
     _section: str = "cms"
 
     name: OptionalStr
@@ -802,7 +802,7 @@ class CMSConfig(BaseEnv):
         name = "unnamed-task" if name is None else name
 
         return [
-            (CMSConfig.get_default_file_name(name) if n == "@name" else n)
+            (CMSSection.get_default_file_name(name) if n == "@name" else n)
             for n in value
         ]
 
@@ -812,7 +812,7 @@ class CMSConfig(BaseEnv):
         return f"{name}.%l"
 
 
-class ChecksConfig(BaseEnv):
+class ChecksSection(BaseEnv):
     """Configuration of checks for pisek to run."""
 
     _section: str = "checks"

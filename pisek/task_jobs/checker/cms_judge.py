@@ -18,7 +18,7 @@ from uuid import uuid4
 
 from pisek.utils.paths import InputPath, OutputPath
 from pisek.env.env import Env
-from pisek.config.task_config import RunConfig
+from pisek.config.task_config import RunSection
 from pisek.config.config_types import ProgramType
 from pisek.task_jobs.run_result import RunResult
 from pisek.task_jobs.solution.solution_result import (
@@ -35,7 +35,7 @@ class RunCMSJudge(RunChecker):
     def __init__(
         self,
         env: Env,
-        judge: RunConfig,
+        judge: RunSection,
         **kwargs,
     ) -> None:
         super().__init__(env=env, checker_name=judge.name, **kwargs)
@@ -87,7 +87,7 @@ class RunCMSBatchJudge(RunCMSJudge, RunBatchChecker):
     def __init__(
         self,
         env: Env,
-        judge: RunConfig,
+        judge: RunSection,
         test: int,
         input_: InputPath,
         output: OutputPath,

@@ -24,7 +24,7 @@ from os import path
 from datetime import datetime, timezone
 
 from pisek.env.env import Env
-from pisek.config.task_config import SolutionConfig, TaskConfig
+from pisek.config.task_config import SolutionSection
 from pisek.utils.colors import ColorSettings
 from pisek.utils.paths import TaskPath
 from pisek.utils.text import eprint
@@ -68,7 +68,7 @@ def submit(
     session: Session,
     files: FileCacher,
     env: Env,
-    solution: SolutionConfig,
+    solution: SolutionSection,
     task: Task,
     participation: Participation,
 ) -> Submission:
@@ -107,7 +107,7 @@ def get_submission(
     session: Session,
     files: FileCacher,
     env: Env,
-    solution: SolutionConfig,
+    solution: SolutionSection,
     task: Task,
 ) -> Optional[Submission]:
     if task.contest is None:
@@ -141,7 +141,7 @@ def get_submission_of_digest(
 
 
 def resolve_solution(
-    contest: Contest, env: Env, solution: SolutionConfig
+    contest: Contest, env: Env, solution: SolutionSection
 ) -> Optional[tuple[TaskPath, Language]]:
     sources = solution.run.build.sources
     if len(sources) != 1:

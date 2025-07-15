@@ -22,7 +22,7 @@ from typing import Optional, Any, Union, Callable
 import signal
 import subprocess
 
-from pisek.config.task_config import ProgramType, RunConfig
+from pisek.config.task_config import ProgramType, RunSection
 from pisek.env.env import Env
 from pisek.utils.paths import TaskPath, LogPath
 from pisek.jobs.jobs import PipelineItemFailure
@@ -143,7 +143,7 @@ class ProgramsJob(TaskJob):
     def _load_program(
         self,
         program_type: ProgramType,
-        program: RunConfig,
+        program: RunSection,
         args: list[str] = [],
         stdin: Optional[Union[TaskPath, int]] = None,
         stdout: Optional[Union[TaskPath, int]] = None,
@@ -280,7 +280,7 @@ class ProgramsJob(TaskJob):
     def _run_program(
         self,
         program_type: ProgramType,
-        program: RunConfig,
+        program: RunSection,
         **kwargs,
     ) -> RunResult:
         """Loads one program and runs it."""

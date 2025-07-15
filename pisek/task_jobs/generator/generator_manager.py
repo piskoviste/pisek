@@ -20,7 +20,7 @@ from hashlib import blake2b
 from pisek.env.env import Env
 from pisek.utils.paths import InputPath, OutputPath, SanitizedPath
 from pisek.config.config_types import GenType, DataFormat
-from pisek.config.task_config import RunConfig
+from pisek.config.task_config import RunSection
 from pisek.jobs.jobs import Job, JobManager
 from pisek.task_jobs.task_manager import TaskJobManager
 from pisek.task_jobs.data.data import InputSmall, OutputSmall
@@ -72,7 +72,7 @@ class PrepareGenerator(TaskJobManager):
         return {"inputs": self._list_inputs.result}
 
 
-def list_inputs_job(env: Env, generator: RunConfig) -> GeneratorListInputs:
+def list_inputs_job(env: Env, generator: RunSection) -> GeneratorListInputs:
     LIST_INPUTS: dict[GenType, type[GeneratorListInputs]] = {
         GenType.opendata_v1: OpendataV1ListInputs,
         GenType.cms_old: CmsOldListInputs,
@@ -83,7 +83,7 @@ def list_inputs_job(env: Env, generator: RunConfig) -> GeneratorListInputs:
 
 
 def generate_input(
-    env: Env, generator: RunConfig, testcase_info: TestcaseInfo, seed: Optional[int]
+    env: Env, generator: RunSection, testcase_info: TestcaseInfo, seed: Optional[int]
 ) -> GenerateInput:
     return {
         GenType.opendata_v1: OpendataV1Generate,
@@ -95,7 +95,7 @@ def generate_input(
 
 
 def generator_test_determinism(
-    env: Env, generator: RunConfig, testcase_info: TestcaseInfo, seed: Optional[int]
+    env: Env, generator: RunSection, testcase_info: TestcaseInfo, seed: Optional[int]
 ) -> Optional[GeneratorTestDeterminism]:
     TEST_DETERMINISM = {
         GenType.opendata_v1: OpendataV1TestDeterminism,

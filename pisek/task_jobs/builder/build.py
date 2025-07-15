@@ -19,7 +19,7 @@ from pisek.utils.text import tab
 from pisek.utils.paths import TaskPath, BUILD_DIR
 
 from pisek.env.env import Env, TestingTarget
-from pisek.config.task_config import BuildConfig, RunConfig
+from pisek.config.task_config import BuildSection, RunSection
 from pisek.config.config_types import BuildStrategyName, OutCheck
 
 from pisek.task_jobs.tools import PrepareTokenJudge, PrepareShuffleJudge
@@ -42,7 +42,7 @@ class BuildManager(TaskJobManager):
     def __init__(self):
         super().__init__("Build programs")
 
-    def _build_program_job(self, run: Optional[RunConfig]) -> Optional["Build"]:
+    def _build_program_job(self, run: Optional[RunSection]) -> Optional["Build"]:
         if run is None or run.build.section_name in self._built_sections:
             return None
         self._built_sections.add(run.build.section_name)
@@ -80,7 +80,7 @@ class Build(TaskJob):
     def __init__(
         self,
         env: Env,
-        build_section: BuildConfig,
+        build_section: BuildSection,
         **kwargs,
     ) -> None:
         super().__init__(env=env, name=f"Build {build_section.program_name}", **kwargs)
