@@ -29,7 +29,7 @@ from pydantic import (
     model_validator,
 )
 import re
-from typing import Any, Annotated, ClassVar, Mapping, Optional, Union
+from typing import Any, Annotated, ClassVar, Mapping, Optional, TypeVar, Union
 
 from pisek.utils.paths import TaskPath
 from pisek.utils.text import tab
@@ -55,12 +55,14 @@ from pisek.task_jobs.solution.solution_result import TEST_SPEC
 from pisek.task_jobs.builder.strategies import ALL_STRATEGIES
 
 
+T = TypeVar("T")
+Maybe = Annotated[T | None, BeforeValidator(lambda t: t or None)]
+
+
 MaybeInt = Annotated[
     Optional[int], BeforeValidator(lambda i: (None if i == "X" else i))
 ]
 ListStr = Annotated[list[str], BeforeValidator(lambda s: s.split())]
-OptionalStr = Annotated[Optional[str], BeforeValidator(lambda s: s or None)]
-OptionalFloat = Annotated[Optional[float], BeforeValidator(lambda s: s or None)]
 
 TaskPathFromStr = Annotated[TaskPath, BeforeValidator(lambda s: TaskPath(s))]
 OptionalTaskPathFromStr = Annotated[
@@ -68,17 +70,6 @@ OptionalTaskPathFromStr = Annotated[
 ]
 ListTaskPathFromStr = Annotated[
     list[TaskPath], BeforeValidator(lambda s: [TaskPath(p) for p in s.split()])
-]
-
-OptionalValidatorType = Annotated[
-    ValidatorType | None, BeforeValidator(lambda t: t or None)
-]
-OptionalJudgeType = Annotated[JudgeType | None, BeforeValidator(lambda t: t or None)]
-OptionalShuffleMode = Annotated[
-    Optional[ShuffleMode], BeforeValidator(lambda t: t or None)
-]
-OptionalRunSection = Annotated[
-    Optional["RunSection"], BeforeValidator(lambda t: t or None)
 ]
 
 MISSING_VALIDATION_CONTEXT = "Missing validation context."
@@ -302,22 +293,22 @@ class TestsSection(BaseEnv):
     _section: str = "tests"
 
     static_subdir: TaskPathFromStr
-    in_gen: OptionalRunSection
+    in_gen: Maybe["RunSection"]
     gen_type: GenType
 
-    validator: OptionalRunSection
-    validator_type: OptionalValidatorType
+    validator: Maybe["RunSection"]
+    validator_type: Maybe[ValidatorType]
 
     out_check: OutCheck
-    out_judge: OptionalRunSection
-    judge_type: OptionalJudgeType
+    out_judge: Maybe["RunSection"]
+    judge_type: Maybe[JudgeType]
     judge_needs_in: bool | None
     judge_needs_out: bool | None
     tokens_ignore_newlines: bool | None
     tokens_ignore_case: bool | None
-    tokens_float_rel_error: OptionalFloat
-    tokens_float_abs_error: OptionalFloat
-    shuffle_mode: OptionalShuffleMode
+    tokens_float_rel_error: Maybe[float]
+    tokens_float_abs_error: Maybe[float]
+    shuffle_mode: Maybe[ShuffleMode]
     shuffle_ignore_case: bool | None
 
     in_format: DataFormat
@@ -767,7 +758,7 @@ class LimitsSection(BaseEnv):
 class CMSSection(BaseEnv):
     _section: str = "cms"
 
-    name: OptionalStr
+    name: Maybe[str]
     title: str
     submission_format: ListStr
 
