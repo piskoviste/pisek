@@ -294,7 +294,7 @@ class TestsSection(BaseEnv):
 
     static_subdir: TaskPathFromStr
     in_gen: Maybe["RunSection"]
-    gen_type: GenType
+    gen_type: Maybe[GenType]
 
     validator: Maybe["RunSection"]
     validator_type: Maybe[ValidatorType]
@@ -355,6 +355,13 @@ class TestsSection(BaseEnv):
 
     @model_validator(mode="after")
     def validate_model(self):
+        if self.in_gen is not None and self.gen_type is None:
+            raise PydanticCustomError(
+                "no_gen_type",
+                "Missing gen_type",
+                {"in_gen": self.in_gen.name, "gen_type": ""},
+            )
+
         if self.validator is not None and self.validator_type is None:
             raise PydanticCustomError(
                 "no_validator_type",

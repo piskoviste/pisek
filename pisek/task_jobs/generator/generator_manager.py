@@ -79,12 +79,14 @@ def list_inputs_job(env: Env, generator: RunSection) -> GeneratorListInputs:
         GenType.pisek_v1: PisekV1ListInputs,
     }
 
+    assert env.config.tests.gen_type is not None
     return LIST_INPUTS[env.config.tests.gen_type](env=env, generator=generator)
 
 
 def generate_input(
     env: Env, generator: RunSection, testcase_info: TestcaseInfo, seed: Optional[int]
 ) -> GenerateInput:
+    assert env.config.tests.gen_type is not None
     return {
         GenType.opendata_v1: OpendataV1Generate,
         GenType.cms_old: CmsOldGenerate,
