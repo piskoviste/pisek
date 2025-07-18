@@ -34,27 +34,27 @@ def checker_job(
     env: Env,
 ) -> RunBatchChecker:
     """Returns JudgeJob according to contest type."""
-    if env.config.out_check == OutCheck.diff:
+    if env.config.tests.out_check == OutCheck.diff:
         return RunDiffChecker(
             env, test, input_, output, correct_output, expected_verdict
         )
 
-    if env.config.out_check == OutCheck.tokens:
+    if env.config.tests.out_check == OutCheck.tokens:
         return RunTokenChecker(
             env, test, input_, output, correct_output, expected_verdict
         )
-    elif env.config.out_check == OutCheck.shuffle:
+    elif env.config.tests.out_check == OutCheck.shuffle:
         return RunShuffleChecker(
             env, test, input_, output, correct_output, expected_verdict
         )
 
-    if env.config.out_judge is None:
-        raise ValueError(f"Unset judge for out_check={env.config.out_check.name}")
+    if env.config.tests.out_judge is None:
+        raise ValueError(f"Unset judge for out_check={env.config.tests.out_check.name}")
 
-    if env.config.judge_type == JudgeType.cms_batch:
+    if env.config.tests.judge_type == JudgeType.cms_batch:
         return RunCMSBatchJudge(
             env,
-            env.config.out_judge,
+            env.config.tests.out_judge,
             test,
             input_,
             output,
@@ -64,7 +64,7 @@ def checker_job(
     else:
         return RunOpendataV1Judge(
             env,
-            env.config.out_judge,
+            env.config.tests.out_judge,
             test,
             input_,
             output,

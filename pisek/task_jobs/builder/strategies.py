@@ -27,7 +27,7 @@ from pisek.config.config_types import BuildStrategyName
 
 if TYPE_CHECKING:
     from pisek.env.env import Env
-    from pisek.config.task_config import BuildConfig
+    from pisek.config.task_config import BuildSection
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ class BuildStrategy(ABC):
     extra_sources: Optional[str] = None
     extra_nonsources: Optional[str] = None
 
-    def __init__(self, build_section: "BuildConfig", env: "Env", _print) -> None:
+    def __init__(self, build_section: "BuildSection", env: "Env", _print) -> None:
         self._build_section = build_section
         self._env = env
         self._print = _print
@@ -51,16 +51,16 @@ class BuildStrategy(ABC):
 
     @classmethod
     @abstractmethod
-    def applicable_on_files(cls, build: "BuildConfig", sources: list[str]) -> bool:
+    def applicable_on_files(cls, build: "BuildSection", sources: list[str]) -> bool:
         pass
 
     @classmethod
     @abstractmethod
-    def applicable_on_directory(cls, build: "BuildConfig", directory: str) -> bool:
+    def applicable_on_directory(cls, build: "BuildSection", directory: str) -> bool:
         pass
 
     @classmethod
-    def applicable(cls, build: "BuildConfig", sources: list[str]) -> bool:
+    def applicable(cls, build: "BuildSection", sources: list[str]) -> bool:
         directories = any(os.path.isdir(s) for s in sources)
         if not directories:
             return cls.applicable_on_files(build, sources)
@@ -141,7 +141,7 @@ class BuildStrategy(ABC):
 
 class BuildScript(BuildStrategy):
     @classmethod
-    def applicable_on_directory(cls, build: "BuildConfig", directory: str) -> bool:
+    def applicable_on_directory(cls, build: "BuildSection", directory: str) -> bool:
         return False
 
     def _build(self) -> str:
@@ -158,7 +158,7 @@ class BuildScript(BuildStrategy):
 
 class BuildBinary(BuildStrategy):
     @classmethod
-    def applicable_on_directory(cls, build: "BuildConfig", directory: str) -> bool:
+    def applicable_on_directory(cls, build: "BuildSection", directory: str) -> bool:
         return False
 
 
@@ -167,7 +167,7 @@ class Python(BuildScript):
     extra_sources: Optional[str] = "extra_sources_py"
 
     @classmethod
-    def applicable_on_files(cls, build: "BuildConfig", sources: list[str]) -> bool:
+    def applicable_on_files(cls, build: "BuildSection", sources: list[str]) -> bool:
         if not cls._all_end_with(sources, [".py"]):
             return False
         return True
@@ -198,7 +198,7 @@ class Shell(BuildScript):
     name = BuildStrategyName.shell
 
     @classmethod
-    def applicable_on_files(cls, build: "BuildConfig", sources: list[str]) -> bool:
+    def applicable_on_files(cls, build: "BuildSection", sources: list[str]) -> bool:
         return len(sources) == 1 and sources[0].endswith(".sh")
 
 
@@ -208,7 +208,7 @@ class C(BuildBinary):
     extra_nonsources: Optional[str] = "headers_c"
 
     @classmethod
-    def applicable_on_files(cls, build: "BuildConfig", sources: list[str]) -> bool:
+    def applicable_on_files(cls, build: "BuildSection", sources: list[str]) -> bool:
         return cls._all_end_with(sources, [".h", ".c"])
 
     def _build(self) -> str:
@@ -232,7 +232,7 @@ class Cpp(BuildBinary):
     extra_nonsources: Optional[str] = "headers_cpp"
 
     @classmethod
-    def applicable_on_files(cls, build: "BuildConfig", sources: list[str]) -> bool:
+    def applicable_on_files(cls, build: "BuildSection", sources: list[str]) -> bool:
         return cls._all_end_with(sources, [".h", ".hpp", ".cpp", ".cc"])
 
     def _build(self) -> str:
@@ -254,7 +254,7 @@ class Pascal(BuildBinary):
     name = BuildStrategyName.pascal
 
     @classmethod
-    def applicable_on_files(cls, build: "BuildConfig", sources: list[str]) -> bool:
+    def applicable_on_files(cls, build: "BuildSection", sources: list[str]) -> bool:
         return cls._all_end_with(sources, [".pas"])
 
     def _build(self) -> str:
@@ -271,11 +271,11 @@ class Make(BuildStrategy):
     _target_subdir: str = "target"
 
     @classmethod
-    def applicable_on_files(cls, build: "BuildConfig", sources: list[str]) -> bool:
+    def applicable_on_files(cls, build: "BuildSection", sources: list[str]) -> bool:
         return False
 
     @classmethod
-    def applicable_on_directory(cls, build: "BuildConfig", directory: str) -> bool:
+    def applicable_on_directory(cls, build: "BuildSection", directory: str) -> bool:
         return os.path.exists(os.path.join(directory, "Makefile"))
 
     def _build(self) -> str:
@@ -300,11 +300,11 @@ class Cargo(BuildStrategy):
     _artifact_dir: str = ".pisek-executables"
 
     @classmethod
-    def applicable_on_files(cls, build: "BuildConfig", sources: list[str]) -> bool:
+    def applicable_on_files(cls, build: "BuildSection", sources: list[str]) -> bool:
         return False
 
     @classmethod
-    def applicable_on_directory(cls, build: "BuildConfig", directory: str) -> bool:
+    def applicable_on_directory(cls, build: "BuildSection", directory: str) -> bool:
         return os.path.exists(os.path.join(directory, "Cargo.toml"))
 
     def _build(self) -> str:

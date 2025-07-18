@@ -19,7 +19,7 @@ from typing import Optional
 from pisek.env.env import Env
 from pisek.utils.paths import InputPath
 from pisek.config.config_types import ProgramType
-from pisek.config.task_config import RunConfig
+from pisek.config.task_config import RunSection
 from pisek.task_jobs.program import RunResult, ProgramsJob
 from pisek.task_jobs.solution.solution_result import Verdict, SolutionResult
 from pisek.task_jobs.checker.cms_judge import RunCMSJudge
@@ -32,7 +32,7 @@ class RunSolution(ProgramsJob):
         self,
         env: Env,
         name: str,
-        solution: RunConfig,
+        solution: RunSection,
         is_primary: bool,
         **kwargs,
     ) -> None:
@@ -62,7 +62,7 @@ class RunBatchSolution(RunSolution):
     def __init__(
         self,
         env: Env,
-        solution: RunConfig,
+        solution: RunSection,
         is_primary: bool,
         input_: InputPath,
         **kwargs,
@@ -75,7 +75,7 @@ class RunBatchSolution(RunSolution):
             **kwargs,
         )
         self.input = input_
-        self.output = input_.to_output().to_raw(env.config.out_format)
+        self.output = input_.to_output().to_raw(env.config.tests.out_format)
         self.log_file = input_.to_log("solution")
 
     def _run(self) -> RunResult:
@@ -92,9 +92,9 @@ class RunInteractive(RunCMSJudge, RunSolution):
     def __init__(
         self,
         env: Env,
-        solution: RunConfig,
+        solution: RunSection,
         is_primary: bool,
-        judge: RunConfig,
+        judge: RunSection,
         test: int,
         input_: InputPath,
         expected_verdict: Optional[Verdict] = None,

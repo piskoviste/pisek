@@ -16,7 +16,7 @@ from typing import Any, NoReturn, Optional
 from pisek.utils.text import tab
 from pisek.env.env import Env
 from pisek.config.config_types import ProgramType
-from pisek.config.task_config import RunConfig
+from pisek.config.task_config import RunSection
 from pisek.utils.paths import TaskPath, InputPath, LogPath
 from pisek.task_jobs.program import ProgramsJob, RunResultKind
 from pisek.task_jobs.data.testcase_info import TestcaseInfo
@@ -27,7 +27,7 @@ from .base_classes import GeneratorListInputs, GenerateInput, GeneratorTestDeter
 class PisekV1ListInputs(GeneratorListInputs):
     """Lists all inputs for pisek-v1 generator."""
 
-    def __init__(self, env: Env, generator: RunConfig, **kwargs) -> None:
+    def __init__(self, env: Env, generator: RunSection, **kwargs) -> None:
         super().__init__(env=env, generator=generator, **kwargs)
 
     def _run(self) -> list[TestcaseInfo]:
@@ -123,7 +123,7 @@ class PisekV1ListInputs(GeneratorListInputs):
 class PisekV1GeneratorJob(ProgramsJob):
     """Abstract class for jobs with OnlineGenerator."""
 
-    generator: RunConfig
+    generator: RunSection
     seed: Optional[int]
     testcase_info: TestcaseInfo
     input_path: InputPath
@@ -144,7 +144,7 @@ class PisekV1GeneratorJob(ProgramsJob):
             ProgramType.gen,
             self.generator,
             args=args,
-            stdout=self.input_path.to_raw(self._env.config.in_format),
+            stdout=self.input_path.to_raw(self._env.config.tests.in_format),
             stderr=self.input_path.to_log(self.generator.name),
         )
         if result.kind != RunResultKind.OK:

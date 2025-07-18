@@ -87,7 +87,7 @@ class RelativeSolutionResult(SolutionResult):
 
     def points(self, env: "Env", test_points: int) -> Decimal:
         return (self.relative_points * test_points).quantize(
-            Decimal("0.1") ** env.config.score_precision
+            Decimal("0.1") ** env.config.task.score_precision
         )
 
     def mark(self) -> str:

@@ -45,7 +45,7 @@ class CompletenessCheck(TaskJobManager):
         tests_res = self.prerequisites_results[f"{SOLUTION_MAN_CODE}{sol_name}"][
             "tests"
         ]
-        for num in self._env.config.tests:
+        for num in self._env.config.test_sections:
             if num == 0:
                 continue  # Skip samples
             if (tests_res[num] == Verdict.ok) != (num in tests):
@@ -55,7 +55,7 @@ class CompletenessCheck(TaskJobManager):
     def _check_dedicated_solutions(self) -> None:
         """Checks that each test has it's own dedicated solution."""
         if self._env.config.checks.solution_for_each_test:
-            for num, test in self._env.config.tests.items():
+            for num, test in self._env.config.test_sections.items():
                 if num == 0:
                     continue  # Samples
 
@@ -72,7 +72,7 @@ class CompletenessCheck(TaskJobManager):
 
     def _check_cms_judge(self) -> None:
         """Checks that cms judge's stdout & stderr contains only one line."""
-        if self._env.config.judge_type in (
+        if self._env.config.tests.judge_type in (
             JudgeType.cms_batch,
             JudgeType.cms_communication,
         ):

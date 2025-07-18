@@ -51,7 +51,7 @@ def set_task_settings(task: Task, config: TaskConfig):
         if config.cms.min_submission_interval > 0
         else None
     )
-    task.score_precision = config.score_precision
+    task.score_precision = config.task.score_precision
     task.score_mode = config.cms.score_mode
     task.feedback_level = config.cms.feedback_level
 

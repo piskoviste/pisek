@@ -17,7 +17,7 @@ from typing import Optional
 from pisek.utils.paths import InputPath, OutputPath
 from pisek.env.env import Env
 from pisek.config.config_types import ProgramType
-from pisek.config.task_config import RunConfig
+from pisek.config.task_config import RunSection
 from pisek.task_jobs.solution.solution_result import (
     Verdict,
     SolutionResult,
@@ -46,7 +46,7 @@ class RunOpendataJudge(RunBatchChecker):
     def __init__(
         self,
         env: Env,
-        judge: RunConfig,
+        judge: RunSection,
         test: int,
         input_: InputPath,
         output: OutputPath,
@@ -70,10 +70,10 @@ class RunOpendataJudge(RunBatchChecker):
 
     def _check(self) -> SolutionResult:
         envs = {}
-        if self._env.config.judge_needs_in:
+        if self._env.config.tests.judge_needs_in:
             envs["TEST_INPUT"] = self.input.abspath
             self._access_file(self.input)
-        if self._env.config.judge_needs_out:
+        if self._env.config.tests.judge_needs_out:
             envs["TEST_OUTPUT"] = self.correct_output.abspath
             self._access_file(self.correct_output)
 

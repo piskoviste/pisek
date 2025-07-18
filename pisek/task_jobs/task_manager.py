@@ -11,7 +11,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from pisek.utils.paths import InputPath, OutputPath
-from pisek.config.task_config import TestConfig
+from pisek.config.task_config import TestSection
 from pisek.jobs.status import StatusJobManager
 from pisek.task_jobs.task_job import TaskHelper
 from pisek.task_jobs.data.testcase_info import TestcaseInfo
@@ -36,10 +36,10 @@ class TaskJobManager(StatusJobManager, TaskHelper):
                 inp.input_path(self._env),
                 inp.reference_output(self._env),
             )
-            for inp in self._test_testcases(self._env.config.tests[0])
+            for inp in self._test_testcases(self._env.config.test_sections[0])
         ]
 
-    def _test_testcases(self, test: TestConfig) -> list[TestcaseInfo]:
+    def _test_testcases(self, test: TestSection) -> list[TestcaseInfo]:
         """Get all inputs of given test."""
         return self.prerequisites_results[INPUTS_MAN_CODE]["testcase_info"][test.num]
 

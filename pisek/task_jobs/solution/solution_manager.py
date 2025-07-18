@@ -75,7 +75,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         input_path = testcase_info.input_path(
             self._env, seed, solution=self.solution_label
         )
-        if self._env.config.tests[test].new_in_test(input_path.name):
+        if self._env.config.test_sections[test].new_in_test(input_path.name):
             self.tests[-1].new_run_jobs.append(self._sols[input_path])
             self.tests[-1].new_jobs.append(self._checkers[input_path])
             self._sols[input_path].require()
@@ -123,7 +123,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
 
         run_sol: RunSolution
         run_checker: RunChecker
-        if self._env.config.task_type == TaskType.batch:
+        if self._env.config.task.task_type == TaskType.batch:
             if (
                 testcase_info.generation_mode == TestcaseGenerationMode.static
                 and self._generate_inputs
@@ -149,7 +149,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
                 run_batch_sol.output.to_sanitized_output(), run_checker, run_batch_sol
             )
 
-            if self._env.config.judge_needs_out:
+            if self._env.config.tests.judge_needs_out:
                 link = SymlinkData(
                     self._env,
                     testcase_info.reference_output(self._env, seed),
@@ -165,7 +165,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
 
             jobs.append(run_checker)
 
-        elif self._env.config.task_type == TaskType.interactive:
+        elif self._env.config.task.task_type == TaskType.interactive:
             run_sol = run_checker = self._create_interactive_jobs(input_path, test)
             jobs.append(run_sol)
 
@@ -198,7 +198,9 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
                 self._env,
                 seed,
                 solution=(
-                    self.solution_label if self._env.config.judge_needs_out else None
+                    self.solution_label
+                    if self._env.config.tests.judge_needs_out
+                    else None
                 ),
             ),
             test,
@@ -212,14 +214,14 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
 
     def _create_interactive_jobs(self, inp: InputPath, test: int) -> RunInteractive:
         """Create RunInteractive job for interactive task type."""
-        if self._env.config.out_judge is None:
+        if self._env.config.tests.out_judge is None:
             raise RuntimeError("Unset judge for interactive.")
 
         return RunInteractive(
             self._env,
             self._solution,
             self.is_primary,
-            self._env.config.out_judge,
+            self._env.config.tests.out_judge,
             test,
             inp,
         )
@@ -325,7 +327,7 @@ class TestJobGroup(TaskHelper):
     def __init__(self, env: Env, num: int) -> None:
         self._env = env
         self.num = num
-        self.test = env.config.tests[num]
+        self.test = env.config.test_sections[num]
         self.new_run_jobs: list[RunSolution] = []
         self.previous_jobs: list[RunChecker] = []
         self.new_jobs: list[RunChecker] = []
@@ -414,11 +416,11 @@ class TestJobGroup(TaskHelper):
 
     def status_verbosity1(self) -> str:
         max_sub_name_len = max(
-            len(test.name) for test in self._env.config.tests.values()
+            len(test.name) for test in self._env.config.test_sections.values()
         )
         max_sub_points_len = max(
             len(self._format_points(sub.points))
-            for sub in self._env.config.tests.values()
+            for sub in self._env.config.test_sections.values()
         )
 
         return right_aligned_text(
@@ -431,7 +433,7 @@ class TestJobGroup(TaskHelper):
 
     def status_verbosity2(self, all_tests: list["TestJobGroup"]):
         def test_name(num: int) -> str:
-            return self._env.config.tests[num].name
+            return self._env.config.test_sections[num].name
 
         text = ""
         max_inp_name_len = max(

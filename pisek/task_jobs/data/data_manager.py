@@ -41,7 +41,7 @@ class DataManager(TaskJobManager):
             output_path = input_path.replace_suffix(".out")
 
             if (
-                self._env.config.task_type == TaskType.interactive
+                self._env.config.task.task_type == TaskType.interactive
                 or output_path.exists()
             ):
                 static_testcase_infos.append(TestcaseInfo.static(name))
@@ -49,7 +49,7 @@ class DataManager(TaskJobManager):
                 static_testcase_infos.append(TestcaseInfo.mixed(name))
 
         all_testcase_infos = list(static_testcase_infos)
-        if self._env.config.in_gen is not None:
+        if self._env.config.tests.in_gen is not None:
             all_testcase_infos += self.prerequisites_results[GENERATOR_MAN_CODE][
                 "inputs"
             ]
@@ -59,7 +59,7 @@ class DataManager(TaskJobManager):
         # put inputs in tests
         self._testcase_infos: dict[int, list[TestcaseInfo]] = {}
 
-        for test in self._env.config.tests.values():
+        for test in self._env.config.test_sections.values():
             self._testcase_infos[test.num] = []
 
             for testcase_info in all_testcase_infos:
@@ -97,26 +97,26 @@ class DataManager(TaskJobManager):
                     LinkData(
                         self._env,
                         TaskPath.static_path(self._env, f"{name}.in"),
-                        input_target_path.to_raw(self._env.config.in_format),
+                        input_target_path.to_raw(self._env.config.tests.in_format),
                     )
                 )
             if (
                 mode == TestcaseGenerationMode.static
-                and self._env.config.task_type != TaskType.interactive
+                and self._env.config.task.task_type != TaskType.interactive
             ):
                 output_target_path = OutputPath.static(f"{name}.out")
                 jobs.append(
                     LinkData(
                         self._env,
                         TaskPath.static_path(self._env, f"{name}.out"),
-                        output_target_path.to_raw(self._env.config.out_format),
+                        output_target_path.to_raw(self._env.config.tests.out_format),
                     )
                 )
 
-        if self._env.config.validator is None:
+        if self._env.config.tests.validator is None:
             skips_all_validation = all(
                 test_config.skip_validation
-                for test_config in self._env.config.tests.values()
+                for test_config in self._env.config.test_sections.values()
             )
             if not skips_all_validation:
                 self._warn(
@@ -165,7 +165,7 @@ class DataManager(TaskJobManager):
             cnt = sum(tc.repeat for tc in testcases)
             if cnt != 1:
                 self._warn(
-                    f"{self._env.config.tests[test_num].name} contains {cnt} testcases but should contain 1."
+                    f"{self._env.config.test_sections[test_num].name} contains {cnt} testcases but should contain 1."
                 )
 
     def _short_inputs_list(self, inputs: Iterable[TestcaseInfo]) -> str:

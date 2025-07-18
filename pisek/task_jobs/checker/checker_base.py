@@ -98,7 +98,7 @@ class RunChecker(ProgramsJob):
 
     def _get_solution_result(self) -> SolutionResult:
         if self._solution_run_res.kind == RunResultKind.OK:
-            out_form = self._env.config.out_format
+            out_form = self._env.config.tests.out_format
             san_res = self.prerequisites_results.get("sanitize")
             if san_res is None:
                 pass
@@ -191,7 +191,7 @@ class RunChecker(ProgramsJob):
             if isinstance(self.result, RelativeSolutionResult):
                 return f"[{self.result.relative_points:.2f}]"
             elif isinstance(self.result, AbsoluteSolutionResult):
-                return f"[={self.result.absolute_points:.{self._env.config.score_precision}f}]"
+                return f"[={self.result.absolute_points:.{self._env.config.task.score_precision}f}]"
             else:
                 raise ValueError(
                     f"Unexpected SolutionResult type: '{type(self.result)}'"
@@ -204,7 +204,7 @@ class RunChecker(ProgramsJob):
         return self.rel_to_abs_points(1.0)
 
     def rel_to_abs_points(self, rel_points: float) -> float:
-        return self._env.config.tests[self.test].points * rel_points
+        return self._env.config.test_sections[self.test].points * rel_points
 
 
 class RunBatchChecker(RunChecker):

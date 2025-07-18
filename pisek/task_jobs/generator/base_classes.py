@@ -15,7 +15,7 @@ from typing import Optional
 
 from pisek.env.env import Env
 from pisek.jobs.jobs import PipelineItemFailure
-from pisek.config.task_config import RunConfig
+from pisek.config.task_config import RunSection
 from pisek.task_jobs.task_job import TaskJob
 from pisek.task_jobs.program import ProgramsJob
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
@@ -25,7 +25,7 @@ class GeneratorListInputs(ProgramsJob):
     """Lists all inputs generator can generate."""
 
     def __init__(
-        self, env: Env, generator: RunConfig, *, name: str = "", **kwargs
+        self, env: Env, generator: RunSection, *, name: str = "", **kwargs
     ) -> None:
         self.generator = generator
         super().__init__(env=env, name=name or "List generator inputs", **kwargs)
@@ -41,7 +41,7 @@ class GenerateInput(ProgramsJob):
     def __init__(
         self,
         env: Env,
-        generator: RunConfig,
+        generator: RunSection,
         testcase_info: TestcaseInfo,
         seed: Optional[int],
         *,
@@ -72,7 +72,7 @@ class GeneratorTestDeterminism(ProgramsJob):
     def __init__(
         self,
         env: Env,
-        generator: RunConfig,
+        generator: RunSection,
         testcase_info: TestcaseInfo,
         seed: Optional[int],
         *,
@@ -92,7 +92,7 @@ class GeneratorTestDeterminism(ProgramsJob):
         )
 
     def _run(self) -> None:
-        input_path = self.input_path.to_raw(self._env.config.in_format)
+        input_path = self.input_path.to_raw(self._env.config.tests.in_format)
         original = input_path.to_second()
         self._rename_file(input_path, original)
         self._gen()
@@ -122,10 +122,10 @@ class GeneratorRespectsSeed(TaskJob):
         self.seed1 = seed1
         self.seed2 = seed2
         self.input1 = testcase_info.input_path(self._env, seed1).to_raw(
-            env.config.in_format
+            env.config.tests.in_format
         )
         self.input2 = testcase_info.input_path(self._env, seed2).to_raw(
-            env.config.in_format
+            env.config.tests.in_format
         )
         super().__init__(
             env=env,

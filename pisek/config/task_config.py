@@ -77,8 +77,8 @@ OptionalJudgeType = Annotated[JudgeType | None, BeforeValidator(lambda t: t or N
 OptionalShuffleMode = Annotated[
     Optional[ShuffleMode], BeforeValidator(lambda t: t or None)
 ]
-OptionalRunConfig = Annotated[
-    Optional["RunConfig"], BeforeValidator(lambda t: t or None)
+OptionalRunSection = Annotated[
+    Optional["RunSection"], BeforeValidator(lambda t: t or None)
 ]
 
 MISSING_VALIDATION_CONTEXT = "Missing validation context."
@@ -102,56 +102,34 @@ def _to_values(config_values_dict: ConfigValuesDict) -> ValuesDict:
 class TaskConfig(BaseEnv):
     """Configuration of task loaded from config file."""
 
-    task_type: TaskType
-    score_precision: int = Field(ge=0)
+    task: "TaskSection"
+    tests: "TestsSection"
+    test_sections: dict[int, "TestSection"]
 
-    static_subdir: TaskPathFromStr
-
-    in_gen: OptionalRunConfig
-    gen_type: GenType
-    validator: OptionalRunConfig
-    validator_type: OptionalValidatorType
-    out_check: OutCheck
-    out_judge: OptionalRunConfig
-    judge_type: OptionalJudgeType
-    judge_needs_in: bool | None
-    judge_needs_out: bool | None
-    tokens_ignore_newlines: bool | None
-    tokens_ignore_case: bool | None
-    tokens_float_rel_error: OptionalFloat
-    tokens_float_abs_error: OptionalFloat
-    shuffle_mode: OptionalShuffleMode
-    shuffle_ignore_case: bool | None
-
-    in_format: DataFormat
-    out_format: DataFormat
-
-    tests: dict[int, "TestConfig"]
-
-    solutions: dict[str, "SolutionConfig"]
+    solutions: dict[str, "SolutionSection"]
 
     solution_time_limit: float = Field(ge=0)  # Needed for visualization
 
-    limits: "LimitsConfig"
+    limits: "LimitsSection"
 
-    cms: "CMSConfig"
+    cms: "CMSSection"
 
-    checks: "ChecksConfig"
+    checks: "ChecksSection"
 
     @computed_field  # type: ignore[misc]
     @cached_property
     def total_points(self) -> int:
-        return sum(sub.points for sub in self.tests.values())
+        return sum(sub.points for sub in self.test_sections.values())
 
     @computed_field  # type: ignore[misc]
     @property
     def tests_count(self) -> int:
-        return len(self.tests)
+        return len(self.test_sections)
 
     @computed_field  # type: ignore[misc]
     @cached_property
     def input_globs(self) -> list[str]:
-        return sum((sub.all_globs for sub in self.tests.values()), start=[])
+        return sum((sub.all_globs for sub in self.test_sections.values()), start=[])
 
     @computed_field  # type: ignore[misc]
     @property
@@ -166,49 +144,17 @@ class TaskConfig(BaseEnv):
         return next(sources, None)
 
     def __init__(self, **kwargs):
-        value = {"test_count": max(kwargs["tests"]) + 1}
+        value = {"test_count": max(kwargs["test_sections"]) + 1}
 
         with init_context(value):
             super().__init__(**kwargs)
 
     @staticmethod
     def load_dict(configs: ConfigHierarchy) -> ConfigValuesDict:
-        GLOBAL_KEYS = [
-            ("task", "task_type"),
-            ("task", "score_precision"),
-            ("tests", "in_gen"),
-            ("tests", "gen_type"),
-            ("tests", "validator"),
-            ("tests", "validator_type"),
-            ("tests", "out_check"),
-            ("tests", "in_format"),
-            ("tests", "out_format"),
-            ("tests", "static_subdir"),
-        ]
-        OUT_CHECK_SPECIFIC_KEYS = [
-            ((None, "judge"), "out_judge", ""),
-            ((None, "judge"), "judge_type", ""),
-            ((TaskType.batch, "judge"), "judge_needs_in", "0"),
-            ((TaskType.batch, "judge"), "judge_needs_out", "1"),
-            ((None, "tokens"), "tokens_ignore_newlines", "0"),
-            ((None, "tokens"), "tokens_ignore_case", "0"),
-            ((None, "tokens"), "tokens_float_rel_error", ""),
-            ((None, "tokens"), "tokens_float_abs_error", ""),
-            ((None, "shuffle"), "shuffle_mode", ""),
-            ((None, "shuffle"), "shuffle_ignore_case", "0"),
-        ]
-        args: dict[str, Any] = {
-            key: configs.get(section, key) for section, key in GLOBAL_KEYS
-        }
+        args: dict[str, Any] = {}
 
-        # Load judge specific keys
-        for (task_type, out_check), key, default in OUT_CHECK_SPECIFIC_KEYS:
-            if (task_type is None or task_type == args["task_type"].value) and args[
-                "out_check"
-            ].value == out_check:
-                args[key] = configs.get("tests", key)
-            else:
-                args[key] = ConfigValue.make_internal(default, "tests", key)
+        args["task"] = TaskSection.load_dict(configs)
+        args["tests"] = TestsSection.load_dict(args["task"]["task_type"].value, configs)
 
         section_names = configs.sections()
 
@@ -218,17 +164,19 @@ class TaskConfig(BaseEnv):
             (ProgramType.judge, "out_judge"),
         ]
         for t, program in PROGRAMS:
-            if args[program].value:
-                args[program] = RunConfig.load_dict(t, args[program], configs)
+            if args["tests"][program].value:
+                args["tests"][program] = RunSection.load_dict(
+                    t, args["tests"][program], configs
+                )
 
         # Load tests
-        args["tests"] = tests = {}
+        args["test_sections"] = test_sec = {}
         # Sort so tests.keys() returns tests in sorted order
         for section in sorted(section_names, key=lambda cv: cv.value):
             section_name = section.value
             if m := re.fullmatch(r"test(\d{2})", section_name):
                 num = m[1]
-                tests[int(num)] = TestConfig.load_dict(
+                test_sec[int(num)] = TestSection.load_dict(
                     ConfigValue(str(int(num)), section.config, section.section, None),
                     configs,
                 )
@@ -236,13 +184,13 @@ class TaskConfig(BaseEnv):
         args["solutions"] = solutions = {}
         for section in section_names:
             if m := re.fullmatch(r"solution_(.+)", section.value):
-                solutions[m[1]] = SolutionConfig.load_dict(
+                solutions[m[1]] = SolutionSection.load_dict(
                     ConfigValue(m[1], section.config, section.section, None), configs
                 )
 
-        args["limits"] = LimitsConfig.load_dict(configs)
-        args["cms"] = CMSConfig.load_dict(configs)
-        args["checks"] = ChecksConfig.load_dict(configs)
+        args["limits"] = LimitsSection.load_dict(configs)
+        args["cms"] = CMSSection.load_dict(configs)
+        args["checks"] = ChecksSection.load_dict(configs)
 
         args["solution_time_limit"] = configs.get_from_candidates(
             [("run_solution", "time_limit"), ("run", "time_limit")]
@@ -252,17 +200,14 @@ class TaskConfig(BaseEnv):
 
     @model_validator(mode="after")
     def validate_model(self):
-        if self.validator is not None and self.validator_type is None:
-            raise PydanticCustomError(
-                "no_validator_type",
-                "Missing validator_type",
-                {"validator": self.validator.name, "validator_type": ""},
-            )
-        if self.task_type == TaskType.interactive and self.out_check != OutCheck.judge:
+        if (
+            self.task.task_type == TaskType.interactive
+            and self.tests.out_check != OutCheck.judge
+        ):
             raise PydanticCustomError(
                 "interactive_must_have_judge",
                 "For interactive task 'out_check' must be 'judge'",
-                {"task_type": self.task_type, "out_check": self.out_check},
+                {"task_type": self.task.task_type, "out_check": self.tests.out_check},
             )
 
         JUDGE_TYPES = {
@@ -270,23 +215,11 @@ class TaskConfig(BaseEnv):
             TaskType.interactive: [JudgeType.cms_communication],
         }
 
-        if self.judge_type not in JUDGE_TYPES[self.task_type]:
+        if self.tests.judge_type not in JUDGE_TYPES[self.task.task_type]:
             raise PydanticCustomError(
                 "task_judge_type_mismatch",
-                f"'{self.judge_type}' judge for '{self.task_type}' task is not allowed",
-                {"task_type": self.task_type, "judge_type": self.judge_type},
-            )
-
-        if (self.tokens_float_abs_error is not None) != (
-            self.tokens_float_rel_error is not None
-        ):
-            raise PydanticCustomError(
-                "tokens_errors_must_be_set_together",
-                "Both types of floating point error must be set together",
-                {
-                    "tokens_float_abs_error": self.tokens_float_abs_error,
-                    "tokens_float_rel_error": self.tokens_float_rel_error,
-                },
+                f"'{self.tests.judge_type}' judge for '{self.task.task_type}' task is not allowed",
+                {"task_type": self.task.task_type, "judge_type": self.tests.judge_type},
             )
 
         primary = [name for name, sol in self.solutions.items() if sol.primary]
@@ -303,8 +236,8 @@ class TaskConfig(BaseEnv):
                 {},
             )
 
-        for i in range(len(self.tests)):
-            if i not in self.tests:
+        for i in range(len(self.test_sections)):
+            if i not in self.test_sections:
                 raise PydanticCustomError(
                     "missing_test",
                     f"Missing section [test{i:02}]",
@@ -319,7 +252,7 @@ class TaskConfig(BaseEnv):
         computed = set()
 
         def compute_test(num: int) -> list[int]:
-            test = self.tests[num]
+            test = self.test_sections[num]
             if num in computed:
                 return test.all_predecessors
             elif num in visited:
@@ -339,7 +272,7 @@ class TaskConfig(BaseEnv):
             test.all_predecessors = normalize_list(all_predecessors)
             test.prev_globs = normalize_list(
                 sum(
-                    (self.tests[p].in_globs for p in test.all_predecessors),
+                    (self.test_sections[p].in_globs for p in test.all_predecessors),
                     start=[],
                 )
             )
@@ -352,7 +285,108 @@ class TaskConfig(BaseEnv):
             compute_test(i)
 
 
-class TestConfig(BaseEnv):
+class TaskSection(BaseEnv):
+    _section: str = "task"
+    task_type: TaskType
+    score_precision: int = Field(ge=0)
+
+    @classmethod
+    def load_dict(cls, configs: ConfigHierarchy) -> ConfigValuesDict:
+        args: dict[str, ConfigValue] = {
+            key: configs.get("task", key) for key in cls.model_fields
+        }
+        return {"_section": configs.get("task", None), **args}
+
+
+class TestsSection(BaseEnv):
+    _section: str = "tests"
+
+    static_subdir: TaskPathFromStr
+    in_gen: OptionalRunSection
+    gen_type: GenType
+
+    validator: OptionalRunSection
+    validator_type: OptionalValidatorType
+
+    out_check: OutCheck
+    out_judge: OptionalRunSection
+    judge_type: OptionalJudgeType
+    judge_needs_in: bool | None
+    judge_needs_out: bool | None
+    tokens_ignore_newlines: bool | None
+    tokens_ignore_case: bool | None
+    tokens_float_rel_error: OptionalFloat
+    tokens_float_abs_error: OptionalFloat
+    shuffle_mode: OptionalShuffleMode
+    shuffle_ignore_case: bool | None
+
+    in_format: DataFormat
+    out_format: DataFormat
+
+    @staticmethod
+    def load_dict(task_type: str, configs: ConfigHierarchy) -> ConfigValuesDict:
+        GLOBAL_KEYS = [
+            "in_gen",
+            "gen_type",
+            "validator",
+            "validator_type",
+            "out_check",
+            "in_format",
+            "out_format",
+            "static_subdir",
+        ]
+        OUT_CHECK_SPECIFIC_KEYS = [
+            ((None, "judge"), "out_judge", ""),
+            ((None, "judge"), "judge_type", ""),
+            ((TaskType.batch, "judge"), "judge_needs_in", "0"),
+            ((TaskType.batch, "judge"), "judge_needs_out", "1"),
+            ((None, "tokens"), "tokens_ignore_newlines", "0"),
+            ((None, "tokens"), "tokens_ignore_case", "0"),
+            ((None, "tokens"), "tokens_float_rel_error", ""),
+            ((None, "tokens"), "tokens_float_abs_error", ""),
+            ((None, "shuffle"), "shuffle_mode", ""),
+            ((None, "shuffle"), "shuffle_ignore_case", "0"),
+        ]
+        args: dict[str, ConfigValue] = {
+            key: configs.get("tests", key) for key in GLOBAL_KEYS
+        }
+
+        # Load judge specific keys
+        for (task_type_cond, out_check), key, default in OUT_CHECK_SPECIFIC_KEYS:
+            if (task_type_cond is None or task_type_cond == task_type) and args[
+                "out_check"
+            ].value == out_check:
+                args[key] = configs.get("tests", key)
+            else:
+                args[key] = ConfigValue.make_internal(default, "tests", key)
+
+        return {"_section": configs.get("tests", None), **args}
+
+    @model_validator(mode="after")
+    def validate_model(self):
+        if self.validator is not None and self.validator_type is None:
+            raise PydanticCustomError(
+                "no_validator_type",
+                "Missing validator_type",
+                {"validator": self.validator.name, "validator_type": ""},
+            )
+
+        if (self.tokens_float_abs_error is not None) != (
+            self.tokens_float_rel_error is not None
+        ):
+            raise PydanticCustomError(
+                "tokens_errors_must_be_set_together",
+                "Both types of floating point error must be set together",
+                {
+                    "tokens_float_abs_error": self.tokens_float_abs_error,
+                    "tokens_float_rel_error": self.tokens_float_rel_error,
+                },
+            )
+
+        return self
+
+
+class TestSection(BaseEnv):
     """Configuration of one test (group of testcases)."""
 
     _section: str
@@ -377,7 +411,7 @@ class TestConfig(BaseEnv):
     @staticmethod
     def load_dict(number: ConfigValue, configs: ConfigHierarchy) -> ConfigValuesDict:
         KEYS = ["name", "points", "in_globs", "predecessors", "skip_validation"]
-        args: dict[str, Any] = {
+        args: dict[str, ConfigValue] = {
             key: configs.get_from_candidates([(number.section, key), ("tests", key)])
             for key in KEYS
         }
@@ -438,13 +472,13 @@ class TestConfig(BaseEnv):
         return self
 
 
-class SolutionConfig(BaseEnv):
+class SolutionSection(BaseEnv):
     """Configuration of one solution."""
 
     _section: str
     name: str
     primary: bool
-    run: "RunConfig"
+    run: "RunSection"
     points: MaybeInt
     points_min: MaybeInt
     points_max: MaybeInt
@@ -491,7 +525,7 @@ class SolutionConfig(BaseEnv):
             "_section": configs.get(name.section, None),
             "name": name,
             **args,
-            "run": RunConfig.load_dict(sol_type, args["run"], configs),
+            "run": RunSection.load_dict(sol_type, args["run"], configs),
         }
 
     @field_validator("name", mode="after")
@@ -573,7 +607,7 @@ def get_run_defaults(program_type: ProgramType, program_name: str) -> list[str]:
         ]
 
 
-class RunConfig(BaseEnv):
+class RunSection(BaseEnv):
     """Configuration of running an program"""
 
     _section: str
@@ -581,7 +615,7 @@ class RunConfig(BaseEnv):
     program_type: ProgramType
     name: str
     subdir: str
-    build: "BuildConfig"
+    build: "BuildSection"
     exec: TaskPathFromStr
     time_limit: float = Field(ge=0)  # [seconds]
     clock_mul: float = Field(ge=0)  # [1]
@@ -625,7 +659,7 @@ class RunConfig(BaseEnv):
             ),
             "name": name,
             **args,
-            "build": BuildConfig.load_dict(args["build"], configs),
+            "build": BuildSection.load_dict(args["build"], configs),
         }
 
     @field_validator("exec", mode="before")
@@ -638,7 +672,7 @@ class RunConfig(BaseEnv):
             return value
 
 
-class BuildConfig(BaseEnv):
+class BuildSection(BaseEnv):
     program_names: ClassVar[dict[str, str]] = {}
 
     _section: str
@@ -714,7 +748,7 @@ class BuildConfig(BaseEnv):
             return value
 
 
-class LimitsConfig(BaseEnv):
+class LimitsSection(BaseEnv):
     """Configuration of input and output size limits."""
 
     _section: str = "limits"
@@ -724,10 +758,13 @@ class LimitsConfig(BaseEnv):
 
     @classmethod
     def load_dict(cls, configs: ConfigHierarchy) -> ConfigValuesDict:
-        return {key: configs.get("limits", key) for key in cls.model_fields}
+        args: dict[str, ConfigValue] = {
+            key: configs.get("limits", key) for key in cls.model_fields
+        }
+        return {"_section": configs.get("limits", None), **args}
 
 
-class CMSConfig(BaseEnv):
+class CMSSection(BaseEnv):
     _section: str = "cms"
 
     name: OptionalStr
@@ -748,21 +785,7 @@ class CMSConfig(BaseEnv):
 
     @classmethod
     def load_dict(cls, configs: ConfigHierarchy) -> ConfigValuesDict:
-        KEYS = [
-            "name",
-            "title",
-            "submission_format",
-            "time_limit",
-            "mem_limit",
-            "max_submissions",
-            "min_submission_interval",
-            "score_mode",
-            "feedback_level",
-            "stubs",
-            "headers",
-        ]
-
-        args = {key: configs.get("cms", key) for key in KEYS}
+        args = {key: configs.get("cms", key) for key in cls.model_fields}
 
         def get_strategy_union(key: str) -> str:
             all_items = {
@@ -782,7 +805,7 @@ class CMSConfig(BaseEnv):
         if args["headers"].value == "@auto":
             args["headers"].value = get_strategy_union("extra_nonsources")
 
-        return args
+        return {"_section": configs.get("cms", None), **args}
 
     @field_validator("title", mode="before")
     @classmethod
@@ -802,7 +825,7 @@ class CMSConfig(BaseEnv):
         name = "unnamed-task" if name is None else name
 
         return [
-            (CMSConfig.get_default_file_name(name) if n == "@name" else n)
+            (CMSSection.get_default_file_name(name) if n == "@name" else n)
             for n in value
         ]
 
@@ -812,7 +835,7 @@ class CMSConfig(BaseEnv):
         return f"{name}.%l"
 
 
-class ChecksConfig(BaseEnv):
+class ChecksSection(BaseEnv):
     """Configuration of checks for pisek to run."""
 
     _section: str = "checks"
@@ -826,7 +849,10 @@ class ChecksConfig(BaseEnv):
 
     @classmethod
     def load_dict(cls, configs: ConfigHierarchy) -> ConfigValuesDict:
-        return {key: configs.get("checks", key) for key in cls.model_fields}
+        args: dict[str, ConfigValue] = {
+            key: configs.get("checks", key) for key in cls.model_fields
+        }
+        return {"_section": configs.get("checks", None), **args}
 
 
 def _format_message(err: ErrorDetails) -> str:

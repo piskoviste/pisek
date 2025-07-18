@@ -100,18 +100,18 @@ class RunTokenChecker(RunJudgeLibChecker):
 
     def _get_flags(self) -> list[str]:
         flags = ["-t"]
-        if self._env.config.tokens_ignore_newlines:
+        if self._env.config.tests.tokens_ignore_newlines:
             flags.append("-n")
-        if self._env.config.tokens_ignore_case:
+        if self._env.config.tests.tokens_ignore_case:
             flags.append("-i")
-        if self._env.config.tokens_float_rel_error != None:
+        if self._env.config.tests.tokens_float_rel_error != None:
             flags.extend(
                 [
                     "-r",
                     "-e",
-                    str(self._env.config.tokens_float_rel_error),
+                    str(self._env.config.tests.tokens_float_rel_error),
                     "-E",
-                    str(self._env.config.tokens_float_abs_error),
+                    str(self._env.config.tests.tokens_float_abs_error),
                 ]
             )
         return flags
@@ -146,9 +146,9 @@ class RunShuffleChecker(RunJudgeLibChecker):
             "lines_words": "-lw",
             "tokens": "-nw",
         }
-        assert self._env.config.shuffle_mode is not None
-        flags = ["-e", SHUFFLE_MODE_FLAGS[self._env.config.shuffle_mode]]
-        if self._env.config.shuffle_ignore_case:
+        assert self._env.config.tests.shuffle_mode is not None
+        flags = ["-e", SHUFFLE_MODE_FLAGS[self._env.config.tests.shuffle_mode]]
+        if self._env.config.tests.shuffle_ignore_case:
             flags.append("-i")
 
         return flags
