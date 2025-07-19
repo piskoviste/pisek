@@ -228,7 +228,7 @@ class ProgramsJob(TaskJob):
                         wt,
                         pool_item.stdout,
                         pool_item.stderr,
-                        "Finished successfully",
+                        "Exited with return code 0",
                     )
                 )
             elif process.returncode == 1:
