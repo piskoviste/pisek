@@ -41,8 +41,6 @@ class TestFixture(unittest.TestCase):
             os.path.join(self.task_dir_orig, "../pisek"),
             os.path.join(self.fixtures_dir, "pisek"),
         )
-        # print(os.listdir(self.task_dir))
-        # print(os.listdir(self.task_dir + "/src"))
 
         if not is_task_dir(self.task_dir, None):
             exit(1)
@@ -166,7 +164,7 @@ def modify_config(task_dir: str, modification_fn):
     config_path = os.path.join(task_dir, config_hierarchy.CONFIG_FILENAME)
     read_files = config.read(config_path)
     if not read_files:
-        raise FileNotFoundError(f"Chybí konfigurační soubor {config_path}.")
+        raise FileNotFoundError(f"Missing configuration file {config_path}.")
 
     modification_fn(config)
 
