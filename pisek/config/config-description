@@ -45,7 +45,8 @@ static_subdir=
 name=
 in_globs=
 predecessors=
-skip_validation=
+checks.validate=
+checks.different_outputs=
 
 [test\d{2}]
 #!regex
@@ -54,6 +55,8 @@ name=
 points=
 in_globs=
 predecessors=
+checks.validate=
+checks.different_outputs=
 
 [solution_(.*)]
 #!regex

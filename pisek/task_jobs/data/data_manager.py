@@ -114,14 +114,14 @@ class DataManager(TaskJobManager):
                 )
 
         if self._env.config.tests.validator is None:
-            skips_all_validation = all(
-                test_config.skip_validation
+            not_skipped_test = any(
+                test_config.checks_validate
                 for test_config in self._env.config.test_sections.values()
             )
-            if not skips_all_validation:
+            if not_skipped_test:
                 self._warn(
                     "No validator specified in config.\n"
-                    "It is recommended to set `validator` is section [tests]"
+                    "It is recommended to set 'validator' is section [tests]"
                 )
 
         return jobs
