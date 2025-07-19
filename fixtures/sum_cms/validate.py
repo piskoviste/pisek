@@ -5,7 +5,7 @@ import argparse
 
 
 def main(diff):
-    BOUNDS = [(0, 1e9), (-1e9, 1e9), (-1e18, 1e18)]
+    BOUNDS = [(-1e18, 1e18), (0, 1e9), (-1e9, 1e9), (-1e18, 1e18)]
     assert 0 <= diff < len(BOUNDS)
     read_values(2, *BOUNDS[diff])
 
@@ -23,7 +23,7 @@ def read_line():
 
 def fail(message):
     global line_number
-    print(message + " (na radku {})".format(line_number), file=sys.stderr)
+    print(message + " (on line {})".format(line_number), file=sys.stderr)
     sys.exit(1)
 
 
@@ -31,19 +31,23 @@ def read_values(count=None, minimum=None, maximum=None, value_type=int):
     try:
         line = read_line()
     except EOFError:
-        fail("Konec souboru.")
+        fail("End of file.")
 
     try:
         numbers = list(map(value_type, line.split(" ")))
     except ValueError:
-        fail("Hodnota neni typu {}.".format(value_type))
+        fail("Value is not of type {}.".format(value_type))
 
     if count is not None and len(numbers) != count:
-        fail("Pocet hodnot na radku byl {} a mel byt {}.".format(len(numbers), count))
+        fail(
+            "Number of values was {} and should have been {}.".format(
+                len(numbers), count
+            )
+        )
     if minimum is not None and any(x < minimum for x in numbers):
-        fail("Nejaka hodnota na radku byla mensi nez {}.".format(minimum))
+        fail("Value was smaller than {}.".format(minimum))
     if maximum is not None and any(x > maximum for x in numbers):
-        fail("Nejaka hodnota na radku byla vetsi nez {}.".format(maximum))
+        fail("Value was greater than {}.".format(maximum))
 
     return numbers
 
@@ -55,14 +59,15 @@ def expect_eof():
     except EOFError:
         koniec = True
     if not koniec:
-        fail("Soubor pokracuje, ale mel uz skoncit.")
+        fail("File continues, but should have ended.")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Nacte ze stdin vstupy ulohy a zkontroluje jejich spravnost"
+        description="Loads input from stdin and validates it."
     )
-    parser.add_argument("test", type=int, help="test (indexovany od 1)")
+    parser.add_argument("test", type=int, help="test number (0-3)")
     args = parser.parse_args()
-    main(args.test - 1)
+    main(args.test)
     expect_eof()
+    exit(42)

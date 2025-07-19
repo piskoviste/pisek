@@ -74,7 +74,6 @@ points_max=
 #!if solution_(.*) points==X
 
 tests=
-subtasks=
 
 [solutions]
 run=
