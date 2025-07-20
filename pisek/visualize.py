@@ -21,8 +21,8 @@ from typing import Any, Optional
 from pisek.utils.text import pad, tab, eprint
 from pisek.utils.colors import ColorSettings
 from pisek.utils.terminal import terminal_width
-from pisek.config.task_config import load_config
-from pisek.config.task_config import TaskConfig
+from pisek.config.config_types import TestPoints
+from pisek.config.task_config import load_config, TaskConfig
 from pisek.config.select_solutions import expand_solutions, UnknownSolutions
 from pisek.task_jobs.solution.solution_result import Verdict
 from pisek.task_jobs.solution.verdicts_eval import evaluate_verdicts
@@ -42,7 +42,9 @@ class LoggedResult:
     test: str
     original_verdict: Verdict
 
-    def points(self, test_points: int) -> Decimal:
+    def points(self, test_points: TestPoints) -> Decimal:
+        if test_points == "unscored":
+            return Decimal("0")
         if self.relative_points is not None:
             return self.relative_points * test_points
         elif self.absolute_points is not None:

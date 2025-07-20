@@ -341,7 +341,7 @@ class TestJobGroup(TaskHelper):
     def points(self) -> Decimal:
         results = self._results(self.all_jobs)
         points = map(lambda r: r.points(self._env, self.test.points), results)
-        return min(points, default=Decimal(self.test.points))
+        return min(points, default=Decimal(self.test.max_points))
 
     @property
     def verdict(self) -> Verdict:
@@ -419,7 +419,7 @@ class TestJobGroup(TaskHelper):
             len(test.name) for test in self._env.config.test_sections.values()
         )
         max_sub_points_len = max(
-            len(self._format_points(sub.points))
+            len(self._format_points(sub.max_points))
             for sub in self._env.config.test_sections.values()
         )
 
@@ -442,7 +442,7 @@ class TestJobGroup(TaskHelper):
         )
         test_info = (
             right_aligned_text(
-                f"{self.test.name}: {self._format_points(self.points)}/{self._format_points(self.test.points)}",
+                f"{self.test.name}: {self._format_points(self.points)}/{self._format_points(self.test.max_points)}",
                 f"slowest {self.slowest_time:.2f}s",
                 offset=-2,
             )

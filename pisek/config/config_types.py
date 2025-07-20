@@ -10,7 +10,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>
 
-from enum import StrEnum, auto
+from enum import auto, StrEnum
+from pydantic_core import PydanticCustomError
+from pydantic import BeforeValidator
+from typing import Annotated, Literal
 
 
 class TaskType(StrEnum):
@@ -53,6 +56,23 @@ class DataFormat(StrEnum):
     text = auto()
     strict_text = "strict-text"
     binary = auto()
+
+
+def validate_test_points(points: str):
+    if points == "unscored":
+        return "unscored"
+    try:
+        p = int(points)
+        assert p >= 0
+        return p
+    except (AssertionError, ValueError):
+        raise PydanticCustomError(
+            "test_points_parsing",
+            "Input should be non-negative integer or 'unscored'",
+        )
+
+
+TestPoints = Annotated[int | Literal["unscored"], BeforeValidator(validate_test_points)]
 
 
 class ProgramType(StrEnum):
