@@ -8,7 +8,7 @@ if __name__ == "__main__":
     parser.add_argument("test", type=int, help="test (indexovany od 1)")
     args = parser.parse_args()
 
-    # Here bounds for test 3 are stricter than what the generator really creates.
+    # Here the bounds for test 3 are stricter than what the generator really creates.
     BOUNDS = [(-1e18, 1e18), (0, 1e9), (-1e9, 1e9), (-1e9, 1e9)][args.test]
     a, b = map(int, input().split(" "))
     assert BOUNDS[0] <= a <= BOUNDS[1]

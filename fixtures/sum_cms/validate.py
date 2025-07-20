@@ -31,7 +31,7 @@ def read_values(count=None, minimum=None, maximum=None, value_type=int):
     try:
         line = read_line()
     except EOFError:
-        fail("End of file.")
+        fail("Unexpected end of file.")
 
     try:
         numbers = list(map(value_type, line.split(" ")))
@@ -40,14 +40,14 @@ def read_values(count=None, minimum=None, maximum=None, value_type=int):
 
     if count is not None and len(numbers) != count:
         fail(
-            "Number of values was {} and should have been {}.".format(
+            "The number of values was {} and should have been {}.".format(
                 len(numbers), count
             )
         )
     if minimum is not None and any(x < minimum for x in numbers):
-        fail("Value was smaller than {}.".format(minimum))
+        fail("A value was smaller than {}.".format(minimum))
     if maximum is not None and any(x > maximum for x in numbers):
-        fail("Value was greater than {}.".format(maximum))
+        fail("A value was greater than {}.".format(maximum))
 
     return numbers
 
@@ -59,12 +59,12 @@ def expect_eof():
     except EOFError:
         koniec = True
     if not koniec:
-        fail("File continues, but should have ended.")
+        fail("The file continues, but it should have ended.")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Loads input from stdin and validates it."
+        description="Loads an input from stdin and validates it."
     )
     parser.add_argument("test", type=int, help="test number (0-3)")
     args = parser.parse_args()
