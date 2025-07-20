@@ -1,4 +1,4 @@
-# Example and explanation of a config file for task made in pisek
+# Example and explanation of a config file for a task made in pisek
 
 # Values beginning with ! or @ are reserved and have special meaning:
 # - Only ! value is !unset, which is always invalid
