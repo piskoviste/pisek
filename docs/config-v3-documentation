@@ -16,7 +16,7 @@
 version=v3
 # Task version
 # - v1 - Old version with a basic set of options. (default)
-# - v2 - Old version, with expanded set of options.
+# - v2 - Old version, with an expanded set of options.
 # - v3 - Current version, recommended
 # The version applies to this config file only and cannot be inherited with the use key.
 

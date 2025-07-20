@@ -1,6 +1,6 @@
 # !!! This config version is old and it is not recommended to use it !!!
 
-# Example and explanation of a config file for task made in pisek
+# Example and explanation of a config file for a task made in pisek
 
 # Values beginning with ! or @ are reserved and have special meaning:
 # - Only ! value is !unset, which is always invalid
@@ -11,7 +11,7 @@
 version=v2
 # Task version
 # - v1 - Old version with a basic set of options. (default)
-# - v2 - Old version, with expanded set of options.
+# - v2 - Old version, with an expanded set of options.
 # - v3 - Current version, recommended
 
 # You can use 'pisek config update' to update the config to the highest version.
