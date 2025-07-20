@@ -3,12 +3,12 @@ import argparse
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Loads input from stdin and validates it."
+        description="Loads an input from stdin and validates it."
     )
     parser.add_argument("test", type=int, help="test number (0-2)")
     args = parser.parse_args()
 
-    # Here bounds for test 3 are stricter than what the generator really creates.
+    # Here the bounds for test 3 are stricter than what the generator really creates.
     BOUNDS = [(-1e18, 1e18), (-1e9, 1e9), (-1e18, 1e18)]
     assert 0 <= args.test < len(BOUNDS)
     bounds = BOUNDS[args.test]
