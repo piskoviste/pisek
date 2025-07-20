@@ -35,8 +35,8 @@ def read_values(count=None, minimum=None, maximum=None, value_type=int):
 
     try:
         numbers = list(map(value_type, line.split(" ")))
-    except ValueError:
-        fail("Value is not of type {}.".format(value_type))
+    except ValueError as err:
+        fail(str(err))
 
     if count is not None and len(numbers) != count:
         fail(
