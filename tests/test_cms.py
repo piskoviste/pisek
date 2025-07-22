@@ -53,7 +53,7 @@ class TestOldInputsDeleted(TestSumCMS):
         self.assertNotIn("01_outdated.in", os.listdir(self.inputs_dir))
 
 
-class TestScoreCounting(TestSumCMS):
+class TestDifferentlyScoringSolution(TestSumCMS):
     def expecting_success(self):
         return False
 
@@ -109,7 +109,8 @@ class TestNoLFInStrictTextInput(TestSumCMS):
     def modify_task(self):
         def modification_fn(raw_config):
             raw_config["tests"]["in_gen"] = "gen_no_lf"
-            raw_config["tests"]["validator"] = ""
+            raw_config["tests"].pop("validator")
+            raw_config["tests"].pop("validator_type")
 
         modify_config(self.task_dir, modification_fn)
 
@@ -124,7 +125,8 @@ class TestNoLFInTextInput(TestSumCMS):
         def modification_fn(raw_config):
             raw_config["tests"]["in_format"] = "text"
             raw_config["tests"]["in_gen"] = "gen_no_lf"
-            raw_config["tests"]["validator"] = ""
+            raw_config["tests"].pop("validator")
+            raw_config["tests"].pop("validator_type")
 
         modify_config(self.task_dir, modification_fn)
 
@@ -139,7 +141,8 @@ class TestNoLFInBinaryInput(TestSumCMS):
         def modification_fn(raw_config):
             raw_config["tests"]["in_format"] = "binary"
             raw_config["tests"]["in_gen"] = "gen_no_lf"
-            raw_config["tests"]["validator"] = ""
+            raw_config["tests"].pop("validator")
+            raw_config["tests"].pop("validator_type")
 
         modify_config(self.task_dir, modification_fn)
 
@@ -153,7 +156,7 @@ class TestNoLFInStrictTextOutput(TestSumCMS):
     def modify_task(self):
         def modification_fn(raw_config):
             raw_config["tests"]["out_format"] = "strict-text"
-            raw_config["solution_solve_no_lf"]["subtasks"] = "NNNN"
+            raw_config["solution_solve_no_lf"]["tests"] = "NNNN"
 
         modify_config(self.task_dir, modification_fn)
 
@@ -167,8 +170,6 @@ class TestNoLFInBinaryOutput(TestSumCMS):
     def modify_task(self):
         def modification_fn(raw_config):
             raw_config["tests"]["out_format"] = "binary"
-            raw_config["solution_solve"]["source"] = "solve_no_lf"
-            raw_config["tests"]["validator"] = ""
 
         modify_config(self.task_dir, modification_fn)
 
@@ -189,6 +190,7 @@ class TestBigInput(TestStub):
 
     def modify_task(self):
         def modification_fn(raw_config):
+            raw_config.add_section("limits")
             raw_config["limits"]["input_max_size"] = "1"
 
         modify_config(self.task_dir, modification_fn)
@@ -200,6 +202,7 @@ class TestBigOutput(TestStub):
 
     def modify_task(self):
         def modification_fn(raw_config):
+            raw_config.add_section("limits")
             raw_config["limits"]["output_max_size"] = "1"
 
         modify_config(self.task_dir, modification_fn)

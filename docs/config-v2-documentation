@@ -1,6 +1,6 @@
-# Example and explanation of a config file for task made in pisek
+# !!! This config version is old and it is not recommended to use it !!!
 
-# Move 'config' into a task folder 
+# Example and explanation of a config file for a task made in pisek
 
 # Values beginning with ! or @ are reserved and have special meaning:
 # - Only ! value is !unset, which is always invalid
@@ -11,10 +11,10 @@
 version=v2
 # Task version
 # - v1 - Old version with a basic set of options. (default)
-# - v2 - Current stable version, Added solution sections and redone test sections.
-# - v3 - Current experimental version, generalized contest_type to use. More changes incoming.
+# - v2 - Old version, with an expanded set of options.
+# - v3 - Current version, recommended
 
-# You can use 'pisek update' to update the config to the highest version.
+# You can use 'pisek config update' to update the config to the highest version.
 
 name=a-plus-b
 # Name of task (for automatic CMS import) (required)
