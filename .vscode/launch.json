@@ -13,7 +13,10 @@
             "justMyCode": true,
             "cwd": "${workspaceFolder}/fixtures/sum_cms",
             "args": ["test"],
-            "env": {"PISEK_DIRECTORY": "${workspaceFolder}/fixtures/pisek"}
+            "env": {
+                "PISEK_DIRECTORY": "${workspaceFolder}/fixtures/pisek",
+                "LOG_LEVEL": "debug"
+            }
         }
     ]
 }
