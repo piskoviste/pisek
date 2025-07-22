@@ -108,7 +108,7 @@ class PisekV1ListInputs(GeneratorListInputs):
         )
         if self._run_result.kind != RunResultKind.OK:
             raise self._create_program_failure(
-                f"{self.generator} failed to list inputs",
+                f"Generator failed to list inputs",
                 self._run_result,
             )
 

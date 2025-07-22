@@ -47,6 +47,7 @@ class RunChecker(ProgramsJob):
     ) -> None:
         super().__init__(env=env, name=name, **kwargs)
         self.test = test
+        self.test_sec = self._env.config.test_sections[test]
         self.input = input_
         self.checker_name = checker_name
         self.checker_log_file = checker_log_file
