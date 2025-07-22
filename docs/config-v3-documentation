@@ -63,7 +63,7 @@ in_gen=gen
 # See [run] for more
 
 gen_type=opendata-v1
-# Specifies the generator type. (required for non-empty generator)
+# Specifies the generator type. (required for non-empty in_gen)
 # - pisek-v1 (recommended)
 # - cms-old
 # - opendata-v1
