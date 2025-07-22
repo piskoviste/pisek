@@ -172,7 +172,11 @@ name=@auto
 # @auto expands to "Test [test number]" (default)
 
 points=2
-# Number of points for this test (<int>)
+# Number of points for this test (non-negative int | "unscored")
+#
+# If points=unscored, it is not possible to get any points for this test.
+# (Unlike points=0, where some judge_types might give more than the maximum number of points.)
+#
 # (required in [tests] or each [testXX])
 
 in_globs=@ith
@@ -215,7 +219,7 @@ checks.different_outputs=true
 # Section for samples test
 # Can be omitted and has the following defaults:
 name=Samples
-points=0
+points=unscored
 in_globs=sample*.in
 predecessors=
 
