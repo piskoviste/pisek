@@ -199,13 +199,6 @@ class RunChecker(ProgramsJob):
         else:
             return self.result.verdict.mark()
 
-    @property
-    def full_points(self) -> float:
-        return self.rel_to_abs_points(1.0)
-
-    def rel_to_abs_points(self, rel_points: float) -> float:
-        return self._env.config.test_sections[self.test].points * rel_points
-
 
 class RunBatchChecker(RunChecker):
     """Runs batch checker on single input. (Abstract class)"""

@@ -21,6 +21,7 @@ from enum import Enum
 from functools import partial, cache
 from typing import Callable, Optional, TYPE_CHECKING
 
+from pisek.config.config_types import TestPoints
 from pisek.task_jobs.run_result import RunResult
 
 if TYPE_CHECKING:
@@ -69,8 +70,14 @@ class SolutionResult(ABC):
     solution_rr: RunResult
     checker_rr: Optional[RunResult]
 
+    def points(self, env: "Env", test_points: TestPoints) -> Decimal:
+        if test_points == "unscored":
+            return Decimal("0")
+        else:
+            return self._points(env, test_points)
+
     @abstractmethod
-    def points(self, env: "Env", test_points: int) -> Decimal:
+    def _points(self, env: "Env", test_points: int) -> Decimal:
         pass
 
     def mark(self) -> str:
@@ -85,7 +92,7 @@ class RelativeSolutionResult(SolutionResult):
     checker_rr: Optional[RunResult]
     relative_points: Decimal
 
-    def points(self, env: "Env", test_points: int) -> Decimal:
+    def _points(self, env: "Env", test_points: int) -> Decimal:
         return (self.relative_points * test_points).quantize(
             Decimal("0.1") ** env.config.task.score_precision
         )
@@ -104,7 +111,7 @@ class AbsoluteSolutionResult(SolutionResult):
     checker_rr: Optional[RunResult]
     absolute_points: Decimal
 
-    def points(self, env: "Env", test_points: int) -> Decimal:
+    def _points(self, env: "Env", test_points: int) -> Decimal:
         return self.absolute_points
 
     def mark(self) -> str:

@@ -158,7 +158,8 @@ def get_group_score_parameters(config: TaskConfig) -> list[tuple[int, str]]:
 
     for subtask in config.test_sections.values():
         globs = map(strip_input_extention, subtask.all_globs)
-        params.append((subtask.points, globs_to_regex(globs)))
+        # CMS supports only relative points therefore we convert 'unscored' to 0
+        params.append((subtask.max_points, globs_to_regex(globs)))
 
     return params
 

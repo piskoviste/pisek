@@ -45,6 +45,7 @@ from pisek.config.config_types import (
     JudgeType,
     ShuffleMode,
     DataFormat,
+    TestPoints,
     ProgramType,
     BuildStrategyName,
     CMSFeedbackLevel,
@@ -110,7 +111,7 @@ class TaskConfig(BaseEnv):
     @computed_field  # type: ignore[misc]
     @cached_property
     def total_points(self) -> int:
-        return sum(sub.points for sub in self.test_sections.values())
+        return sum(sub.max_points for sub in self.test_sections.values())
 
     @computed_field  # type: ignore[misc]
     @property
@@ -390,7 +391,7 @@ class TestSection(BaseEnv):
     _section: str
     num: int
     name: str
-    points: int = Field(ge=0)
+    points: TestPoints
     in_globs: ListStr
     prev_globs: list[str] = []
     all_globs: list[str] = []
@@ -398,6 +399,10 @@ class TestSection(BaseEnv):
     all_predecessors: list[int] = []
     checks_validate: bool
     checks_different_outputs: bool
+
+    @property
+    def max_points(self) -> int:
+        return 0 if self.points == "unscored" else self.points
 
     def in_test(self, filename: str) -> bool:
         return any(fnmatch.fnmatch(filename, g) for g in self.all_globs)

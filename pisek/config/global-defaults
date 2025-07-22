@@ -26,7 +26,7 @@ checks.different_outputs=on
 
 [test00]
 name=Samples
-points=0
+points=unscored
 in_globs=sample*.in
 predecessors=
 
