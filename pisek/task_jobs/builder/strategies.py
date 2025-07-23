@@ -266,6 +266,50 @@ class Pascal(BuildBinary):
         return self.target
 
 
+class Java(BuildStrategy):
+    name = BuildStrategyName.java
+    extra_sources: Optional[str] = "extra_sources_java"
+
+    @classmethod
+    def applicable_on_files(cls, build: "BuildSection", sources: list[str]) -> bool:
+        return cls._all_end_with(sources, [".java"])
+
+    @classmethod
+    def applicable_on_directory(cls, build: "BuildSection", directory: str) -> bool:
+        return False
+
+    def _build(self):
+        entry_class = self._get_entrypoint().rstrip(".java")
+        arguments = ["javac", "-d", self.target] + self.sources
+        self._run_subprocess(arguments, self._build_section.program_name)
+        assert "run" not in self.sources
+        run_path = os.path.join(self.target, "run")
+        with open(run_path, "w") as run_file:
+            run_file.write("#!/usr/bin/env bash\n")
+            run_file.write("cd $(dirname $0)\n")
+            run_file.write(f"java {entry_class}\n")
+        st = os.stat(run_path)
+        os.chmod(run_path, st.st_mode | 0o111)
+        return self.target
+
+    def _get_entrypoint(self) -> str:
+        if len(self.sources) == 1:
+            return self.sources[0]
+        else:
+            if self._build_section.entrypoint == "":
+                raise PipelineItemFailure(
+                    f"For multiple java files 'entrypoint' must be set (in section [{self._build_section.section_name}])."
+                )
+            if (entrypoint := self._build_section.entrypoint + ".java") in self.sources:
+                return entrypoint
+            elif (entrypoint := self._build_section.entrypoint) in self.sources:
+                return entrypoint
+            else:
+                raise PipelineItemFailure(
+                    f"Entrypoint '{self._build_section.entrypoint}' not in sources."
+                )
+
+
 class Make(BuildStrategy):
     name = BuildStrategyName.make
     _target_subdir: str = "target"
@@ -364,6 +408,7 @@ AUTO_STRATEGIES: list[type[BuildStrategy]] = [
     C,
     Cpp,
     Pascal,
+    Java,
     Make,
     Cargo,
 ]
