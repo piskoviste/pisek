@@ -285,9 +285,10 @@ class Java(BuildStrategy):
         assert "run" not in self.sources
         run_path = os.path.join(self.target, "run")
         with open(run_path, "w") as run_file:
-            run_file.write("#!/usr/bin/env bash\n")
-            run_file.write("cd $(dirname $0)\n")
-            run_file.write(f"java {entry_class}\n")
+            run_file.write(
+                "#!/usr/bin/bash\n"
+                + f"exec java --class-path ${{0%/run}} {entry_class} $@\n"
+            )
         st = os.stat(run_path)
         os.chmod(run_path, st.st_mode | 0o111)
         return self.target
