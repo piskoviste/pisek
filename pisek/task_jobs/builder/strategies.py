@@ -279,6 +279,10 @@ class Java(BuildStrategy):
         return False
 
     def _build(self):
+        self._check_tool("java")
+        self._check_tool("javac")
+        self._check_tool("/usr/bin/bash")
+
         entry_class = self._get_entrypoint().rstrip(".java")
         arguments = ["javac", "-d", self.target] + self.sources
         self._run_subprocess(arguments, self._build_section.program_name)
