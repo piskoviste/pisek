@@ -90,6 +90,7 @@ def submit(
 
     submission = Submission(
         timestamp=datetime.now(timezone.utc).replace(tzinfo=None),
+        opaque_id=Submission.generate_opaque_id(session, participation.id),
         language=language.name,
         participation=participation,
         task=task,
