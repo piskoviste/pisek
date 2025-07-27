@@ -147,7 +147,7 @@ class TestNoLFInBinaryInput(TestSumCMS):
         modify_config(self.task_dir, modification_fn)
 
 
-class TestNoLFInStrictTextOutput(TestSumCMS):
+class TestNoLFInTextOutput(TestSumCMS):
     """Output without newline at the end with out_format=text."""
 
     def expecting_success(self):
@@ -155,8 +155,8 @@ class TestNoLFInStrictTextOutput(TestSumCMS):
 
     def modify_task(self):
         def modification_fn(raw_config):
-            raw_config["tests"]["out_format"] = "strict-text"
-            raw_config["solution_solve_no_lf"]["tests"] = "NNNN"
+            raw_config["tests"]["out_format"] = "text"
+            raw_config["solution_solve_no_lf"]["tests"] = "1111"
 
         modify_config(self.task_dir, modification_fn)
 
@@ -170,6 +170,7 @@ class TestNoLFInBinaryOutput(TestSumCMS):
     def modify_task(self):
         def modification_fn(raw_config):
             raw_config["tests"]["out_format"] = "binary"
+            raw_config["solution_solve_no_lf"]["tests"] = "1111"
 
         modify_config(self.task_dir, modification_fn)
 
