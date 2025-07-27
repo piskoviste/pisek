@@ -193,10 +193,11 @@ class Python(BuildScript):
         return True
 
     def _build(self):
+        entrypoint = self._get_entrypoint(".py")
         if len(self.sources) == 1:
-            return self._build_script(self.sources[0])
+            return self._build_script(entrypoint)
         else:
-            entrypoint = self._get_entrypoint(".py")
+            assert "run" not in self.sources
             os.symlink(self._build_script(entrypoint), "run")
             return "."
 
