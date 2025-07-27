@@ -362,6 +362,8 @@ strategy=auto
 # - c
 # - cpp
 # - pascal
+# - make
+# - cargo
 
 headers_c=
 # Headers to include in the c strategy (defaults to empty)
