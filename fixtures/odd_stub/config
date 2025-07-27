@@ -1,37 +1,35 @@
 # Pisek fixture
-# Source: $(pisek)/docs/config-v2-documentation for more information
+# Source: $(pisek)/docs/config-v3-documentation for more information
 
 [task]
-name=odd-stub
-contest_type=cms
-version=v2
-
-static_subdir=.
+version=v3
 
 [tests]
 in_gen=gen
 gen_type=pisek-v1
 out_check=shuffle
-stub=stubs/grader
-headers=stubs/odd.h
 shuffle_mode=lines
+static_subdir=.
 
 [test01]
 points=10
 in_globs=first-ten.in random-uniform*.in
 predecessors=0
 
-[limits]
-solve_time_limit=0.2
-
 [solution_solve]
-source=solve
 primary=yes
-points=10
-subtasks=11
+tests=11
 
 [solution_solve_rev]
-subtasks=11
+tests=11
+
+[run_solution]
+time_limit=0.2
+
+[build_solution]
+extra_sources_cpp=stubs/grader.cpp
+headers_c=stubs/odd.h
+headers_cpp=stubs/odd.h
 
 [cms]
 name=odd-stub
