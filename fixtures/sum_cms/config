@@ -20,6 +20,8 @@ judge_needs_in=1
 judge_needs_out=1
 judge_type=cms-batch
 
+out_format=strict-text
+
 [checks]
 solution_for_each_test=on
 all_inputs_in_last_test=on
@@ -56,7 +58,7 @@ tests=111T
 tests=WWWW
 
 [solution_solve_no_lf]
-tests=1111
+tests=NNNN
 
 [run_solution]
 time_limit=0.2
