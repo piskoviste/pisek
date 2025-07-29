@@ -69,3 +69,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     main(args.test - 1)
     expect_eof()
+    exit(42)

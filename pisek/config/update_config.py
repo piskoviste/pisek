@@ -298,11 +298,8 @@ def update_to_v3(config: ConfigParser, task_path: str) -> None:
     maybe_move_key(config, "predecessors", "all_tests", "tests")
 
 
-OUTDATED_VERSIONS = {"v1": ("v2", update_to_v2)}
-CURRENT_VERSIONS = {"v2": ("v3", update_to_v3)}
-
+OUTDATED_VERSIONS = {"v1": ("v2", update_to_v2), "v2": ("v3", update_to_v3)}
 NEWEST_VERSION = "v3"
-NEWEST_IS_EXPERIMENTAL = True
 
 
 def update_config(config: ConfigParser, task_path: str, infos: bool = True) -> None:
@@ -312,21 +309,14 @@ def update_config(config: ConfigParser, task_path: str, infos: bool = True) -> N
 
     version = config.get("task", "version", fallback="v1")
     if version == NEWEST_VERSION:
-        if NEWEST_IS_EXPERIMENTAL:
-            inform(
-                f"Config format for version {NEWEST_VERSION} is experimental and can be changed"
-            )
         return
 
-    if version in OUTDATED_VERSIONS:
-        inform(f"Updating config")
-
-    updaters = OUTDATED_VERSIONS | CURRENT_VERSIONS
-    if version not in updaters:
+    if version not in OUTDATED_VERSIONS:
         raise TaskConfigError(f"Unknown version of config: {version}")
 
-    while version in updaters:
-        version, updater = updaters[version]
+    inform(f"Updating config")
+    while version in OUTDATED_VERSIONS:
+        version, updater = OUTDATED_VERSIONS[version]
         updater(config, task_path)
 
     if version != NEWEST_VERSION:

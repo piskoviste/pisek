@@ -1,29 +1,30 @@
 # Pisek fixture
-# Source: $(pisek)/docs/config-v2-documentation for more information
+# Source: $(pisek)/docs/config-v3-documentation for more information
 
 [task]
-name=sum
-# CMS tasks have a different judge and generator format than Kasiopea
-# (generator doesn't require seed)
-contest_type=cms
-version=v2
+version=v3
+task_type=batch
 
 [tests]
 # generator source file
 in_gen=gen
+gen_type=cms-old
 
-checker=validate
+validator=validate
+validator_type=simple-42
 
 out_check=judge
 # judge source file
 out_judge=judge
-
 judge_needs_in=1
 judge_needs_out=1
+judge_type=cms-batch
+
+out_format=strict-text
 
 [checks]
-solution_for_each_subtask=on
-all_inputs_in_last_subtask=on
+solution_for_each_test=on
+all_inputs_in_last_test=on
 
 [test01]
 name=Subtask A
@@ -42,36 +43,28 @@ points=6
 in_globs=03*.in
 predecessors=1 2
 
-[limits]
-# Time limit (seconds) for solutions
-solve_time_limit=0.2
-
 [solution_solve]
-source=solve
 primary=yes
-points=10
-subtasks=1111
+tests=1111
 
 [solution_solve_3b]
-source=solve_3b
 points=3
-subtasks=P1PW
+tests=P1PW
 
 [solution_solve_slow_4b]
-source=solve_slow_4b
-points=4
-subtasks=111T
+tests=111T
 
 [solution_solve_0b]
-source=solve_0b
-points=0
-subtasks=WWWW
+tests=WWWW
 
 [solution_solve_no_lf]
-source=solve_no_lf
-subtasks=1111
+tests=NNNN
+
+[run_solution]
+time_limit=0.2
 
 [cms]
+name=sum
 title=Sum
 time_limit=2
 min_submission_interval=30

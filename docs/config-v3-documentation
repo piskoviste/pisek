@@ -1,9 +1,4 @@
-# Example and explanation of a config file for task made in pisek
-
-# !!! Config version 3 is experimental and can be changed !!!
-# TODO comments indicate future changes
-
-# Move 'config' into a task folder
+# Example and explanation of a config file for a task made in pisek
 
 # Values beginning with ! or @ are reserved and have special meaning:
 # - Only ! value is !unset, which is always invalid
@@ -21,11 +16,11 @@
 version=v3
 # Task version
 # - v1 - Old version with a basic set of options. (default)
-# - v2 - Current stable version, Added solution sections and redone test sections.
-# - v3 - Current experimental version, generalized contest_type to use. More changes incoming.
+# - v2 - Old version, with an expanded set of options.
+# - v3 - Current version, recommended
 # The version applies to this config file only and cannot be inherited with the use key.
 
-# You can use 'pisek update' to update the config to the highest version.
+# You can use 'pisek config update' to update the config to the highest version.
 
 use=organization-config
 # Config to use defaults from (defaults to none)
@@ -63,7 +58,7 @@ in_gen=gen
 # See [run] for more
 
 gen_type=opendata-v1
-# Specifies the generator type. (required)
+# Specifies the generator type. (required for non-empty in_gen)
 # - pisek-v1 (recommended)
 # - cms-old
 # - opendata-v1
@@ -363,6 +358,8 @@ strategy=auto
 # - cpp
 # - pascal
 # - java
+# - make
+# - cargo
 
 headers_c=
 # Headers to include in the c strategy (defaults to empty)

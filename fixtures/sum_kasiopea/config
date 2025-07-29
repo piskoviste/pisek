@@ -2,52 +2,38 @@
 # Source: $(pisek)/docs/config-v3-documentation for more information
 
 [task]
-name=sum
-tests=2
-
-version=v2
+version=v3
 
 [tests]
-in_mode=online
 in_gen=gen
-checker=validate
-out_mode=solve
-online_validity=360
+gen_type=opendata-v1
+validator=validate
+validator_type=simple-42
 out_check=tokens
 
 [test01]
 name=Easy input
-file_name=H-lehky.txt
 points=4
 
 [test02]
 name=Hard input
-file_name=H-tezky.txt
 points=6
 
 [solution_solve]
-source=solve
 primary=yes
-points=10
-subtasks=111
+tests=111
 
 [solution_solve_4b]
-source=solve_4b
-points=4
-subtasks=11W
+tests=11W
 
 [solution_solve_slow_4b]
-source=solve_slow_4b
-points=4
-subtasks=11T
+tests=11T
 
 [solution_solve_0b]
-source=solve_0b
-points=0
-subtasks=1WW
+tests=1WW
 
-[limits]
+[run_solution]
 # Time limit (seconds) for solutions
-solve_time_limit=0.2
+time_limit=0.2
 # Memory (address space) limit (MB) for solutions
-solve_mem_limit=128
+mem_limit=128
