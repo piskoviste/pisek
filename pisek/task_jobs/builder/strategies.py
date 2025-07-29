@@ -2,6 +2,7 @@
 #
 # Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
 # Copyright (c)   2024        Benjamin Swart <benjaminswart@email.cz>
+# Copyright (c)   2025        Antonín Maloň <git@tonyl.eu>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
