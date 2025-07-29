@@ -245,6 +245,7 @@ def update_to_v3(config: ConfigParser, task_path: str) -> None:
     update_to_extra(config, "stub", "extra_sources_c", ".c")
     update_to_extra(config, "stub", "extra_sources_cpp", ".cpp")
     update_to_extra(config, "stub", "extra_sources_py", ".py")
+    update_to_extra(config, "stub", "extra_sources_java", ".java")
     maybe_delete_key(config, "tests", "stub")
     update_to_extra(config, "headers", "headers_c", ".h")
     update_to_extra(config, "headers", "headers_cpp", ".h")

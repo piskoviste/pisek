@@ -53,6 +53,12 @@ tests=WW
 [solution_solve_rs_complex_max]
 tests=@all
 
+[solution_solve_java_simple]
+tests=@all
+
+[solution_solve_java_complex]
+tests=@all
+
 [run_solution]
 time_limit=0.2
 
@@ -62,6 +68,12 @@ build=solve_judge
 build=solve_judge
 
 [run_solution:solve_py_cpp]
+process_limit=0
+
+[run_solution:solve_java_simple]
+process_limit=0
+
+[run_solution:solve_java_complex]
 process_limit=0
 
 [run_solution:solve_rs_complex_min]
@@ -80,4 +92,8 @@ sources=solve_cpp/solve.cpp solve_cpp/max.hpp
 
 [build_solution:solve_py]
 sources=solve_py/solve solve_py/lib
+entrypoint=solve
+
+[build_solution:solve_java_complex]
+sources=solve_java_complex/solve solve_java_complex/lib.java
 entrypoint=solve

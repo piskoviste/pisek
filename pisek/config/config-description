@@ -236,6 +236,7 @@ extra_sources_c=
 headers_cpp=
 extra_sources_cpp=
 extra_sources_py=
+extra_sources_java=
 
 [build:(.*)]
 #!regex
@@ -251,6 +252,7 @@ extra_sources_c=
 headers_cpp=
 extra_sources_cpp=
 extra_sources_py=
+extra_sources_java=
 
 [build_gen]
 #!default build
@@ -265,6 +267,7 @@ extra_sources_c=
 headers_cpp=
 extra_sources_cpp=
 extra_sources_py=
+extra_sources_java=
 
 [build_gen:(.*)]
 #!regex
@@ -280,6 +283,7 @@ extra_sources_c=
 headers_cpp=
 extra_sources_cpp=
 extra_sources_py=
+extra_sources_java=
 
 [build_validator]
 #!default build
@@ -294,6 +298,7 @@ extra_sources_c=
 headers_cpp=
 extra_sources_cpp=
 extra_sources_py=
+extra_sources_java=
 
 [build_validator:(.*)]
 #!regex
@@ -309,6 +314,7 @@ extra_sources_c=
 headers_cpp=
 extra_sources_cpp=
 extra_sources_py=
+extra_sources_java=
 
 [build_solution]
 #!default build
@@ -323,6 +329,7 @@ extra_sources_c=
 headers_cpp=
 extra_sources_cpp=
 extra_sources_py=
+extra_sources_java=
 
 [build_solution:(.*)]
 #!regex
@@ -338,6 +345,7 @@ extra_sources_c=
 headers_cpp=
 extra_sources_cpp=
 extra_sources_py=
+extra_sources_java=
 
 [build_judge]
 #!default build
@@ -352,6 +360,7 @@ extra_sources_c=
 headers_cpp=
 extra_sources_cpp=
 extra_sources_py=
+extra_sources_java=
 
 [build_judge:(.*)]
 #!regex
@@ -367,6 +376,7 @@ extra_sources_c=
 headers_cpp=
 extra_sources_cpp=
 extra_sources_py=
+extra_sources_java=
 
 [limits]
 input_max_size=

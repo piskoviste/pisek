@@ -2,6 +2,7 @@
 #
 # Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
 # Copyright (c)   2024        Benjamin Swart <benjaminswart@email.cz>
+# Copyright (c)   2025        Antonín Maloň <git@tonyl.eu>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -138,6 +139,26 @@ class BuildStrategy(ABC):
             )
         return comp.stdout.read()
 
+    def _get_entrypoint(self, file_extension: str) -> str:
+        assert file_extension[0] == "."
+        if len(self.sources) == 1:
+            return self.sources[0]
+        else:
+            if self._build_section.entrypoint == "":
+                raise PipelineItemFailure(
+                    f"For multiple {self.name} files 'entrypoint' must be set (in section [{self._build_section.section_name}])."
+                )
+            if (
+                entrypoint := self._build_section.entrypoint + file_extension
+            ) in self.sources:
+                return entrypoint
+            elif (entrypoint := self._build_section.entrypoint) in self.sources:
+                return entrypoint
+            else:
+                raise PipelineItemFailure(
+                    f"Entrypoint '{self._build_section.entrypoint}' not in sources."
+                )
+
 
 class BuildScript(BuildStrategy):
     @classmethod
@@ -173,23 +194,11 @@ class Python(BuildScript):
         return True
 
     def _build(self):
+        entrypoint = self._get_entrypoint(".py")
         if len(self.sources) == 1:
-            return self._build_script(self.sources[0])
+            return self._build_script(entrypoint)
         else:
-            if self._build_section.entrypoint == "":
-                raise PipelineItemFailure(
-                    f"For multiple python files 'entrypoint' must be set (in section [{self._build_section.section_name}])."
-                )
             assert "run" not in self.sources
-            if (entrypoint := self._build_section.entrypoint + ".py") in self.sources:
-                pass
-            elif (entrypoint := self._build_section.entrypoint) in self.sources:
-                pass
-            else:
-                raise PipelineItemFailure(
-                    f"Entrypoint '{self._build_section.entrypoint}' not in sources."
-                )
-
             os.symlink(self._build_script(entrypoint), "run")
             return "."
 
@@ -263,6 +272,38 @@ class Pascal(BuildBinary):
             ["fpc"] + pas_flags + self.sources + self._build_section.comp_args,
             self._build_section.program_name,
         )
+        return self.target
+
+
+class Java(BuildStrategy):
+    name = BuildStrategyName.java
+    extra_sources: Optional[str] = "extra_sources_java"
+
+    @classmethod
+    def applicable_on_files(cls, build: "BuildSection", sources: list[str]) -> bool:
+        return cls._all_end_with(sources, [".java"])
+
+    @classmethod
+    def applicable_on_directory(cls, build: "BuildSection", directory: str) -> bool:
+        return False
+
+    def _build(self):
+        self._check_tool("java")
+        self._check_tool("javac")
+        self._check_tool("/usr/bin/bash")
+
+        entry_class = self._get_entrypoint(".java").rstrip(".java")
+        arguments = ["javac", "-d", self.target] + self.sources
+        self._run_subprocess(arguments, self._build_section.program_name)
+        assert "run" not in self.sources
+        run_path = os.path.join(self.target, "run")
+        with open(run_path, "w") as run_file:
+            run_file.write(
+                "#!/usr/bin/bash\n"
+                + f"exec java --class-path ${{0%/run}} {entry_class} $@\n"
+            )
+        st = os.stat(run_path)
+        os.chmod(run_path, st.st_mode | 0o111)
         return self.target
 
 
@@ -364,6 +405,7 @@ AUTO_STRATEGIES: list[type[BuildStrategy]] = [
     C,
     Cpp,
     Pascal,
+    Java,
     Make,
     Cargo,
 ]

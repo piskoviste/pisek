@@ -99,6 +99,7 @@ class BuildStrategyName(StrEnum):
     c = auto()
     cpp = auto()
     pascal = auto()
+    java = auto()
     make = auto()
     cargo = auto()
     auto = auto()

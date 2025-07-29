@@ -357,6 +357,7 @@ strategy=auto
 # - c
 # - cpp
 # - pascal
+# - java
 # - make
 # - cargo
 
@@ -368,6 +369,8 @@ headers_cpp=
 # Headers to include in the cpp strategy (defaults to empty)
 extra_sources_cpp=
 # Extra source files for the cpp strategy (defaults to empty)
+extra_sources_java=
+# Extra source files for the java strategy (defaults to empty)
 
 # It is recommended to set these keys in higher sections ([build_solution], [build],...)
 # and use the sources and extra keys for program-specific sections
