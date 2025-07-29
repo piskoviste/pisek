@@ -159,6 +159,20 @@ class BuildStrategy(ABC):
                     f"Entrypoint '{self._build_section.entrypoint}' not in sources."
                 )
 
+    def _check_no_run(self):
+        if "run" in self.sources:
+            raise PipelineItemFailure(
+                "Reserved filename 'run' already exists in sources"
+            )
+        elif "run" in self.extras:
+            raise PipelineItemFailure(
+                "Reserved filename 'run' already exists in extras"
+            )
+        elif "run" in self.inputs:
+            raise RuntimeError(
+                "'run' is contained in inputs, but not sources or extras"
+            )
+
 
 class BuildScript(BuildStrategy):
     @classmethod
@@ -198,7 +212,7 @@ class Python(BuildScript):
         if len(self.sources) == 1:
             return self._build_script(entrypoint)
         else:
-            assert "run" not in self.sources
+            self._check_no_run()
             os.symlink(self._build_script(entrypoint), "run")
             return "."
 
@@ -295,7 +309,7 @@ class Java(BuildStrategy):
         entry_class = self._get_entrypoint(".java").rstrip(".java")
         arguments = ["javac", "-d", self.target] + self.sources
         self._run_subprocess(arguments, self._build_section.program_name)
-        assert "run" not in self.sources
+        self._check_no_run()
         run_path = os.path.join(self.target, "run")
         with open(run_path, "w") as run_file:
             run_file.write(
