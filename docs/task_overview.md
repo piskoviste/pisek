@@ -56,7 +56,7 @@ There are few types of tasks pisek supports:
 
 ```mermaid
 graph TD;
-    G[Generator] -->|Input| C[Validator];
+    G[Generator] -->|Input| V[Validator];
     G -->|Input| S[Solution];
     G -->|Input| CS[Correct solution];
     S -->|Output| C[Checker];
