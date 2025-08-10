@@ -124,7 +124,7 @@ class TestJudge(TestSumKasiopea):
         def modification_fn(raw_config):
             raw_config["tests"]["out_check"] = "judge"
             raw_config["tests"]["out_judge"] = "judge"
-            raw_config["tests"]["judge_type"] = "opendata-v1"
+            raw_config["tests"]["judge_type"] = "opendata-v2"
 
         modify_config(self.task_dir, modification_fn)
 
@@ -138,7 +138,7 @@ class TestJudgeWithNoInput(TestSumKasiopea):
             raw_config["tests"]["judge_needs_in"] = "0"
             raw_config["tests"]["out_check"] = "judge"
             raw_config["tests"]["out_judge"] = "judge"
-            raw_config["tests"]["judge_type"] = "opendata-v1"
+            raw_config["tests"]["judge_type"] = "opendata-v2"
 
         modify_config(self.task_dir, modification_fn)
 
@@ -152,7 +152,7 @@ class TestJudgeWithNoOutput(TestSumKasiopea):
             raw_config["tests"]["judge_needs_out"] = "0"
             raw_config["tests"]["out_check"] = "judge"
             raw_config["tests"]["out_judge"] = "judge"
-            raw_config["tests"]["judge_type"] = "opendata-v1"
+            raw_config["tests"]["judge_type"] = "opendata-v2"
 
         modify_config(self.task_dir, modification_fn)
 
@@ -165,7 +165,7 @@ class TestPythonJudge(TestSumKasiopea):
         def modification_fn(raw_config):
             raw_config["tests"]["out_check"] = "judge"
             raw_config["tests"]["out_judge"] = "judge_py"
-            raw_config["tests"]["judge_type"] = "opendata-v1"
+            raw_config["tests"]["judge_type"] = "opendata-v2"
 
         modify_config(self.task_dir, modification_fn)
 

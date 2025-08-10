@@ -26,14 +26,19 @@ int main(int argc, char** argv) {
         fscanf(fin, "%lld%lld", &a, &b);
         fscanf(fcorrect, "%lld", &c);
 
-        scanf("%lld", &contestant);
+        if (scanf("%lld", &contestant) < 1) {
+            fprintf(stderr, "Invalid format");
+            return 43;
+        }
 
         assert(a + b == c);
         // Note the "+ 1"
         if (c != contestant + 1) {
-            return 1;
+            fprintf(stderr, "Wrong answer");
+            return 43;
         }
 	}
 
-	return 0;
+    fprintf(stderr, "Correct answer");
+	return 42;
 }

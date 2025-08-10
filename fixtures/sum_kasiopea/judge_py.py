@@ -3,6 +3,11 @@ import os
 import sys
 
 
+def fail(msg):
+    print(msg, file=sys.stderr)
+    exit(43)
+
+
 def main():
     # Check that the command line arguments are passed as expected,
     # even though we do not need them here otherwise.
@@ -34,18 +39,24 @@ def main():
 
                 # Normally we would not need to do this in the judge, but here we want
                 # to verify that the command line arguments are passed as expected.
-                if diff <= 1:
+                if diff == 1:
                     assert abs(a) <= 1e9, "Input out of bounds for the easy version"
                     assert abs(b) <= 1e9, "Input out of bounds for the easy version"
 
-                contestant = int(input())
+                try:
+                    contestant = int(input())
+                except ValueError:
+                    fail("Not a number")
+                except EOFError:
+                    fail("Output ends unexpectedly")
 
                 assert a + b == c
 
                 if c != contestant:
-                    exit(1)
+                    fail("Wrong answer")
 
-    exit(0)
+    print("Correct answer", file=sys.stderr)
+    exit(42)
 
 
 main()
