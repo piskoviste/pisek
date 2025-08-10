@@ -45,7 +45,8 @@ and `judge_needs_in`, `judge_needs_out` to `0`/`1` depending whether the judge n
 
 When writing a custom judge, you can chose from multiple judge types: 
 1. [cms-batch judge](#cms-batch-judge)
-2. [opendata-v1](#opendata-v1-judge)
+2. [opendata-v2](#opendata-v2-judge)
+3. [opendata-v1](#opendata-v1-judge)
 
 ### Cms-batch judge
 
@@ -61,9 +62,9 @@ To its stderr it should write a single-line message to the contestant.
 **Unlike the CMS documentation specifies, the files should be single-line only.**
 There will be a warning otherwise.
 
-### Opendata-v1 judge
+### Opendata-v2 judge
 
-The opendata-v1 judge is run in this way:
+The opendata-v2 judge is run in this way:
 ```
 ./judge <test> <seed> < contestant-output
 ```
@@ -76,5 +77,22 @@ If `judge_needs_in` is set, the judge will get the input filename in the `TEST_I
 environment variable. Similarly, if `judge_needs_out` is set, the correct output
 filename will be in the `TEST_OUTPUT` environment variable.
 
-If the output is correct, the judge should exit with returncode 0.
-Otherwise, the judge should exit returncode 1.
+If the output is correct, the judge should exit with returncode 42.
+Otherwise, the judge should exit returncode 43.
+
+Optionally, the judge can write a one-line message for the contestant
+to stderr (at most 255 bytes), followed by a sequence of lines with `KEY=value` pairs.
+The following keys are allowed:
+- `POINTS` — Number of points awarded for this test case (used only if the exit code says "OK").
+- `LOG` — A message that should be logged.
+- `NOTE` — An internal note recorded in the database, but not visible to contestants.
+
+Values are again limited to 255 bytes.
+
+### Opendata-v1
+
+The opendata-v1 judge is the same as opendata-v2, with the exception of using different
+returncodes, returncode 0 for a correct output and returncode 1 for a wrong output.
+
+However, usage of this judge type is discouraged as these returncodes can
+also be the result of an internal judge bug.

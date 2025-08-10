@@ -12,7 +12,8 @@
 
 from abc import abstractmethod
 from decimal import Decimal
-from typing import Optional
+import logging
+from typing import Any
 
 from pisek.utils.paths import InputPath, OutputPath
 from pisek.env.env import Env
@@ -21,10 +22,13 @@ from pisek.config.task_config import RunSection
 from pisek.task_jobs.solution.solution_result import (
     Verdict,
     SolutionResult,
+    AbsoluteSolutionResult,
     RelativeSolutionResult,
 )
 
 from pisek.task_jobs.checker.checker_base import RunBatchChecker
+
+logger = logging.getLogger(__name__)
 
 
 OPENDATA_NO_SEED = "-"
@@ -51,8 +55,8 @@ class RunOpendataJudge(RunBatchChecker):
         input_: InputPath,
         output: OutputPath,
         correct_output: OutputPath,
-        seed: Optional[int],
-        expected_verdict: Optional[Verdict],
+        seed: int | None,
+        expected_verdict: Verdict | None,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -68,6 +72,61 @@ class RunOpendataJudge(RunBatchChecker):
         self.judge = judge
         self.seed = seed
 
+    def _load_stderr(self) -> tuple[str, dict[str, Any]]:
+        KEYS = {
+            "POINTS": Decimal,
+            "LOG": str,
+            "NOTE": str,
+        }
+        FAIL_KWARGS = {
+            "status": False,
+            "stdout": False,
+            "stderr_force_content": True,
+        }
+
+        key_values: dict[str, Any] = {}
+        with self._open_file(self.checker_log_file) as f:
+            message = f.readline().removesuffix("\n")
+            if len(message.encode()) > 255:
+                raise self._create_program_failure(
+                    f"Message longer than 255 bytes: '{message}'",
+                    self._result,
+                    **FAIL_KWARGS,
+                )
+            for line in f.readlines():
+                line = line.removesuffix("\n")
+
+                if "=" not in line:
+                    raise self._create_program_failure(
+                        f"Invalid key-value pair: '{line}'", self._result, **FAIL_KWARGS
+                    )
+                key, val = line.split("=", 1)
+
+                if key not in KEYS:
+                    raise self._create_program_failure(
+                        f"Invalid key: '{key}'", self._result, **FAIL_KWARGS
+                    )
+                if key in key_values:
+                    raise self._create_program_failure(
+                        f"Duplicate key: '{key}'", self._result, **FAIL_KWARGS
+                    )
+                if len(val.encode()) > 255:
+                    raise self._create_program_failure(
+                        f"Value longer than 255 bytes: '{val}'",
+                        self._result,
+                        **FAIL_KWARGS,
+                    )
+                try:
+                    key_values[key] = KEYS[key](val)
+                except ValueError:
+                    raise self._create_program_failure(
+                        f"Value is not of type '{KEYS[key]}': '{val}'",
+                        self._result,
+                        **FAIL_KWARGS,
+                    )
+
+        return (message, key_values)
+
     def _check(self) -> SolutionResult:
         envs = {}
         if self._env.config.tests.judge_needs_in:
@@ -77,7 +136,7 @@ class RunOpendataJudge(RunBatchChecker):
             envs["TEST_OUTPUT"] = self.correct_output.abspath
             self._access_file(self.correct_output)
 
-        result = self._run_program(
+        self._result = self._run_program(
             ProgramType.judge,
             self.judge,
             args=[
@@ -88,17 +147,50 @@ class RunOpendataJudge(RunBatchChecker):
             stderr=self.checker_log_file,
             env=envs,
         )
-        if result.returncode == self.return_code_ok:
-            return RelativeSolutionResult(
-                Verdict.ok, None, self._solution_run_res, result, Decimal(1)
-            )
-        elif result.returncode == self.return_code_wa:
-            return RelativeSolutionResult(
-                Verdict.wrong_answer, None, self._solution_run_res, result, Decimal(0)
-            )
-        else:
+
+        if self._result.returncode not in (self.return_code_ok, self.return_code_wa):
+            # We need to check this first to report the correct problem
             raise self._create_program_failure(
-                f"Judge failed on output {self.output:n}:", result
+                f"Judge failed on output {self.output:n}:",
+                self._result,
+                stderr_force_content=True,
+            )
+
+        message, key_values = self._load_stderr()
+
+        if "LOG" in key_values:
+            logger.info(f"Judge on test {self.test}: LOG={key_values['LOG']}")
+
+        if self._result.returncode == self.return_code_ok:
+            if "POINTS" not in key_values:
+                return RelativeSolutionResult(
+                    Verdict.ok,
+                    message,
+                    self._solution_run_res,
+                    self._result,
+                    Decimal(1),
+                )
+
+            max_points = self._env.config.test_sections[self.test].points
+            points = key_values["POINTS"]
+            if max_points == "unscored" or points == max_points:
+                verdict = Verdict.ok
+            elif points < max_points:
+                verdict = Verdict.partial_ok
+            else:
+                verdict = Verdict.superopt
+
+            return AbsoluteSolutionResult(
+                verdict, message, self._solution_run_res, self._result, points
+            )
+
+        else:
+            return RelativeSolutionResult(
+                Verdict.wrong_answer,
+                message,
+                self._solution_run_res,
+                self._result,
+                Decimal(0),
             )
 
 
@@ -112,3 +204,15 @@ class RunOpendataV1Judge(RunOpendataJudge):
     @property
     def return_code_wa(self) -> int:
         return 1
+
+
+class RunOpendataV2Judge(RunOpendataJudge):
+    """Checks solution output using judge with the opendataV2 interface."""
+
+    @property
+    def return_code_ok(self) -> int:
+        return 42
+
+    @property
+    def return_code_wa(self) -> int:
+        return 43

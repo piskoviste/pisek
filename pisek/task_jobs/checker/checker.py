@@ -21,7 +21,10 @@ from pisek.task_jobs.checker.checker_base import RunBatchChecker
 from pisek.task_jobs.checker.diff_checker import RunDiffChecker
 from pisek.task_jobs.checker.judgelib_checker import RunTokenChecker, RunShuffleChecker
 from pisek.task_jobs.checker.cms_judge import RunCMSBatchJudge
-from pisek.task_jobs.checker.opendata_judge import RunOpendataV1Judge
+from pisek.task_jobs.checker.opendata_judge import (
+    RunOpendataV1Judge,
+    RunOpendataV2Judge,
+)
 
 
 def checker_job(
@@ -61,7 +64,7 @@ def checker_job(
             correct_output,
             expected_verdict,
         )
-    else:
+    elif env.config.tests.judge_type == JudgeType.opendata_v1:
         return RunOpendataV1Judge(
             env,
             env.config.tests.out_judge,
@@ -72,3 +75,16 @@ def checker_job(
             seed,
             expected_verdict,
         )
+    elif env.config.tests.judge_type == JudgeType.opendata_v2:
+        return RunOpendataV2Judge(
+            env,
+            env.config.tests.out_judge,
+            test,
+            input_,
+            output,
+            correct_output,
+            seed,
+            expected_verdict,
+        )
+    else:
+        raise ValueError(f"Unknown judge type: {env.config.tests.judge_type}")
