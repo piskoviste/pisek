@@ -32,10 +32,13 @@ class FuzzingManager(TaskJobManager):
     def _get_jobs(self) -> list[Job]:
         jobs: list[Job] = []
 
-        testcases: list[tuple[InputPath, OutputPath]] = []
-        for inp, res in self.prerequisites_results[
+        primary_sol = self.prerequisites_results[
             SOLUTION_MAN_CODE + self._env.config.primary_solution
-        ]["results"].items():
+        ]
+
+        inputs: dict[str, tuple[list[int], int | None]] = primary_sol["inputs"]
+        testcases: list[tuple[InputPath, OutputPath]] = []
+        for inp, res in primary_sol["results"].items():
             testcases.append((inp, res.solution_rr.stdout_file.to_sanitized_output()))
 
         jt = self._env.config.checks.fuzzing_thoroughness
@@ -55,8 +58,8 @@ class FuzzingManager(TaskJobManager):
                         inp,
                         inv_out,
                         out,
-                        0,
-                        None,
+                        rand_gen.choice(inputs[inp.name][0]),
+                        inputs[inp.name][1],
                         None,
                         self._env,
                     ),
