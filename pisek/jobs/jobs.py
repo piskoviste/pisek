@@ -187,6 +187,7 @@ class Job(PipelineItem, CaptureInitParams):
         self._accessed_globs: MutableSet[str] = set()
         self._accessed_files: MutableSet[str] = set()
         self._terminal_output: list[tuple[str, bool]] = []
+        self._logs: list[tuple[str, str]] = []
         self.name = name
         super().__init__(name)
 
@@ -194,6 +195,10 @@ class Job(PipelineItem, CaptureInitParams):
         """Prints text to stdout/stderr and caches it."""
         self._terminal_output.append((msg + end, stderr))
         return super()._print(msg, end, stderr)
+
+    def _log(self, kind: str, message: str) -> None:
+        self._logs.append((kind, message))
+        getattr(logger, kind)(message)
 
     def _access_file(self, filename: TaskPath) -> None:
         """Add file this job depends on."""
@@ -290,6 +295,7 @@ class Job(PipelineItem, CaptureInitParams):
             self._accessed_globs,
             self.prerequisites_results,
             self._terminal_output,
+            self._logs,
         )
 
     def run_job(self, cache: Cache) -> None:
@@ -306,6 +312,8 @@ class Job(PipelineItem, CaptureInitParams):
             cache.move_to_top(entry)
             for msg, stderr in entry.output:
                 self._print(msg, end="", stderr=stderr)
+            for level, message in entry.logs:
+                getattr(logger, level)(message)
             self._accessed_files = set(entry.files)
             self.result = entry.result
         else:

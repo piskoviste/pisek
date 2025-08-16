@@ -159,7 +159,9 @@ class RunOpendataJudge(RunBatchChecker):
         message, key_values = self._load_stderr()
 
         if "LOG" in key_values:
-            logger.info(f"Judge on test {self.test}: LOG={key_values['LOG']}")
+            self._log(
+                "info", f"Judge on output {self.output:p}: LOG={key_values['LOG']}"
+            )
 
         if self._result.returncode == self.return_code_ok:
             if "POINTS" not in key_values:
