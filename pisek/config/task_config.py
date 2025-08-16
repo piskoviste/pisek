@@ -203,7 +203,12 @@ class TaskConfig(BaseEnv):
             )
 
         JUDGE_TYPES = {
-            TaskType.batch: [None, JudgeType.opendata_v1, JudgeType.cms_batch],
+            TaskType.batch: [
+                None,
+                JudgeType.opendata_v1,
+                JudgeType.opendata_v2,
+                JudgeType.cms_batch,
+            ],
             TaskType.interactive: [JudgeType.cms_communication],
         }
 

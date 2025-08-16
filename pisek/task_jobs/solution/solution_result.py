@@ -17,7 +17,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from decimal import Decimal
-from enum import Enum
+from enum import auto, Enum
 from functools import partial, cache
 from typing import Callable, Optional, TYPE_CHECKING
 
@@ -30,12 +30,13 @@ if TYPE_CHECKING:
 
 class Verdict(Enum):
     # Higher value means more unsuccessful verdict.
-    ok = 1
-    partial_ok = 2
-    timeout = 3
-    wrong_answer = 4
-    normalization_fail = 5
-    error = 6
+    ok = auto()
+    superopt = auto()
+    partial_ok = auto()
+    timeout = auto()
+    wrong_answer = auto()
+    normalization_fail = auto()
+    error = auto()
 
     def is_zero_point(self) -> bool:
         return self in (
@@ -48,6 +49,7 @@ class Verdict(Enum):
     def mark(self) -> str:
         return {
             Verdict.ok: "·",
+            Verdict.superopt: "S",
             Verdict.partial_ok: "P",
             Verdict.timeout: "T",
             Verdict.wrong_answer: "W",
@@ -124,12 +126,8 @@ def verdict_always(res: Verdict) -> bool:
     return True
 
 
-def verdict_1point(res: Verdict) -> bool:
-    return res == Verdict.ok
-
-
-def verdict_0points(res: Verdict) -> bool:
-    return res in (Verdict.wrong_answer, Verdict.timeout, Verdict.error)
+def verdict_accepted(res: Verdict) -> bool:
+    return res in (Verdict.ok, Verdict.superopt)
 
 
 def specific_verdict(res: Verdict, verdict: Verdict) -> bool:
@@ -140,11 +138,16 @@ def specific_verdict(res: Verdict, verdict: Verdict) -> bool:
 # First function must be true for all
 # Second function must be true for any
 TEST_SPEC: dict[str, tuple[Callable[[Verdict], bool], Callable[[Verdict], bool]]] = {
-    "1": (verdict_1point, verdict_always),
-    "0": (verdict_always, verdict_0points),
+    "1": (
+        verdict_accepted,
+        partial(specific_verdict, verdict=Verdict.ok),
+    ),
+    "S": (partial(specific_verdict, verdict=Verdict.superopt), verdict_always),
+    "A": (verdict_accepted, verdict_always),
+    "0": (verdict_always, lambda verdict: verdict.is_zero_point()),
     "X": (verdict_always, verdict_always),
     "P": (
-        lambda r: not verdict_0points(r),
+        lambda verdict: not verdict.is_zero_point(),
         partial(specific_verdict, verdict=Verdict.partial_ok),
     ),
     "W": (
