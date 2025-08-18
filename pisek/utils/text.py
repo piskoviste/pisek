@@ -32,7 +32,7 @@ def pad_left(text: str, length: int, pad_char: str = " ") -> str:
     return pad(text[::-1], length, pad_char)[::-1]
 
 
-def eprint(msg, *args, **kwargs) -> NoReturn:
+def eprint(msg, *args, **kwargs) -> None:
     """Prints to sys.stderr."""
     print(msg, *args, file=sys.stderr, **kwargs)
 
