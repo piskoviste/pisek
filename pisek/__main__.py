@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import argcomplete
 import argparse
 import logging
 import os
@@ -318,6 +319,7 @@ def main(argv) -> int:
     )
     add_argument_dataset(parser_cms_check)
 
+    argcomplete.autocomplete(parser)
     args = parser.parse_args(argv)
     ColorSettings.set_state(not args.plain and not args.no_colors)
 
