@@ -16,9 +16,11 @@
 
 import os
 import shutil
-from typing import Optional
+import logging
+from typing import Optional, Union
 
 from pisek.utils.paths import BUILD_DIR, TESTS_DIR, INTERNALS_DIR
+from pisek.utils.text import fatal_user_error
 
 
 class ChangedCWD:
@@ -54,3 +56,21 @@ def clean_non_relevant_files(accessed_files: set[str]) -> None:
             path = os.path.join(root, file)
             if root in accessed_dirs and path not in accessed_files:
                 os.remove(path)
+
+
+def log_level_mapper(log_level: str) -> int:
+    log_level = log_level.lower()
+    if log_level == "debug":
+        return logging.DEBUG
+    elif log_level == "info":
+        return logging.INFO
+    elif log_level == "warning":
+        return logging.WARNING
+    elif log_level == "error":
+        return logging.ERROR
+    elif log_level == "critical":
+        return logging.CRITICAL
+    else:
+        fatal_user_error(
+            f"Invalid log level - {log_level}!, Please set a valid log level."
+        )

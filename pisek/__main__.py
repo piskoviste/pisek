@@ -23,7 +23,7 @@ import signal
 import sys
 from typing import Optional
 
-from pisek.utils.util import clean_task_dir
+from pisek.utils.util import clean_task_dir, log_level_mapper
 from pisek.utils.text import eprint, fatal_user_error
 from pisek.utils.colors import ColorSettings
 from pisek.visualize import visualize
@@ -340,7 +340,7 @@ def main(argv) -> int:
     logging.basicConfig(
         filename=LOG_FILE,
         encoding="utf-8",
-        level=logging.INFO,
+        level=log_level_mapper(os.getenv("LOG_LEVEL", "info")),
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
 

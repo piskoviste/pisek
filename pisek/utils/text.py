@@ -15,28 +15,29 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import sys
+from typing import NoReturn
 
 from pisek.utils.colors import ColorSettings
 
 
-def tab(text: str, tab_str: str = "  "):
+def tab(text: str, tab_str: str = "  ") -> str:
     return tab_str + text.replace("\n", f"\n{tab_str}")
 
 
-def pad(text: str, length: int, pad_char: str = " "):
+def pad(text: str, length: int, pad_char: str = " ") -> str:
     return text + (length - len(text)) * pad_char
 
 
-def pad_left(text: str, length: int, pad_char: str = " "):
+def pad_left(text: str, length: int, pad_char: str = " ") -> str:
     return pad(text[::-1], length, pad_char)[::-1]
 
 
-def eprint(msg, *args, **kwargs):
+def eprint(msg, *args, **kwargs) -> None:
     """Prints to sys.stderr."""
     print(msg, *args, file=sys.stderr, **kwargs)
 
 
-def fatal_user_error(msg, *args, **kwargs):
+def fatal_user_error(msg, *args, **kwargs) -> NoReturn:
     eprint(ColorSettings.colored(msg, "red"), *args, **kwargs)
     exit(2)
 
