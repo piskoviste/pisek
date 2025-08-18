@@ -72,6 +72,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
     def _register_skipped_testcase(
         self, testcase_info: TestcaseInfo, seed: Optional[int], test: int
     ) -> None:
+        super()._register_skipped_testcase(testcase_info, seed, test)
         input_path = testcase_info.input_path(
             self._env, seed, solution=self.solution_label
         )

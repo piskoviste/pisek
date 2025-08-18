@@ -130,4 +130,4 @@ class TaskPipeline(JobPipeline):
     def input_dataset(self) -> list[InputPath]:
         if self.input_generator.result is None:
             raise RuntimeError("Input dataset has not been computed yet.")
-        return self.input_generator.result["inputs"]
+        return self.input_generator.result["input_dataset"]

@@ -113,7 +113,8 @@ def generator_test_determinism(
 
 class TestcaseInfoMixin(JobManager):
     def __init__(self, name: str, **kwargs) -> None:
-        self.inputs: set[InputPath] = set()
+        self.inputs: dict[str, tuple[set[int], int | None]] = {}
+        self.input_dataset: set[InputPath] = set()
         self._gen_inputs_job: dict[Optional[int], GenerateInput] = {}
         super().__init__(name=name, **kwargs)
 
@@ -143,7 +144,9 @@ class TestcaseInfoMixin(JobManager):
                 self._register_skipped_testcase(testcase_info, seed, test)
                 continue
 
-            self.inputs.add(testcase_info.input_path(self._env, seed))
+            input_path = testcase_info.input_path(self._env, seed)
+            self.inputs[input_path.name] = ({test}, seed)
+            self.input_dataset.add(input_path)
 
             inp_jobs = self._generate_input_jobs(testcase_info, seed, test, i == 0)
             out_jobs = self._solution_jobs(testcase_info, seed, test)
@@ -165,12 +168,14 @@ class TestcaseInfoMixin(JobManager):
     def _skip_testcase(
         self, testcase_info: TestcaseInfo, seed: Optional[int], test: int
     ) -> bool:
-        return testcase_info.input_path(self._env, seed) in self.inputs
+        return testcase_info.input_path(self._env, seed) in self.input_dataset
 
     def _register_skipped_testcase(
         self, testcase_info: TestcaseInfo, seed: Optional[int], test: int
     ) -> None:
-        pass
+        input_path = testcase_info.input_path(self._env, seed)
+        assert self.inputs[input_path.name][1] == seed
+        self.inputs[input_path.name][0].add(test)
 
     def _generate_input_jobs(
         self,
@@ -319,7 +324,10 @@ class TestcaseInfoMixin(JobManager):
             return Sanitize(self._env, path.to_raw(format), path)
 
     def _compute_result(self) -> dict[str, Any]:
-        return {"inputs": list(sorted(self.inputs, key=lambda i: i.name))}
+        return {
+            "input_dataset": list(sorted(self.input_dataset, key=lambda i: i.name)),
+            "inputs": {i: (list(sorted(t)), s) for i, (t, s) in self.inputs.items()},
+        }
 
 
 class RunGenerator(TaskJobManager, TestcaseInfoMixin):
