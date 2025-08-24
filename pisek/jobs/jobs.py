@@ -23,7 +23,7 @@ import glob
 import hashlib
 import logging
 import os.path
-import sys
+import time
 from typing import (
     Optional,
     AbstractSet,
@@ -51,7 +51,7 @@ class State(Enum):
     cancelled = auto()
 
     def finished(self) -> bool:
-        return self in (State.succeeded, State.failed)
+        return self in (State.succeeded, State.failed, State.cancelled)
 
 
 class PipelineItemFailure(Exception):
@@ -106,19 +106,19 @@ class PipelineItem(ABC):
         self.state = State.in_queue
         self.result: Optional[Any] = None
         self.fail_msg = ""
-        self.dirty = False  # Prints something to console?
 
         self.prerequisites = 0
         self.required_by: list[RequiredBy] = []
         self.prerequisites_results: dict[str, Any] = {}
+        # List of prints (string to print, whether to use stderr)
+        self.terminal_output: list[tuple[str, bool]] = []
 
     def _colored(self, msg: str, color: str) -> str:
         return self._env.colored(msg, color)
 
     def _print(self, msg: str, end: str = "\n", stderr: bool = False) -> None:
-        """Prints text to stdout/stderr."""
-        self.dirty = True
-        (sys.stderr if stderr else sys.stdout).write(msg + end)
+        """Adds text for printing to stdout/stderr later."""
+        self.terminal_output.append((msg + end, stderr))
 
     def _warn(self, msg: str) -> None:
         if self._env.strict:
@@ -186,15 +186,10 @@ class Job(PipelineItem, CaptureInitParams):
         self._accessed_envs: MutableSet[tuple[str, ...]] = set()
         self._accessed_globs: MutableSet[str] = set()
         self._accessed_files: MutableSet[str] = set()
-        self._terminal_output: list[tuple[str, bool]] = []
         self._logs: list[tuple[str, str]] = []
         self.name = name
+        self.started: float | None = None
         super().__init__(name)
-
-    def _print(self, msg: str, end: str = "\n", stderr: bool = False) -> None:
-        """Prints text to stdout/stderr and caches it."""
-        self._terminal_output.append((msg + end, stderr))
-        return super()._print(msg, end, stderr)
 
     def _log(self, kind: str, message: str) -> None:
         self._logs.append((kind, message))
@@ -296,41 +291,46 @@ class Job(PipelineItem, CaptureInitParams):
             self._accessed_files,
             self._accessed_globs,
             self.prerequisites_results,
-            self._terminal_output,
+            self.terminal_output,
             self._logs,
         )
 
-    def run_job(self, cache: Cache) -> None:
-        """Run this job. If result is already in cache use it instead."""
+    def prepare(self, cache: Cache) -> None:
         if self.state == State.cancelled:
             return None
         self._check_prerequisites()
-        self.state = State.running
 
-        cached = False
         if self.name in cache and (entry := self._find_entry(cache)):
             logger.info(f"Loading cached '{self.name}'")
-            cached = True
             cache.move_to_top(entry)
-            for msg, stderr in entry.output:
-                self._print(msg, end="", stderr=stderr)
+            self.terminal_output = entry.output
             for level, message in entry.logs:
                 getattr(logger, level)(message)
             self._accessed_files = set(entry.files)
             self.result = entry.result
-        else:
-            logger.info(f"Running '{self.name}'")
-            try:
-                self._env.clear_accesses()
-                self.result = self._run()
-                self._accessed_envs |= self._env.get_accessed()
-            except PipelineItemFailure as failure:
-                self._fail(failure)
-
-        if self.state != State.failed:
-            if not cached:
-                cache.add(self._export(self.result, cache))
             self.state = State.succeeded
+
+    def run(self, env: "Env") -> None:
+        """Run this job."""
+        if self.state == State.cancelled:
+            return
+        self.state = State.running
+        self.started = time.time()
+        logger.info(f"Running '{self.name}'")
+
+        try:
+            self._env = env
+            self._env.clear_accesses()
+            self.result = self._run()
+            self._accessed_envs |= self._env.get_accessed()
+        except PipelineItemFailure as failure:
+            self._fail(failure)
+
+    def finalize(self, cache: Cache):
+        if self.state == State.running:
+            cache.add(self._export(self.result, cache))
+            self.state = State.succeeded
+        return self.finish()
 
     @abstractmethod
     def _run(self) -> Any:
@@ -341,10 +341,12 @@ class Job(PipelineItem, CaptureInitParams):
 class JobManager(PipelineItem):
     """Object that can create jobs and compute depending on their results."""
 
-    def create_jobs(self, env: "Env") -> list[Job]:
+    def set_env(self, env: "Env") -> None:
+        self._env = env
+
+    def create_jobs(self) -> list[Job]:
         """Crates this JobManager's jobs."""
         self.result: Optional[dict[str, Any]]
-        self._env = env
         if self.state == State.cancelled:
             self.jobs = []
         else:
@@ -355,6 +357,7 @@ class JobManager(PipelineItem):
             except PipelineItemFailure as failure:
                 self._fail(failure)
                 self.jobs = []
+
         return self.jobs
 
     @abstractmethod
@@ -366,7 +369,7 @@ class JobManager(PipelineItem):
         """States of this manager's jobs."""
         return tuple(map(lambda j: j.state, self.jobs))
 
-    def _jobs_with_state(self, state: State) -> list[Job]:
+    def jobs_with_state(self, state: State) -> list[Job]:
         """Filter this manager's jobs by state."""
         return list(filter(lambda j: j.state == state, self.jobs))
 
@@ -374,23 +377,12 @@ class JobManager(PipelineItem):
         """Override this function for manager-specific."""
         pass
 
-    def update(self) -> str:
-        """Update this manager's state according to its jobs and return status."""
+    def update(self) -> None:
+        """Update this manager's state according to its jobs."""
         self._update()
-        states = self._job_states()
-        if self.state in (State.failed, State.cancelled):
-            pass
-        elif State.in_queue in states or State.running in states:
-            self.state = State.running
-        elif State.failed in states:
-            self.state = State.failed
-        else:
-            self.state = State.running
-
-        return self._get_status()
 
     @abstractmethod
-    def _get_status(self) -> str:
+    def get_status(self) -> str:
         """Return status of job manager to be displayed on stdout."""
         return ""
 
@@ -400,40 +392,29 @@ class JobManager(PipelineItem):
         (i.e. All of it's jobs have finished)
         """
         return self.state == State.running and len(
-            self._jobs_with_state(State.succeeded)
-            + self._jobs_with_state(State.cancelled)
+            self.jobs_with_state(State.succeeded)
+            + self.jobs_with_state(State.cancelled)
         ) == len(self.jobs)
 
     def any_failed(self) -> bool:
         """Returns whether this manager or its jobs had any failures so far."""
-        return (
-            self.state == State.failed or len(self._jobs_with_state(State.failed)) > 0
-        )
+        return self.state == State.failed or len(self.jobs_with_state(State.failed)) > 0
 
-    def failures(self) -> str:
-        """Returns failures of failed jobs or manager itself."""
-        failed = self._jobs_with_state(State.failed)
-        if len(failed):
-            failed_msg = "\n".join([f'"{job.name}": {job.fail_msg}' for job in failed])
-            return f"{len(failed)} jobs failed:\n{failed_msg}"
-        else:
-            return f"{self.name} failed:\n{self.fail_msg}"
-
-    def finalize(self) -> str:
-        """Finalizes this JobManager - Does final evaluation and returns final status."""
-
-        if self.state == State.running:
+    def finalize(self) -> None:
+        """Does final evaluation and computes the result of this job manager."""
+        assert self.state == State.running
+        if not self.any_failed():
             try:
                 self._evaluate()
             except PipelineItemFailure as failure:
                 self._fail(failure)
             else:
                 self.state = State.succeeded
+        else:
+            self.state = State.failed
 
         self.result = self._compute_result()
-
         super().finish()
-        return self._get_status()
 
     def _evaluate(self) -> None:
         """Decide whether jobs did run as expected and return result."""

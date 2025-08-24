@@ -230,7 +230,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
             if test.definitive(expected[test.num]):
                 test.cancel()
 
-    def _get_status(self) -> str:
+    def get_status(self) -> str:
         msg = f"Testing {self.solution_label}"
         if self.state == State.cancelled:
             return self._job_bar(msg)

@@ -118,26 +118,23 @@ class BuildStrategy(ABC):
         self._check_tool(args[0])
 
         logger.debug("Building '" + " ".join(args) + "'")
-        comp = subprocess.Popen(
+        comp = subprocess.run(
             args, **kwargs, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
         )
 
         assert comp.stderr is not None
         assert comp.stdout is not None
 
-        while True:
-            line = comp.stderr.readline()
-            if not line:
-                break
-            self._print(line, end="", stderr=True)
+        if comp.returncode != 0 or self._env.verbosity >= 1:
+            if comp.stderr.strip():
+                self._print(comp.stderr, stderr=True)
 
-        comp.wait()
         if comp.returncode != 0:
             raise PipelineItemFailure(
                 f"Build of {program} failed.\n"
                 + tab(self._env.colored(" ".join(args), "yellow"))
             )
-        return comp.stdout.read()
+        return comp.stdout
 
     def _get_entrypoint(self, file_extension: str) -> str:
         assert file_extension[0] == "."
