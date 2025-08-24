@@ -191,16 +191,16 @@ class ProgramsJob(TaskJob):
             tmp_dirs.append(tmp_dir)
             running_pool.append(subprocess.Popen(**popen, cwd=tmp_dir))
 
-        callback_exec = False
-        while True:
-            states = [process.poll() is not None for process in running_pool]
-            if not callback_exec and any(states):
-                callback_exec = True
-                if self._callback is not None:
+        if self._callback is not None:
+            callback_exec = False
+            while True:
+                states = [process.poll() is not None for process in running_pool]
+                if not callback_exec and any(states):
+                    callback_exec = True
                     self._callback(running_pool[states.index(True)])
 
-            if all(states):
-                break
+                if all(states):
+                    break
 
         run_results = []
         for pool_item, process, tmp_dir, meta_file in zip(
