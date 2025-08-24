@@ -226,14 +226,6 @@ class TaskJob(Job, TaskHelper):
     def _files_equal(self, file_a: TaskPath, file_b: TaskPath) -> bool:
         return filecmp.cmp(file_a.path, file_b.path)
 
-    @_file_access(2)
-    def _diff_files(self, file_a: TaskPath, file_b: TaskPath) -> str:
-        diff = subprocess.run(
-            ["diff", file_a.path, file_b.path, "-Bb", "-u2"],
-            stdout=subprocess.PIPE,
-        )
-        return diff.stdout.decode("utf-8")
-
     def _globs_to_files(
         self, globs: Iterable[str], directory: TaskPath
     ) -> list[TaskPath]:
