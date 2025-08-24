@@ -16,6 +16,7 @@ from typing import Optional
 from pisek.env.env import Env
 from pisek.jobs.jobs import PipelineItemFailure
 from pisek.config.task_config import RunSection
+from pisek.utils.paths import InputPath
 from pisek.task_jobs.task_job import TaskJob
 from pisek.task_jobs.program import ProgramsJob
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
@@ -53,7 +54,7 @@ class GenerateInput(ProgramsJob):
         self.generator = generator
         self.seed = seed
         self.testcase_info = testcase_info
-        self.input_path = testcase_info.input_path(env, seed)
+        self.input_path = testcase_info.input_path(seed)
         super().__init__(
             env=env, name=name or f"Generate {self.input_path.name}", **kwargs
         )
@@ -84,7 +85,7 @@ class GeneratorTestDeterminism(ProgramsJob):
         self.generator = generator
         self.seed = seed
         self.testcase_info = testcase_info
-        self.input_path = testcase_info.input_path(env, seed)
+        self.input_path = testcase_info.input_path(seed)
         super().__init__(
             env=env,
             name=name or f"Generator is deterministic (on {self.input_path:p})",
@@ -121,12 +122,8 @@ class GeneratorRespectsSeed(TaskJob):
         self.testcase_info = testcase_info
         self.seed1 = seed1
         self.seed2 = seed2
-        self.input1 = testcase_info.input_path(self._env, seed1).to_raw(
-            env.config.tests.in_format
-        )
-        self.input2 = testcase_info.input_path(self._env, seed2).to_raw(
-            env.config.tests.in_format
-        )
+        self.input1 = testcase_info.input_path(seed1).to_raw(env.config.tests.in_format)
+        self.input2 = testcase_info.input_path(seed2).to_raw(env.config.tests.in_format)
         super().__init__(
             env=env,
             name=f"Generator respects seed ({self.input1:n} and {self.input2:n})",

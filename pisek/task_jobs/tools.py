@@ -37,7 +37,7 @@ class ToolsManager(TaskJobManager):
         super().__init__("Preparing tools")
 
     def _get_jobs(self) -> list[Job]:
-        self.makedirs(TaskPath.executable_path(self._env, "."))
+        self.makedirs(TaskPath.executable_path("."))
         jobs: list[Job] = [
             PrepareMinibox(self._env),
             PrepareTextPreprocessor(self._env),
@@ -53,7 +53,7 @@ class PrepareMinibox(TaskJob):
 
     def _run(self):
         source = files("pisek").joinpath("tools/minibox.c")
-        executable = TaskPath.executable_path(self._env, "minibox")
+        executable = TaskPath.executable_path("minibox")
         self._access_file(executable)
         gcc = subprocess.run(
             [
@@ -83,7 +83,7 @@ class PrepareTextPreprocessor(TaskJob):
 
     def _run(self):
         source = files("pisek").joinpath("tools/text-preproc.c")
-        executable = TaskPath.executable_path(self._env, "text-preproc")
+        executable = TaskPath.executable_path("text-preproc")
         self._access_file(executable)
         gcc = subprocess.run(
             [
@@ -115,7 +115,7 @@ class PrepareJudgeLibChecker(TaskJob):
         source_dir = files("pisek").joinpath("tools/judgelib")
         sources = [source_dir.joinpath(file) for file in source_files]
 
-        executable = TaskPath.executable_path(self._env, self.judge)
+        executable = TaskPath.executable_path(self.judge)
         self._access_file(executable)
 
         gpp = subprocess.run(

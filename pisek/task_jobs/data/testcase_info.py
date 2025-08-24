@@ -44,7 +44,7 @@ class TestcaseInfo:
         return TestcaseInfo(name, 1, TestcaseGenerationMode.static, False)
 
     def input_path(
-        self, env: Env, seed: Optional[int] = None, solution: Optional[str] = None
+        self, seed: Optional[int] = None, solution: Optional[str] = None
     ) -> InputPath:
         filename = self.name
         if self.seeded:
@@ -52,14 +52,14 @@ class TestcaseInfo:
             filename += f"_{seed:016x}"
         filename += ".in"
 
-        return InputPath(env, filename, solution=solution)
+        return InputPath(filename, solution=solution)
 
     def reference_output(
         self, env: Env, seed: Optional[int] = None, solution: Optional[str] = None
     ) -> OutputPath:
         is_static = self.generation_mode == TestcaseGenerationMode.static
 
-        input_path = self.input_path(env, seed, solution=env.config.primary_solution)
+        input_path = self.input_path(seed, solution=env.config.primary_solution)
         if is_static:
             path = OutputPath.static(input_path.replace_suffix(".out").name)
         else:

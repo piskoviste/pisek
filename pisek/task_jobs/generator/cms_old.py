@@ -31,7 +31,7 @@ class CmsOldListInputs(GeneratorListInputs):
 
     def _run(self) -> list[TestcaseInfo]:
         """Generates all inputs."""
-        gen_dir = TaskPath.generated_path(self._env, ".")
+        gen_dir = TaskPath.generated_path(".")
         try:
             shutil.rmtree(gen_dir.path)
         except FileNotFoundError:
@@ -50,7 +50,7 @@ class CmsOldListInputs(GeneratorListInputs):
             raise self._create_program_failure("Generator failed:", run_result)
 
         testcases = []
-        for inp in self._globs_to_files(["*"], TaskPath.generated_path(self._env, ".")):
+        for inp in self._globs_to_files(["*"], TaskPath.generated_path(".")):
             if inp.path.endswith(".in"):
                 testcases.append(
                     TestcaseInfo.generated(inp.name.removesuffix(".in"), seeded=False)
@@ -72,13 +72,13 @@ class CmsOldGenerate(GenerateInput):
             generator,
             testcase_info,
             seed,
-            name=f"Serve {testcase_info.input_path(env).name}",
+            name=f"Serve {testcase_info.input_path().name}",
             **kwargs,
         )
 
     def _gen(self):
         self._link_file(
-            TaskPath.generated_path(self._env, self.input_path.name),
+            TaskPath.generated_path(self.input_path.name),
             self.input_path.to_raw(self._env.config.tests.in_format),
             overwrite=True,
         )

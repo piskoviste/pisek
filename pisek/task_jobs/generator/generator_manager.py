@@ -163,7 +163,7 @@ class TestcaseInfoMixin(JobManager):
                 continue
 
             self._begin_new_testcase()
-            input_path = testcase_info.input_path(self._env, seed)
+            input_path = testcase_info.input_path(seed)
             self.inputs[input_path.name] = ({test}, seed)
             self.input_dataset.add(input_path)
 
@@ -180,12 +180,12 @@ class TestcaseInfoMixin(JobManager):
     def _skip_testcase(
         self, testcase_info: TestcaseInfo, seed: Optional[int], test: int
     ) -> bool:
-        return testcase_info.input_path(self._env, seed) in self.input_dataset
+        return testcase_info.input_path(seed) in self.input_dataset
 
     def _register_skipped_testcase(
         self, testcase_info: TestcaseInfo, seed: Optional[int], test: int
     ) -> None:
-        input_path = testcase_info.input_path(self._env, seed)
+        input_path = testcase_info.input_path(seed)
         assert self.inputs[input_path.name][1] == seed
         self.inputs[input_path.name][0].add(test)
 
@@ -196,7 +196,7 @@ class TestcaseInfoMixin(JobManager):
         test: int,
         test_determinism: bool,
     ) -> None:
-        input_path = testcase_info.input_path(self._env, seed)
+        input_path = testcase_info.input_path(seed)
 
         if testcase_info.generation_mode == TestcaseGenerationMode.generated:
             self._add_job(self._generate_input_job(testcase_info, seed), new_last=True)

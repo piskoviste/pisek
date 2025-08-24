@@ -33,7 +33,7 @@ class TaskJobManager(StatusJobManager, TaskHelper):
         """Returns the list [(sample1.in, sample1.out), …]."""
         return [
             (
-                inp.input_path(self._env),
+                inp.input_path(),
                 inp.reference_output(self._env),
             )
             for inp in self._test_testcases(self._env.config.test_sections[0])

@@ -117,7 +117,7 @@ class PisekV1ListInputs(GeneratorListInputs):
             return f.readlines()
 
     def _get_inputs_list_path(self):
-        return TaskPath.data_path(self._env, "inputs_list")
+        return TaskPath.data_path("inputs_list")
 
 
 class PisekV1GeneratorJob(ProgramsJob):

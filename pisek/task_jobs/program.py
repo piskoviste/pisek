@@ -156,7 +156,7 @@ class ProgramsJob(TaskJob):
             time_limit = self._env.time_limit
 
         self._load_executable(
-            executable=TaskPath.executable_file(self._env, program.exec.path),
+            executable=TaskPath.executable_file(program.exec.path),
             args=program.args + args,
             time_limit=program.time_limit if time_limit is None else time_limit,
             clock_limit=program.clock_limit(time_limit),
@@ -178,7 +178,7 @@ class ProgramsJob(TaskJob):
         running_pool: list[subprocess.Popen] = []
         meta_files: list[str] = []
         tmp_dirs: list[str] = []
-        minibox = TaskPath.executable_path(self._env, "minibox").abspath
+        minibox = TaskPath.executable_path("minibox").abspath
         for pool_item in self._program_pool:
             fd, meta_file = tempfile.mkstemp()
             os.close(fd)
@@ -298,7 +298,7 @@ class ProgramsJob(TaskJob):
     ) -> RunResult:
         """Loads one program and runs it."""
         self._load_executable(
-            TaskPath.executable_path(self._env, program),
+            TaskPath.executable_path(program),
             args=args,
             time_limit=300,
             clock_limit=300,

@@ -101,21 +101,21 @@ class TaskPath:
         return env.config.tests.static_subdir.join(*path)
 
     @staticmethod
-    def executable_path(env: "Env", *path: str) -> "TaskPath":
+    def executable_path(*path: str) -> "TaskPath":
         return TaskPath(BUILD_DIR, *path)
 
     @staticmethod
-    def executable_file(env: "Env", program: str) -> "TaskPath":
+    def executable_file(program: str) -> "TaskPath":
         program = os.path.splitext(program)[0]
-        return TaskPath.executable_path(env, program)
+        return TaskPath.executable_path(program)
 
     @staticmethod
-    def data_path(env: "Env", *path: str) -> "TaskPath":
+    def data_path(*path: str) -> "TaskPath":
         return TaskPath(TESTS_DIR, *path)
 
     @staticmethod
-    def generated_path(env: "Env", *path: str) -> "TaskPath":
-        return TaskPath.data_path(env, GENERATED_SUBDIR, *path)
+    def generated_path(*path: str) -> "TaskPath":
+        return TaskPath.data_path(GENERATED_SUBDIR, *path)
 
 
 class JudgeablePath(TaskPath):
@@ -131,7 +131,7 @@ class SanitizedPath(TaskPath):
 
 
 class InputPath(SanitizedPath):
-    def __init__(self, env: "Env", *path, solution: Optional[str] = None) -> None:
+    def __init__(self, *path, solution: str | None = None) -> None:
         if solution is None:
             super().__init__(TESTS_DIR, INPUTS_SUBDIR, *path)
         else:
@@ -170,8 +170,8 @@ class RawPath(TaskPath):
     def to_sanitized_output(self) -> OutputPath:
         return OutputPath(self.path.removesuffix(".raw"))
 
-    def to_sanitized_input(self, env: "Env") -> InputPath:
-        return InputPath(env, self.path.removesuffix(".raw"))
+    def to_sanitized_input(self) -> InputPath:
+        return InputPath(self.path.removesuffix(".raw"))
 
     def to_second(self) -> TaskPath:
         return self.replace_suffix(".raw2")

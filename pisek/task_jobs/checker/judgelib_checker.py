@@ -39,7 +39,7 @@ class RunJudgeLibChecker(RunBatchChecker):
         self._access_file(self.output)
         self._access_file(self.correct_output)
 
-        executable = TaskPath.executable_path(self._env, self.checker_name)
+        executable = TaskPath.executable_path(self.checker_name)
 
         checker = subprocess.run(
             [

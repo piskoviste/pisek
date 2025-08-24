@@ -72,9 +72,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         self, testcase_info: TestcaseInfo, seed: Optional[int], test: int
     ) -> None:
         super()._register_skipped_testcase(testcase_info, seed, test)
-        input_path = testcase_info.input_path(
-            self._env, seed, solution=self.solution_label
-        )
+        input_path = testcase_info.input_path(seed, solution=self.solution_label)
         if self._env.config.test_sections[test].new_in_test(input_path.name):
             self.tests[-1].new_run_jobs.append(self._sols[input_path])
             self.tests[-1].new_jobs.append(self._checkers[input_path])
@@ -97,8 +95,8 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         self._add_job(
             SymlinkData(
                 self._env,
-                testcase_info.input_path(self._env, seed),
-                testcase_info.input_path(self._env, seed, solution=self.solution_label),
+                testcase_info.input_path(seed),
+                testcase_info.input_path(seed, solution=self.solution_label),
             ),
             new_last=True,
         )
@@ -115,9 +113,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         seed: Optional[int],
         test: int,
     ) -> None:
-        input_path = testcase_info.input_path(
-            self._env, seed, solution=self.solution_label
-        )
+        input_path = testcase_info.input_path(seed, solution=self.solution_label)
 
         run_sol: RunSolution
         run_checker: RunChecker
@@ -127,7 +123,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
                 and self._generate_inputs
             ):
                 # Check static outputs against themselves
-                inp = testcase_info.input_path(self._env, seed)
+                inp = testcase_info.input_path(seed)
                 out = testcase_info.reference_output(self._env, seed)
 
                 checker_j = checker_job(
@@ -182,9 +178,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         self, testcase_info: TestcaseInfo, seed: Optional[int], test: int
     ) -> tuple[RunBatchSolution, RunBatchChecker]:
         """Create RunSolution and RunBatchChecker jobs for batch task type."""
-        input_path = testcase_info.input_path(
-            self._env, seed, solution=self.solution_label
-        )
+        input_path = testcase_info.input_path(seed, solution=self.solution_label)
         run_solution = RunBatchSolution(
             self._env,
             self._solution,
