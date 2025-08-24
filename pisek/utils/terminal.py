@@ -14,12 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
-from typing import TYPE_CHECKING
 
 from pisek.utils.text import pad
-
-if TYPE_CHECKING:
-    from pisek.env.env import Env
 
 MSG_LEN = 25
 
@@ -29,6 +25,11 @@ except OSError:
     terminal_width, terminal_height = 100, 24
 
 TARGET_LINE_WIDTH = min(terminal_width, 100)
+
+
+def separator_text(text: str):
+    dashes = TARGET_LINE_WIDTH - len(text) - 2
+    return "-" * (dashes // 2) + " " + text + " " + "-" * ((dashes + 1) // 2)
 
 
 def right_aligned_text(left: str, right: str, offset: int = 0):
