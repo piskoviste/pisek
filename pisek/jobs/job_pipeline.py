@@ -61,7 +61,8 @@ class JobPipeline(ABC):
 
                 if not self._update(cache, env):
                     self._reporter.refresh([])
-                    # FIXME: We need to kill running subprocess manually, otherwise exiting will wait for the jobs to be finished
+                    for job in self._futures.values():
+                        job.cancel()
                     break
 
                 self._reporter.refresh(list(self._futures.values()))

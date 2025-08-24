@@ -175,7 +175,9 @@ class Build(TaskJob):
         elif os.path.isfile(target.path):
             os.remove(target.path)
 
-        executable_name = strategy(self.build_section, self._env, self._print).build(
+        executable_name = strategy(
+            self.build_section, self._env, self._print, self._run_subprocess
+        ).build(
             WORKING_DIR,
             list(map(lambda p: p.name, sources)),
             list(map(lambda p: p.name, extras)),
