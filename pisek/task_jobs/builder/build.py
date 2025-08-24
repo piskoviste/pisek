@@ -67,10 +67,14 @@ class BuildManager(TaskJobManager):
                     self._build_program_job(self._env.config.solutions[solution].run)
                 )
 
-        filtered_jobs = []
+        filtered_jobs: list[Job] = []
         for j in jobs:
             if j is not None:
+                # TODO: Because BuildJobs change cwd, they cannot be run in parallel (yet)
+                if len(filtered_jobs):
+                    j.add_prerequisite(filtered_jobs[-1])
                 filtered_jobs.append(j)
+
         return filtered_jobs
 
 
