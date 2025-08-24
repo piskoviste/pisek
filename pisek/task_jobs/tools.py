@@ -19,7 +19,6 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from importlib.resources import files
 import os
-import subprocess
 
 from pisek.jobs.jobs import Job, PipelineItemFailure
 from pisek.env.env import Env
@@ -55,7 +54,7 @@ class PrepareMinibox(TaskJob):
         source = files("pisek").joinpath("tools/minibox.c")
         executable = TaskPath.executable_path("minibox")
         self._access_file(executable)
-        gcc = subprocess.run(
+        gcc = self._run_subprocess(
             [
                 "gcc",
                 source,
@@ -85,7 +84,7 @@ class PrepareTextPreprocessor(TaskJob):
         source = files("pisek").joinpath("tools/text-preproc.c")
         executable = TaskPath.executable_path("text-preproc")
         self._access_file(executable)
-        gcc = subprocess.run(
+        gcc = self._run_subprocess(
             [
                 "gcc",
                 source,
@@ -118,7 +117,7 @@ class PrepareJudgeLibChecker(TaskJob):
         executable = TaskPath.executable_path(self.judge)
         self._access_file(executable)
 
-        gpp = subprocess.run(
+        gpp = self._run_subprocess(
             [
                 "g++",
                 *sources,

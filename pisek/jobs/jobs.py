@@ -58,6 +58,11 @@ class PipelineItemFailure(Exception):
     pass
 
 
+class PipelineItemAbort(Exception):
+    def __init__(self, item: "PipelineItem"):
+        super().__init__(f'"{item.name}" was aborted.')
+
+
 class CaptureInitParams:
     """
     Class that stores __init__ args and kwargs of its descendants

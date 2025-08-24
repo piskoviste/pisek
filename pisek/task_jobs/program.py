@@ -206,7 +206,7 @@ class ProgramsJob(TaskJob):
         for pool_item, process, tmp_dir, meta_file in zip(
             self._program_pool, running_pool, tmp_dirs, meta_files
         ):
-            process.wait()
+            self._wait_for_subprocess(process)
             assert process.stderr is not None  # To make mypy happy
 
             with open(meta_file) as f:

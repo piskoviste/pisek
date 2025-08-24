@@ -19,7 +19,7 @@ import subprocess
 import os
 import json
 import shutil
-from typing import Optional, TYPE_CHECKING
+from typing import Callable, Optional, TYPE_CHECKING
 
 from pisek.utils.util import ChangedCWD
 from pisek.utils.text import tab
@@ -40,10 +40,17 @@ class BuildStrategy(ABC):
     extra_sources: Optional[str] = None
     extra_nonsources: Optional[str] = None
 
-    def __init__(self, build_section: "BuildSection", env: "Env", _print) -> None:
+    def __init__(
+        self,
+        build_section: "BuildSection",
+        env: "Env",
+        _print: Callable[..., None],
+        _run_subprocess: Callable[..., subprocess.Popen],
+    ) -> None:
         self._build_section = build_section
         self._env = env
         self._print = _print
+        self._run_popen = _run_subprocess
 
     def __init_subclass__(cls):
         if not inspect.isabstract(cls):
@@ -105,7 +112,10 @@ class BuildStrategy(ABC):
     def _check_tool(self, tool: str) -> None:
         """Checks that a tool exists."""
         try:
-            # tool.split() because some tools have more parts (e.g. '/usr/bin/env python3')
+            # XXX: We should technically use self._run_popen but that doesn't implement timeout properly
+            # But as we set it to zero, it doesn't matter
+            #
+            # Also tool.split() because some tools have more parts (e.g. '/usr/bin/env python3')
             subprocess.run(
                 tool.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=0
             )
@@ -118,7 +128,7 @@ class BuildStrategy(ABC):
         self._check_tool(args[0])
 
         logger.debug("Building '" + " ".join(args) + "'")
-        comp = subprocess.run(
+        comp = self._run_popen(
             args, **kwargs, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
         )
 
@@ -126,15 +136,16 @@ class BuildStrategy(ABC):
         assert comp.stdout is not None
 
         if comp.returncode != 0 or self._env.verbosity >= 1:
-            if comp.stderr.strip():
-                self._print(comp.stderr, stderr=True)
+            stderr: str = comp.stderr.read()
+            if stderr.strip():
+                self._print(stderr, stderr=True)
 
         if comp.returncode != 0:
             raise PipelineItemFailure(
                 f"Build of {program} failed.\n"
                 + tab(self._env.colored(" ".join(args), "yellow"))
             )
-        return comp.stdout
+        return comp.stdout.read()
 
     def _get_entrypoint(self, file_extension: str) -> str:
         assert file_extension[0] == "."
