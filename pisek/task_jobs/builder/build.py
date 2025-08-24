@@ -146,7 +146,7 @@ class Build(TaskJob):
 
         if self._env.verbosity >= 1:
             msg = f"Building '{self.build_section.program_name}' using build strategy '{strategy.name}'."
-            self._print(self._colored(tab(msg), "magenta"))
+            self._print(self._colored(msg, "magenta"))
 
         if os.path.exists(WORKING_DIR):
             shutil.rmtree(WORKING_DIR)
