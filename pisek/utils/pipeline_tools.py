@@ -24,7 +24,7 @@ from typing import Callable, Optional
 from pisek.jobs.job_pipeline import JobPipeline
 from pisek.utils.util import clean_non_relevant_files, ChangedCWD
 from pisek.utils.text import eprint
-from pisek.utils.terminal import TARGET_LINE_WIDTH
+from pisek.utils.terminal import separator_text
 from pisek.utils.paths import INTERNALS_DIR
 from pisek.utils.colors import ColorSettings
 from pisek.env.env import Env
@@ -49,13 +49,11 @@ def run_pipeline(path: str, pipeline_class: Callable[[Env], JobPipeline], **env_
             if env.repeat > 1:
                 if i != 0:
                     print()
-                text = f" Run {i+1}/{env.repeat} "
-                text = (
-                    ((TARGET_LINE_WIDTH - len(text)) // 2) * "-"
-                    + text
-                    + ((TARGET_LINE_WIDTH - len(text) + 1) // 2) * "-"
+                print(
+                    ColorSettings.colored(
+                        separator_text(f"Run {i+1}/{env.repeat}"), "cyan"
+                    )
                 )
-                print(ColorSettings.colored(text, "cyan"))
                 print()
 
             pipeline = pipeline_class(env.fork())
