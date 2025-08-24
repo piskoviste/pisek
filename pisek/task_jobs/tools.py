@@ -199,7 +199,7 @@ class TextPreprocAbstract(ProgramsJob):
             raise RuntimeError(f"Text preprocessor failed on file {input_:p}.")
 
 
-class SanitizeAbstact(TaskJob):
+class SanitizeAbstract(TaskJob):
     def __init__(self, env: Env, input_: TaskPath, output: TaskPath, **kwargs) -> None:
         self.input = input_
         self.output = output
@@ -218,7 +218,7 @@ class SanitizeAbstact(TaskJob):
         pass
 
 
-class Sanitize(SanitizeAbstact, TextPreprocAbstract):
+class Sanitize(SanitizeAbstract, TextPreprocAbstract):
     """Sanitize text file using Text Preprocessor."""
 
     def __init__(
@@ -232,7 +232,7 @@ class Sanitize(SanitizeAbstact, TextPreprocAbstract):
         return self._run_text_preproc(self.input, self.output)
 
 
-class IsClean(SanitizeAbstact, TextPreprocAbstract):
+class IsClean(SanitizeAbstract, TextPreprocAbstract):
     """Check that file is same after sanitizing with Text Preprocessor."""
 
     def __init__(

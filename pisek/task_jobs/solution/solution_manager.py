@@ -24,6 +24,7 @@ from pisek.utils.paths import InputPath
 from pisek.config.config_types import TaskType
 from pisek.utils.text import pad, pad_left, tab
 from pisek.utils.terminal import MSG_LEN, right_aligned_text
+from pisek.task_jobs.tools import SanitizeAbstract
 from pisek.task_jobs.data.data import SymlinkData
 from pisek.task_jobs.solution.verdicts_eval import evaluate_verdicts
 from pisek.task_jobs.task_job import TaskHelper
@@ -56,8 +57,6 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         self.is_primary: bool = self._env.config.solutions[self.solution_label].primary
         self._solution = self._env.config.solutions[self.solution_label].run
 
-        jobs: list[Job] = []
-
         self._sols: dict[InputPath, RunSolution] = {}
         self._checkers: dict[InputPath, RunChecker] = {}
         self._static_out_checkers: dict[InputPath, RunChecker] = {}
@@ -65,9 +64,9 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         for sub_num, inputs in self._all_testcases().items():
             self.tests.append(TestJobGroup(self._env, sub_num))
             for inp in inputs:
-                jobs += self._testcase_info_jobs(inp, sub_num)
+                self._add_testcase_info_jobs(inp, sub_num)
 
-        return jobs
+        return self._jobs
 
     def _register_skipped_testcase(
         self, testcase_info: TestcaseInfo, seed: Optional[int], test: int
@@ -83,44 +82,42 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         else:
             self.tests[-1].previous_jobs.append(self._checkers[input_path])
 
-    def _generate_input_jobs(
+    def _add_generate_input_jobs(
         self,
         testcase_info: TestcaseInfo,
         seed: Optional[int],
         test: int,
         test_determinism: bool,
-    ) -> list[Job]:
+    ) -> None:
         if self._generate_inputs:
-            jobs = super()._generate_input_jobs(
+            super()._add_generate_input_jobs(
                 testcase_info, seed, test, test_determinism
             )
-        else:
-            jobs = []
 
-        jobs.append(
+        self._add_job(
             SymlinkData(
                 self._env,
                 testcase_info.input_path(self._env, seed),
                 testcase_info.input_path(self._env, seed, solution=self.solution_label),
-            )
+            ),
+            new_last=True,
         )
-        return jobs
 
-    def _respects_seed_jobs(
+    def _add_respects_seed_jobs(
         self, testcase_info: TestcaseInfo, seeds: list[int], test: int
-    ) -> list[Job]:
-        if not self._generate_inputs:
-            return []
-        return super()._respects_seed_jobs(testcase_info, seeds, test)
+    ) -> None:
+        if self._generate_inputs:
+            super()._add_respects_seed_jobs(testcase_info, seeds, test)
 
-    def _solution_jobs(
-        self, testcase_info: TestcaseInfo, seed: Optional[int], test: int
-    ) -> list[Job]:
+    def _add_solution_jobs(
+        self,
+        testcase_info: TestcaseInfo,
+        seed: Optional[int],
+        test: int,
+    ) -> None:
         input_path = testcase_info.input_path(
             self._env, seed, solution=self.solution_label
         )
-
-        jobs: list[Job] = []
 
         run_sol: RunSolution
         run_checker: RunChecker
@@ -129,53 +126,57 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
                 testcase_info.generation_mode == TestcaseGenerationMode.static
                 and self._generate_inputs
             ):
+                # Check static outputs against themselves
                 inp = testcase_info.input_path(self._env, seed)
                 out = testcase_info.reference_output(self._env, seed)
 
                 checker_j = checker_job(
                     inp, out, out, test, seed, Verdict.ok, self._env
                 )
-                jobs += self._check_output_jobs(out, checker_j, None)
-                jobs.append(checker_j)
+                self._add_check_output_jobs(out)
+                self._add_job(
+                    checker_j,
+                    prerequisite_name=(
+                        "sanitize"
+                        if isinstance(self._testcase_last, SanitizeAbstract)
+                        else None
+                    ),
+                )
                 self._static_out_checkers[inp] = checker_j
 
             run_batch_sol, run_checker = self._create_batch_jobs(
                 testcase_info, seed, test
             )
             run_sol = run_batch_sol
+            self._add_job(run_batch_sol, new_last=True)
 
-            jobs.append(run_batch_sol)
+            self._add_check_output_jobs(run_batch_sol.output.to_sanitized_output())
 
-            jobs += self._check_output_jobs(
-                run_batch_sol.output.to_sanitized_output(), run_checker, run_batch_sol
-            )
+            if isinstance(self._testcase_last, SanitizeAbstract):
+                run_checker.add_prerequisite(self._testcase_last, "sanitize")
 
             if self._env.config.tests.judge_needs_out:
-                link = SymlinkData(
-                    self._env,
-                    testcase_info.reference_output(self._env, seed),
-                    testcase_info.reference_output(
-                        self._env, seed, solution=self.solution_label
+                self._add_job(
+                    SymlinkData(
+                        self._env,
+                        testcase_info.reference_output(self._env, seed),
+                        testcase_info.reference_output(
+                            self._env, seed, solution=self.solution_label
+                        ),
                     ),
+                    new_last=True,
                 )
-                jobs.append(link)
-                link.add_prerequisite(run_batch_sol)
-                run_checker.add_prerequisite(link)
-            else:
-                run_checker.add_prerequisite(run_batch_sol)
 
-            jobs.append(run_checker)
+            self._add_job(run_checker)
 
         elif self._env.config.task.task_type == TaskType.interactive:
             run_sol = run_checker = self._create_interactive_jobs(input_path, test)
-            jobs.append(run_sol)
+            self._add_job(run_sol)
 
         self._sols[input_path] = run_sol
         self._checkers[input_path] = run_checker
         self.tests[-1].new_jobs.append(run_checker)
         self.tests[-1].new_run_jobs.append(run_sol)
-
-        return jobs
 
     def _create_batch_jobs(
         self, testcase_info: TestcaseInfo, seed: Optional[int], test: int
