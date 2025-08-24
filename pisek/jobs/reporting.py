@@ -25,11 +25,12 @@ from pisek.env.env import Env
 
 
 class Reporter(ABC):
-    def __init__(self, env: Env) -> None:
+    def __init__(self, env: Env, job_managers: list[JobManager]) -> None:
         self._env = env
+        self._job_managers = job_managers
 
     @abstractmethod
-    def update(self, job_managers: list[JobManager]) -> None:
+    def update(self) -> None:
         pass
 
     @abstractmethod
@@ -46,21 +47,23 @@ class Reporter(ABC):
 
 
 class CommandLineReporter(Reporter):
-    def __init__(self, env: Env) -> None:
+    def __init__(self, env: Env, job_managers: list[JobManager]) -> None:
         self._finished_jm = 0
         self._tmp_lines = 0
         self._manager_tmp_lines = 0
-        super().__init__(env)
+        super().__init__(env, job_managers)
 
-    def update(self, job_managers: list[JobManager]) -> None:
+    def update(self) -> None:
         self._reset_tmp_lines()
         self._manager_tmp_lines = 0
-        for i in range(self._finished_jm, len(job_managers)):
-            job_man = job_managers[i]
+        for i in range(self._finished_jm, len(self._job_managers)):
+            job_man = self._job_managers[i]
 
             if i == self._finished_jm and job_man.state.finished():
                 self._finished_jm += 1
                 self._print(job_man.get_status())
+                if job_man.state != State.cancelled:
+                    self._report_manager(job_man)
                 if job_man.state == State.failed and not self._env.full:
                     break
             elif job_man.state == State.running:
@@ -73,7 +76,17 @@ class CommandLineReporter(Reporter):
         pass
 
     def report_manager(self, job_manager: JobManager) -> None:
-        # FIXME: Not in order
+        # If the conditions are met, we need to report it now as we won't have another chance
+        # Otherwise we'll just do it later
+        if (
+            self._finished_jm <= self._job_managers.index(job_manager)
+            and job_manager.any_failed()
+            and not self._env.full
+        ):
+            self._print(job_manager.get_status())
+            self._report_manager(job_manager)
+
+    def _report_manager(self, job_manager: JobManager) -> None:
         report_about: list[PipelineItem] = job_manager.jobs + [job_manager]
 
         # Prints and warnings
@@ -82,7 +95,7 @@ class CommandLineReporter(Reporter):
                 self._print(msg, end="", file=sys.stderr if is_stderr else sys.stdout)
 
         # Fails
-        fails = []
+        fails: list[str] = []
         for item in report_about:
             if item.state == State.failed and item.fail_msg:
                 fails.append(self._fail_message(item))
