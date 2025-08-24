@@ -85,17 +85,17 @@ class GeneratorTestDeterminism(ProgramsJob):
         self.generator = generator
         self.seed = seed
         self.testcase_info = testcase_info
-        self.input_path = testcase_info.input_path(seed)
+        self._original = testcase_info.input_path(seed)
+        self.input_path = self._original.to_second()
         super().__init__(
             env=env,
-            name=name or f"Generator is deterministic (on {self.input_path:p})",
+            name=name or f"Generator is deterministic (on {self._original:p})",
             **kwargs,
         )
 
     def _run(self) -> None:
         input_path = self.input_path.to_raw(self._env.config.tests.in_format)
-        original = input_path.to_second()
-        self._rename_file(input_path, original)
+        original = self._original.to_raw(self._env.config.tests.in_format)
         self._gen()
         if not self._files_equal(input_path, original):
             raise PipelineItemFailure(
@@ -103,7 +103,7 @@ class GeneratorTestDeterminism(ProgramsJob):
                 + (f" (seed {self.seed:016x})" if self.testcase_info.seeded else "")
                 + "."
             )
-        self._remove_file(original)
+        self._remove_file(input_path)
 
     @abstractmethod
     def _gen(self) -> None:

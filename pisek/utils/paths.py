@@ -137,6 +137,9 @@ class InputPath(SanitizedPath):
         else:
             super().__init__(TESTS_DIR, solution, *path)
 
+    def to_second(self) -> "InputPath":
+        return InputPath(self.replace_suffix(".in2").path)
+
     def to_output(self) -> "OutputPath":
         return OutputPath(self.replace_suffix(f".out").path)
 
@@ -172,9 +175,6 @@ class RawPath(TaskPath):
 
     def to_sanitized_input(self) -> InputPath:
         return InputPath(self.path.removesuffix(".raw"))
-
-    def to_second(self) -> TaskPath:
-        return self.replace_suffix(".raw2")
 
     def to_sanitization_log(self) -> LogPath:
         return LogPath(self.replace_suffix(".sanitizer.log").path)
