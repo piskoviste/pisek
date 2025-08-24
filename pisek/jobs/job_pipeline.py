@@ -33,7 +33,7 @@ class JobPipeline(ABC):
         self.all_accessed_files: set[str] = set()
 
     def run_jobs(self, cache: Cache, env: Env) -> bool:
-        self._reporter: Reporter = CommandLineReporter(env)
+        self._reporter: Reporter = CommandLineReporter(env, self.job_managers)
 
         self._futures: dict[Future, Job] = {}
         self._queue: list[Job] = []
@@ -83,7 +83,7 @@ class JobPipeline(ABC):
         for manager in self.job_managers:
             if manager.state == State.in_queue and manager.prerequisites == 0:
                 self._queue.extend(manager.create_jobs())
-                self._reporter.update(self.job_managers)
+                self._reporter.update()
                 break  # We don't want to start many managers at once because that can lead to UI freeze
 
         # Process new jobs
@@ -129,7 +129,7 @@ class JobPipeline(ABC):
         self._report(job)
 
     def _report(self, pitem: Job | JobManager) -> None:
-        self._reporter.update(self.job_managers)
+        self._reporter.update()
         if isinstance(pitem, Job):
             self._reporter.report_job(pitem)
         else:
