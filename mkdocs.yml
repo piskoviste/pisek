@@ -24,6 +24,8 @@ theme:
         name: Switch to system preference
   favicon: assets/logo.png
   logo: assets/logo.png
+  features:
+    - navigation.expand
 
 plugins:
   - search
@@ -34,3 +36,13 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
+
+nav:
+  - Home: index.md
+  - Task overview: task-overview.md
+  - Task parts:
+    - Generator: task-parts/generator.md
+    - Validator: task-parts/validator.md
+    - Batch checker: task-parts/batch-checker.md
+    - Interactive judge: task-parts/interactive-judge.md
+  - CMS integration: CMS.md

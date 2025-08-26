@@ -4,6 +4,7 @@ The batch checker gets the contestants output, the input and the correct output.
 It should say whether the contestant output is correct.
 
 There are various types of checkers you can use:
+
 - `tokens` - fast, versatile file equality checker
 - `diff` - file equality checker based on the `diff` command line tool (don't use, as it has a quadratic time complexity)
 - `judge` - custom checker
@@ -22,7 +23,7 @@ For the output to be correct, the tokens need to be same as in the correct outpu
 
 You can customize the tokens judge with `tokens_ignore_newlines` or `tokens_ignore_case`.
 For comparing floats, set `tokens_float_rel_error` and `tokens_float_abs_error`.
-Details can be found in [config-documentation](/docs/config-v3-documentation).
+Details can be found in [config-documentation](./config-v3-documentation).
 
 ## Shuffle judge
 
@@ -44,6 +45,7 @@ Set `out_judge` to the path to the source code of your judge, `judge_type` to *e
 and `judge_needs_in`, `judge_needs_out` to `0`/`1` depending whether the judge needs the input and the correct output.
 
 When writing a custom judge, you can chose from multiple judge types: 
+
 1. [cms-batch judge](#cms-batch-judge)
 2. [opendata-v2](#opendata-v2-judge)
 3. [opendata-v1](#opendata-v1-judge)
@@ -83,13 +85,14 @@ Otherwise, the judge should exit returncode 43.
 Optionally, the judge can write a one-line message for the contestant
 to stderr (at most 255 bytes), followed by a sequence of lines with `KEY=value` pairs.
 The following keys are allowed:
+
 - `POINTS` — Number of points awarded for this test case (used only if the exit code says "OK").
 - `LOG` — A message that should be logged.
 - `NOTE` — An internal note recorded in the database, but not visible to contestants.
 
 Values are again limited to 255 bytes.
 
-### Opendata-v1
+### Opendata-v1 judge
 
 The opendata-v1 judge is the same as opendata-v2, with the exception of using different
 returncodes, returncode 0 for a correct output and returncode 1 for a wrong output.
