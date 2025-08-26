@@ -12,16 +12,20 @@
 
 from abc import ABC, abstractmethod
 from colorama import Cursor, ansi
+from functools import wraps
 from math import ceil
 import re
 import sys
 import time
+from typing import Callable, Concatenate, ParamSpec
 
 from pisek.utils.text import tab
-from pisek.utils.terminal import terminal_width, LINE_SEPARATOR
+from pisek.utils.terminal import terminal_width, terminal_height, LINE_SEPARATOR
 
 from pisek.jobs.jobs import State, PipelineItem, Job, JobManager
 from pisek.env.env import Env
+
+P = ParamSpec("P")
 
 
 class Reporter(ABC):
@@ -108,23 +112,45 @@ class CommandLineReporter(Reporter):
 
     def refresh(self, active_jobs: list[Job]) -> None:
         self._reset_tmp_lines(leave=self._manager_tmp_lines)
-        dirty_lines = self._env.jobs - len(active_jobs)
         now = time.time()
 
-        if active_jobs:
-            self._print_tmp("Active jobs:")
+        if terminal_height <= self._env.jobs + 5:  # Some extra safety margin
+            if active_jobs:
+                self._print_tmp(
+                    f"{len(active_jobs)} active job{'s' if len(active_jobs) >= 2 else ''}, longest running: {self._format_job(active_jobs[0], now)}"
+                )
         else:
-            dirty_lines += 1
+            dirty_lines = self._env.jobs - len(active_jobs)
+            if active_jobs:
+                self._print_tmp("Active jobs:")
+            else:
+                dirty_lines += 1
 
-        for job in active_jobs:
-            run_time: float = 0 if job.started is None else max(0, now - job.started)
-            self._print_tmp(f"- {job.name} ({run_time:.1f}s)")
+            for job in active_jobs:
+                self._print_tmp("- " + self._format_job(job, now))
 
-        print(
-            f"{ansi.clear_line()}\n" * dirty_lines + Cursor.UP() * dirty_lines, end=""
-        )
+            print(
+                f"{ansi.clear_line()}\n" * dirty_lines + Cursor.UP() * dirty_lines,
+                end="",
+            )
 
-    def _reset_tmp_lines(self, clear: bool = False, leave: int = 0):
+    def _format_job(self, job: Job, now: float) -> str:
+        run_time: float = 0 if job.started is None else max(0, now - job.started)
+        return f"{job.name} ({run_time:.1f}s)"
+
+    @staticmethod
+    def _jumps(
+        func: Callable[Concatenate["CommandLineReporter", P], None],
+    ) -> Callable[Concatenate["CommandLineReporter", P], None]:
+        @wraps(func)
+        def g(self, *args: P.args, **kwargs: P.kwargs) -> None:
+            if not self._env.no_jumps:
+                func(self, *args, **kwargs)
+
+        return g
+
+    @_jumps
+    def _reset_tmp_lines(self, clear: bool = False, leave: int = 0) -> None:
         clear_lines = max(0, self._tmp_lines - leave)
         if clear:
             print(f"{Cursor.UP()}{ansi.clear_line()}" * clear_lines, end="")
@@ -132,13 +158,13 @@ class CommandLineReporter(Reporter):
             print(Cursor.UP() * clear_lines, end="")
         self._tmp_lines -= clear_lines
 
-    def _print_tmp(self, msg, *args, **kwargs):
+    @_jumps
+    def _print_tmp(self, msg, *args, **kwargs) -> None:
         """Prints a text to be rewritten latter."""
-        if not self._env.no_jumps:
-            lines = self._lines(msg)
-            self._tmp_lines += lines
-            self._clear_lines(lines)
-            print(str(msg), *args, **kwargs)
+        lines = self._lines(msg)
+        self._tmp_lines += lines
+        self._clear_lines(lines)
+        print(str(msg), *args, **kwargs)
 
     def _print(self, msg, *args, **kwargs) -> None:
         """Prints a text."""
@@ -146,6 +172,7 @@ class CommandLineReporter(Reporter):
         self._clear_lines(self._lines(msg))
         print(str(msg), *args, **kwargs)
 
+    @_jumps
     def _clear_lines(self, count: int) -> None:
         print(f"{ansi.clear_line()}\n" * count + Cursor.UP() * count, end="")
 
