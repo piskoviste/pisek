@@ -29,7 +29,7 @@ One of the solutions should be the **primary solution**, always producing the co
 It is also recommended to write some wrong solutions to ensure they don't pass.
 
 ### Generator
-*More details about the generator are [generator.md](./generator.md).*
+*More details about the generator are [generator.md](./task-parts/generator.md).*
 
 The generator is used for generating inputs that the solution is tested upon.
 Ideally the generator should generate diverse enough inputs to break any wrong solution.
@@ -49,6 +49,7 @@ conform to the task statement. It adds an additional degree of safety.
 ## Task types
 
 There are few types of tasks pisek supports:
+
 1. [Batch tasks](#batch-task)
 2. [Interactive tasks](#interactive-task)
 
@@ -64,7 +65,7 @@ graph TD;
 ```
 
 #### Batch checkers
-*More details about the batch checkers are in [batch_checker.md](./batch_checker.md).*
+*More details about the batch checkers are in [batch_checker.md](./task-parts/batch-checker.md).*
 
 A batch checker gets the solution output and should say whether it is correct.
 It can also get the correct output (from the primary solution) if specified in the config.
@@ -83,7 +84,7 @@ Interactive task should be used when part of the input should remain hidden
 from the contestant's solution. For example when it can ask questions about the input.
 
 #### Interactive judge
-*More details about the interactive judges are in [interactive_judge.md](./interactive_judge.md).*
+*More details about the interactive judges are in [interactive_judge.md](./task-parts/interactive-judge.md).*
 
 The judge in a interactive task gets the task input and is run together with the solution.
 The solution can make requests to the judge about the input. Finally, the judge says

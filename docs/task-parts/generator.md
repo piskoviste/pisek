@@ -3,6 +3,7 @@ The generator is used for generating inputs. Solutions are then run and judged o
 
 ## Generator type
 There are currently 3 generator types available:
+
 - pisek-v1
 - cms-old
 - opendata-v1

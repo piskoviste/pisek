@@ -3,6 +3,7 @@ The validator is used for validating inputs, i.e. making sure they conform to th
 
 ## Validator type
 There are currently 2 validator types available:
+
 - simple-42
 - simple-0
 
