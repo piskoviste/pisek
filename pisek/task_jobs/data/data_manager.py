@@ -63,7 +63,7 @@ class DataManager(TaskJobManager):
             self._testcase_infos[test.num] = []
 
             for testcase_info in all_testcase_infos:
-                inp_path = testcase_info.input_path(self._env, TEST_SEED).name
+                inp_path = testcase_info.input_path(TEST_SEED).name
                 if test.in_test(inp_path):
                     self._testcase_infos[test.num].append(testcase_info)
 
@@ -92,7 +92,7 @@ class DataManager(TaskJobManager):
             mode = testcase.generation_mode
 
             if mode in (TestcaseGenerationMode.static, TestcaseGenerationMode.mixed):
-                input_target_path = InputPath(self._env, f"{name}.in")
+                input_target_path = InputPath(f"{name}.in")
                 jobs.append(
                     LinkData(
                         self._env,

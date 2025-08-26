@@ -16,6 +16,7 @@ from typing import Optional
 from pisek.env.env import Env
 from pisek.jobs.jobs import PipelineItemFailure
 from pisek.config.task_config import RunSection
+from pisek.utils.paths import InputPath
 from pisek.task_jobs.task_job import TaskJob
 from pisek.task_jobs.program import ProgramsJob
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
@@ -53,7 +54,7 @@ class GenerateInput(ProgramsJob):
         self.generator = generator
         self.seed = seed
         self.testcase_info = testcase_info
-        self.input_path = testcase_info.input_path(env, seed)
+        self.input_path = testcase_info.input_path(seed)
         super().__init__(
             env=env, name=name or f"Generate {self.input_path.name}", **kwargs
         )
@@ -84,17 +85,17 @@ class GeneratorTestDeterminism(ProgramsJob):
         self.generator = generator
         self.seed = seed
         self.testcase_info = testcase_info
-        self.input_path = testcase_info.input_path(env, seed)
+        self._original = testcase_info.input_path(seed)
+        self.input_path = self._original.to_second()
         super().__init__(
             env=env,
-            name=name or f"Generator is deterministic (on {self.input_path:p})",
+            name=name or f"Generator is deterministic (on {self._original:p})",
             **kwargs,
         )
 
     def _run(self) -> None:
         input_path = self.input_path.to_raw(self._env.config.tests.in_format)
-        original = input_path.to_second()
-        self._rename_file(input_path, original)
+        original = self._original.to_raw(self._env.config.tests.in_format)
         self._gen()
         if not self._files_equal(input_path, original):
             raise PipelineItemFailure(
@@ -102,7 +103,7 @@ class GeneratorTestDeterminism(ProgramsJob):
                 + (f" (seed {self.seed:016x})" if self.testcase_info.seeded else "")
                 + "."
             )
-        self._remove_file(original)
+        self._remove_file(input_path)
 
     @abstractmethod
     def _gen(self) -> None:
@@ -121,12 +122,8 @@ class GeneratorRespectsSeed(TaskJob):
         self.testcase_info = testcase_info
         self.seed1 = seed1
         self.seed2 = seed2
-        self.input1 = testcase_info.input_path(self._env, seed1).to_raw(
-            env.config.tests.in_format
-        )
-        self.input2 = testcase_info.input_path(self._env, seed2).to_raw(
-            env.config.tests.in_format
-        )
+        self.input1 = testcase_info.input_path(seed1).to_raw(env.config.tests.in_format)
+        self.input2 = testcase_info.input_path(seed2).to_raw(env.config.tests.in_format)
         super().__init__(
             env=env,
             name=f"Generator respects seed ({self.input1:n} and {self.input2:n})",

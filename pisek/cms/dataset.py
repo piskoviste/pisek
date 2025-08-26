@@ -142,7 +142,7 @@ def create_dataset(
             output = input_.to_output()
 
             if not path.exists(output.path):
-                output = TaskPath.data_path(env, config.primary_solution, output.name)
+                output = TaskPath.data_path(config.primary_solution, output.name)
 
         create_testcase(session, files, dataset, name, input_, output)
 
@@ -199,9 +199,7 @@ def add_judge(session: Session, files: FileCacher, env: Env, dataset: Dataset):
     assert config.tests.out_judge is not None
 
     run_section = config.tests.out_judge
-    judge_path = TaskPath.executable_path(
-        env, path.splitext(run_section.exec.name)[0]
-    ).path
+    judge_path = TaskPath.executable_path(path.splitext(run_section.exec.name)[0]).path
 
     if config.task.task_type == TaskType.batch:
         judge_name = "checker"
