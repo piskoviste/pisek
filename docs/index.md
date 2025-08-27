@@ -12,7 +12,7 @@ Tool for developing tasks for programming competitions.
     you can build your programs with a Makefile.
     - **Supports various program interfaces** — We aim to support many interfaces
     used across different contests. If you have a program interface you would like us
-    to support, please [create an issue](https://github.com/piskoviste/pisek/issues/).
+    to support, please [create an issue](https://github.com/piskoviste/pisek/issues/new?template=new_program_type.md).
     - **Open-data and closed-data tasks** — Pisek supports the preparation of both open-data tasks
     (where contestants get the input) and closed-data tasks (where contestants submit their code). 
 - **Customizable**
