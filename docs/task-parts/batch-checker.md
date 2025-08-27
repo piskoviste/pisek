@@ -36,7 +36,9 @@ Use `shuffle_ignore_case` for case insensitivity.
 An equality checker based on the `diff` tool. Runs `diff -Bbq` under the hood.
 Ignores whitespace and empty lines.
 
-**Use is strongly discouraged because of the quadratic complexity of `diff`.**
+??? danger "This `out_check` is not recommended"
+
+    In some cases `diff` has quadratic complexity, leading to unexpectedly slow checking of outputs.
 
 ## Custom judge
 
@@ -99,3 +101,8 @@ returncodes, returncode 0 for a correct output and returncode 1 for a wrong outp
 
 However, usage of this judge type is discouraged as these returncodes can
 also be the result of an internal judge bug.
+
+??? danger "This `judge_type` is not recommended"
+
+    Return with exitcode 1 is very common and is for example trigger by any exception in Python.
+    This 
