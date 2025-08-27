@@ -41,7 +41,7 @@ class RunJudgeLibChecker(RunBatchChecker):
 
         executable = TaskPath.executable_path(self.checker_name)
 
-        checker = subprocess.run(
+        checker = self._run_subprocess(
             [
                 executable.path,
                 *self._get_flags(),
@@ -52,7 +52,8 @@ class RunJudgeLibChecker(RunBatchChecker):
             stderr=subprocess.PIPE,
         )
 
-        stderr = checker.stderr.decode("utf-8")
+        assert checker.stderr is not None
+        stderr = checker.stderr.read().decode("utf-8")
 
         # XXX: Okay, it didn't finish in no time, but this is not meant to be used
         rr = RunResult(

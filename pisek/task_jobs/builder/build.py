@@ -67,10 +67,14 @@ class BuildManager(TaskJobManager):
                     self._build_program_job(self._env.config.solutions[solution].run)
                 )
 
-        filtered_jobs = []
+        filtered_jobs: list[Job] = []
         for j in jobs:
             if j is not None:
+                # TODO: Because BuildJobs change cwd, they cannot be run in parallel (yet)
+                if len(filtered_jobs):
+                    j.add_prerequisite(filtered_jobs[-1])
                 filtered_jobs.append(j)
+
         return filtered_jobs
 
 
@@ -146,7 +150,7 @@ class Build(TaskJob):
 
         if self._env.verbosity >= 1:
             msg = f"Building '{self.build_section.program_name}' using build strategy '{strategy.name}'."
-            self._print(self._colored(tab(msg), "magenta"))
+            self._print(self._colored(msg, "magenta"))
 
         if os.path.exists(WORKING_DIR):
             shutil.rmtree(WORKING_DIR)
@@ -171,7 +175,9 @@ class Build(TaskJob):
         elif os.path.isfile(target.path):
             os.remove(target.path)
 
-        executable_name = strategy(self.build_section, self._env, self._print).build(
+        executable_name = strategy(
+            self.build_section, self._env, self._print, self._run_subprocess
+        ).build(
             WORKING_DIR,
             list(map(lambda p: p.name, sources)),
             list(map(lambda p: p.name, extras)),

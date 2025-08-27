@@ -14,11 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from pisek.utils.text import tab, pad
-from pisek.utils.terminal import MSG_LEN, TARGET_LINE_WIDTH, terminal_width
+from pisek.utils.terminal import MSG_LEN, TARGET_LINE_WIDTH
 from pisek.jobs.jobs import State, PipelineItem, JobManager
 
 TARGET_BAR_WIDTH = TARGET_LINE_WIDTH - MSG_LEN - 11
-line_sepatator = "⎯" * terminal_width + "\n"
 
 
 class StatusJobManager(JobManager):
@@ -46,28 +45,16 @@ class StatusJobManager(JobManager):
 
         return self._bar(
             msg,
-            len(self._jobs_with_state(State.succeeded))
+            len(self.jobs_with_state(State.succeeded))
             + (self.state == State.succeeded),
             len(self.jobs) + 1,
             color=color,
         )
 
-    def _get_status(self) -> str:
+    def get_status(self) -> str:
         return self._job_bar(self.name)
 
     @staticmethod
     def _fail_message(pitem: PipelineItem) -> str:
         """Get fail message of given job."""
         return f'"{pitem.name}" failed:\n{tab(pitem.fail_msg)}\n'
-
-    def failures(self) -> str:
-        """Returns failures of failed jobs."""
-        fails = []
-        for job in self._jobs_with_state(State.failed):
-            fails.append(self._fail_message(job))
-
-        if self.fail_msg != "":
-            fails.append(self._fail_message(self))
-
-        msg = line_sepatator + line_sepatator.join(fails) + line_sepatator
-        return self._colored(msg, "red")

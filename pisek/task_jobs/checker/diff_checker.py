@@ -52,7 +52,7 @@ class RunDiffChecker(RunBatchChecker):
     def _check(self) -> SolutionResult:
         self._access_file(self.output)
         self._access_file(self.correct_output)
-        diff = subprocess.run(
+        diff = self._run_subprocess(
             ["diff", "-Bbq", self.output.path, self.correct_output.path],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -75,6 +75,7 @@ class RunDiffChecker(RunBatchChecker):
                 Verdict.wrong_answer, None, self._solution_run_res, rr, Decimal(0)
             )
         else:
+            assert diff.stderr is not None
             raise PipelineItemFailure(
-                f"Diff failed:\n{tab(diff.stderr.decode('utf-8'))}"
+                f"Diff failed:\n{tab(diff.stderr.read().decode('utf-8'))}"
             )
