@@ -53,6 +53,7 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Task overview: task-overview.md
+  - Config documentation: config-docs.md
   - Task parts:
     - Generator: task-parts/generator.md
     - Validator: task-parts/validator.md
