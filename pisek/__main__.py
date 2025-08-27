@@ -51,19 +51,11 @@ def test_task_path(path, solutions: Optional[list[str]] = None, **env_args):
     return run_pipeline(path, TaskPipeline, solutions=solutions, **env_args)
 
 
-def test_solution(args):
-    if args.solution is None:
-        fatal_user_error(
-            "Specify a solution name to test.\n"
-            "Example:   pisek [--all_tests] test solution solve_slow_4b"
-        )
-
-    eprint(f"Testing solution: {args.solution}")
-    return test_task(args, solutions=[args.solution])
+def test_solutions(args):
+    return test_task(args)
 
 
 def test_generator(args):
-    eprint("Testing generator")
     return test_task(args, solutions=[])
 
 
@@ -154,16 +146,16 @@ def main(argv) -> int:
     # ------------------------------- pisek test -------------------------------
 
     parser_test = subparsers.add_parser("test", help="test task")
-    parser_test.add_argument(
-        "target",
-        choices=["generator", "solution", "all"],
-        nargs="?",
-        default="all",
-        help="what to test?",
+    test_subparsers = parser_test.add_subparsers(help="Testing target", dest="target")
+    test_all = test_subparsers.add_parser("all", help="Test all")
+    test_gen = test_subparsers.add_parser("generator", help="Test only generator")
+    test_sols = test_subparsers.add_parser(
+        "solutions", help="Test generator & given solutions"
     )
-    parser_test.add_argument(
-        "solution", type=str, help="name of the solution to test", nargs="?"
+    test_sols.add_argument(
+        "solutions", type=str, help="name of the solutions to test", nargs="+"
     )
+
     parser_test.add_argument(
         "--verbosity",
         "-v",
@@ -347,9 +339,9 @@ def main(argv) -> int:
     if args.subcommand == "test":
         if args.target == "generator":
             result = test_generator(args)
-        elif args.target == "solution":
-            result = test_solution(args)
-        elif args.target == "all":
+        elif args.target == "solutions":
+            result = test_solutions(args)
+        elif args.target is None or args.target == "all":
             result = test_task(args, solutions=None)
         else:
             raise RuntimeError(f"Unknown testing target: {args.target}")

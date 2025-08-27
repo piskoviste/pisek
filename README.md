@@ -61,9 +61,9 @@ What pisek verifies:
 
 ### Testing given programs
 
-For fast testing of only the solution `solve_cool.cpp` use:
+For testing only the solutions `solve_cool.cpp` and `solve_slow.py` use:
 ```bash
-pisek test solution solve_cool
+pisek test solutions solve_cool solve_slow
 ```
 
 Similarly the generator can be tested using:

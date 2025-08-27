@@ -41,7 +41,7 @@ class TestCLI(TestFixture):
 
 class TestCLITestSolution(TestCLI):
     def args(self):
-        return [["test", "solution", "solve"]]
+        return [["test", "solutions", "solve"]]
 
 
 class TestCLITestGenerator(TestCLI):

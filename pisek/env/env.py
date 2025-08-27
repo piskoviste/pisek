@@ -28,7 +28,7 @@ from pisek.config.select_solutions import expand_solutions, UnknownSolutions
 class TestingTarget(StrEnum):
     all = auto()
     generator = auto()
-    solution = auto()
+    solutions = auto()
 
 
 class Env(BaseEnv):
@@ -69,7 +69,7 @@ class Env(BaseEnv):
 
     @staticmethod
     def load(
-        target: str = TestingTarget.all,
+        target: str | None = TestingTarget.all,
         verbosity: int = 0,
         file_contents: bool = False,
         full: bool = False,
@@ -105,7 +105,7 @@ class Env(BaseEnv):
             expanded_solutions.insert(0, config.primary_solution)
 
         return Env(
-            target=TestingTarget(target),
+            target=TestingTarget(TestingTarget.all if target is None else target),
             config=config,
             verbosity=verbosity,
             file_contents=file_contents,

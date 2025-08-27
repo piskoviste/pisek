@@ -64,7 +64,7 @@ from pisek.utils.util import clean_non_relevant_files
 def generate_testcases(env: Env) -> list[InputPath]:
     env = env.fork()
     env.solutions = [env.config.primary_solution]
-    env.target = TestingTarget.solution
+    env.target = TestingTarget.solutions
 
     pipeline = TaskPipeline(env)
 

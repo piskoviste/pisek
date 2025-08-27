@@ -23,7 +23,7 @@ class UnknownSolutions(TaskConfigError):
         self, unknown: list[str], solutions: dict[str, "SolutionSection"]
     ) -> None:
         def format_solution(s: SolutionSection) -> str:
-            if s.name == s.run:
+            if s.name == s.run.name:
                 return s.name
             else:
                 return f"{s.name} (run: {s.run.name})"
