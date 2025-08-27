@@ -71,6 +71,13 @@ The generator is run with:
 
 The generator should generate all input files to this directory. The generator must be deterministic.
 
+??? warning "This `gen_type` is not recommended"
+
+    We don't recommend using this generator type for these reasons:
+
+    - It's **hard to debug**, as you don't know during generation of what input the bug occurs.
+    - You need to write **your own management code** for which inputs to generate, how many times and what seeds to use.
+
 ## Opendata-v1
 The generator is run:
 ```

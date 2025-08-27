@@ -24,3 +24,8 @@ The simple-0 validator is run as follows:
 Where `test_num` is number of the test to which the input belongs.
 If the input is valid, the validator should exit with **returncode 0**.
 Otherwise, it should exit with any other returncode.
+
+??? warning "This `validator_type` is not recommended"
+
+    Return with exitcode 0 can be sometimes caused by libraries.
+    It is better to avoid this pitfall and use the simple-42 validator type instead.
