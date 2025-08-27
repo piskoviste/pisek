@@ -407,7 +407,6 @@ class JobManager(PipelineItem):
 
     def finalize(self) -> None:
         """Does final evaluation and computes the result of this job manager."""
-        assert self.state == State.running
         if not self.any_failed():
             try:
                 self._evaluate()

@@ -83,6 +83,11 @@ class JobPipeline(ABC):
         for manager in self.job_managers:
             if manager.state == State.in_queue and manager.prerequisites == 0:
                 self._queue.extend(manager.create_jobs())
+                if manager.any_failed():
+                    manager.finalize()
+                    self._report(manager)
+                    if not env.full:
+                        return False
                 self._reporter.update()
                 break  # We don't want to start many managers at once because that can lead to UI freeze
 
