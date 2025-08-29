@@ -54,7 +54,7 @@ class BuildManager(TaskJobManager):
 
         jobs.append(self._build_program_job(self._env.config.tests.in_gen))
         jobs.append(self._build_program_job(self._env.config.tests.validator))
-        if self._env.target in (TestingTarget.solution, TestingTarget.all):
+        if self._env.target in (TestingTarget.solutions, TestingTarget.all):
             if self._env.config.tests.out_check == OutCheck.judge:
                 jobs.append(self._build_program_job(self._env.config.tests.out_judge))
             elif self._env.config.tests.out_check == OutCheck.tokens:
