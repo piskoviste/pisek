@@ -1,6 +1,8 @@
 # Task overview
-*The Task overview is for those who are familiar with competitive programming but haven't made tasks yet.*
-*If you already made some tasks, look at the task type diagrams [here](#batch-task) and [here](#interactive-task), to brush up on potential differences in terminology.*
+*The Task overview is for those who are familiar with competitive programming but haven't made tasks yet.
+If you already made some tasks, you can just look at the task type diagrams
+for [batch task](#batch-task) and [interactive task](#interactive-task)
+to brush up on potential differences in terminology.*
 
 ## Task components
 
