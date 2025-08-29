@@ -1,7 +1,7 @@
 # Task overview
 *The Task overview is for those who are familiar with competitive programming but haven't made tasks yet.
 If you already made some tasks, you can just look at the task type diagrams
-for [batch task](#batch-task) and [interactive task](#interactive-task)
+for a [batch task](#batch-task) and an [interactive task](#interactive-task)
 to brush up on potential differences in terminology.*
 
 ## Task components
@@ -30,8 +30,7 @@ It is the same as what the contestant should write - taking the input and produc
 One of the solutions should be the **primary solution**, always producing the correct output.
 It is also recommended to write some wrong solutions to ensure they don't pass.
 
-### Generator
-*More details about the generator are [generator.md](./task-parts/generator.md).*
+### [Generator](./task-parts/generator.md)
 
 The generator is used for generating inputs that the solution is tested upon.
 Ideally the generator should generate diverse enough inputs to break any wrong solution.
@@ -43,7 +42,7 @@ It greatly differs between task types, so you can read more there.
 
 A task-specific checker provided by the task author is called a **judge**.
 
-### Validator
+### [Validator](./task-parts/validator.md)
 
 The validator is used for validating inputs produced by generator
 conform to the task statement. It adds an additional degree of safety.
@@ -66,8 +65,7 @@ graph TD;
     CS -->|Correct output| C;
 ```
 
-#### Batch checkers
-*More details about the batch checkers are in [batch_checker.md](./task-parts/batch-checker.md).*
+#### [Batch checkers](./task-parts/batch-checker.md)
 
 A batch checker gets the solution output and should say whether it is correct.
 It can also get the correct output (from the primary solution) if specified in the config.
@@ -85,8 +83,7 @@ graph TD;
 Interactive task should be used when part of the input should remain hidden
 from the contestant's solution. For example when it can ask questions about the input.
 
-#### Interactive judge
-*More details about the interactive judges are in [interactive_judge.md](./task-parts/interactive-judge.md).*
+#### [Interactive judge](./task-parts/interactive-judge.md)
 
 The judge in a interactive task gets the task input and is run together with the solution.
 The solution can make requests to the judge about the input. Finally, the judge says
