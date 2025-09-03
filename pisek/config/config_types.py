@@ -109,6 +109,7 @@ class BuildStrategyName(StrEnum):
 class CMSFeedbackLevel(StrEnum):
     full = auto()
     restricted = auto()
+    oi_restricted = auto()
 
 
 class CMSScoreMode(StrEnum):
