@@ -10,7 +10,7 @@ assignees: ''
 **Describe the bug**
 A clear and concise description of what the bug is.
 
-**How to Reproduce**
+**How to reproduce**
 If you can, please attach relevant files. If they should not be public, please use our emails.
 
 **Expected behavior**
