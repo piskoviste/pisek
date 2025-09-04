@@ -2,7 +2,7 @@
 When testing a task all actions are run inside a pipeline - `JobPipeline`.
 `JobPipeline` contains two types of `PipelineItem`s:
  - `Job`s - Actions to be done
- - `JobManger`s - Create jobs and look after them.
+ - `JobManger`s - Create `Job`s and look after them.
 
 ## PipelineItem
 Both `Job` and `JobManager` share a few common traits.
@@ -12,14 +12,18 @@ Each `PipelineItem` has a name that's displayed to the user.
 
 ### State
 Each item has a state that represent their progress:
- - `in_queue` - The item is waiting for previous items
+ - `in_queue` - The item is waiting for previous items.
  - `running` - The item is running.
  - `succeeded` - The item has successfully ended.
- - `failed` - The item has failed, and the something is wrong with the task being tested.
+ - `failed` - The task doesn't pass the checks this job tests.
  - `cancelled` - A prerequisite (see below) of this item has failed, therefore this item cannot be run.
 
+### Failing
+`PipelineItem`s can fail by raising `PipelineItemFailure`. Note that this is allowed
+only in `Job._run`, `JobManager._get_jobs` and `JobManager._evaluate`.
+
 ### Prerequisites
-Each item can have items that must be run before it. (E.g. Running after compilation.) 
+Each item can have items that must be run before it. (E.g. Execution after compilation.) 
 Prerequisites must be specified:
  - When creating `Job`s in `JobManager`
  - When creating `JobManager`s in `JobPipeline`'s init.
@@ -27,7 +31,7 @@ Prerequisites must be specified:
 Additionally each prerequisite must be inserted into the pipeline before the given item.
 
 ## Jobs
-`Job`s represent a single and simple task.
+`Job`s represent a single simple task.
 
 To decrease run time `Job`'s inputs are monitored, and after `Job` has successfully finished,
 it's result is cached. These are all inputs that `Job` can access:
@@ -38,7 +42,7 @@ it's result is cached. These are all inputs that `Job` can access:
 
 Next time if `Job` should be run with same inputs, the cached result is used instead.
 
-(Job results are saved in `./.pisek_cache` file.)
+(Job results are saved in `.pisek/cache` file.)
 
 ### Writing Jobs
 A job can look like this (notice things in comments):
@@ -74,11 +78,15 @@ Env must be second argument of every `__init__` (after `self`).
 `*args` and `**kwargs` are cached.
 
 ## JobManager
-Jobs are managed by a `JobManager` in this way:
-1. First `JobManager` creates all jobs in `JobManager._get_jobs`.
-2. After every managed `Job` state change, you can update `JobManager` in `JobManager._update`. 
-3. Then repeatedly reports current state of jobs with `JobManager._get_status`.
-4. After all jobs have finished, it can check for cross-job failures using `JobManager._evaluate`.
+Jobs are managed by a `JobManager` via the following interface:
+
+1. `JobManager._get_jobs` creates a list of all jobs.
+2. After a batch of `Job`s is finished / loaded from cache, `JobManager._update` is called. 
+3. `JobManager.get_status` reports the state of the manager for printing to the console.
+4. After all jobs have finished, `JobManager` can check for cross-job failures in `JobManager._evaluate`.
+5. Finally, `JobManager._compute_result` is called and its result can be used by other `JobManager`s. 
+
+Only `_get_jobs` and `_evaluate` can raise `PipelineItemFailure`.
 
 ### Writing JobManagers
 ```py
@@ -99,7 +107,7 @@ class ExampleManager(TaskJobManager):  # We inherit from TaskJobManager again fo
     
     # We don't need to override _get_status as we have a better one already
     # but as an example:
-    def _get_status(self) -> str:
+    def get_status(self) -> str:
         return f"{self.name} {len(self._jobs_with_state(State.succeeded))}/{len(self.jobs)}"
 
     # Finally we check for cross-job failures
@@ -107,15 +115,3 @@ class ExampleManager(TaskJobManager):  # We inherit from TaskJobManager again fo
         if self.jobs[0].result != self.jobs[1].result:
             raise PipelineItemFailure("Both jobs have to have the same result.")
 ```
-
-## JobPipeline
-`JobPipeline` holds all `PipelineItems` and executes them in correct order.
-
-The pipeline has list of `JobManager`s and `Job`s to execute.
-Pipeline does the following in each step:
- - If at the top of the pipeline is `JobManager`:
-   - Create jobs with it and add them **to the top** of the pipeline.
-   - Add this `JobManager` to active ones.
- - If at the top of the pipeline is a `Job`:
-    - Run it, or if it's cached use the result
-After each step update active `JobManager`s and write current status to console.
