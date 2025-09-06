@@ -1,0 +1,18 @@
+[task]
+version=v3
+
+[tests]
+gen_type=opendata-v1
+validator_type=simple-42
+
+# Depends on your task hosting backend
+# If you normalize inputs from contestants, use:
+out_format=text
+# Otherwise use
+# out_format=binary
+
+[run_solution]
+subdir=solutions/
+
+[checks]
+one_input_in_each_nonsample_test=on
