@@ -135,15 +135,17 @@ class BuildStrategy(ABC):
         assert comp.stderr is not None
         assert comp.stdout is not None
 
-        if comp.returncode != 0 or self._env.verbosity >= 1:
-            stderr: str = comp.stderr.read()
+        stderr: str = comp.stderr.read()
+        if self._env.verbosity >= 1:
             if stderr.strip():
                 self._print(stderr, stderr=True)
 
         if comp.returncode != 0:
             raise PipelineItemFailure(
                 f"Build of {program} failed.\n"
-                + tab(self._env.colored(" ".join(args), "yellow"))
+                + tab(self._env.colored("> " + " ".join(args), "magenta"))
+                + "\n"
+                + tab(self._env.colored(stderr, "yellow"))
             )
         return comp.stdout.read()
 
