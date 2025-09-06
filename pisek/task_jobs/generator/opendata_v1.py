@@ -65,6 +65,7 @@ class OpendataV1GeneratorJob(ProgramsJob):
             raise self._create_program_failure(
                 f"{self.generator.name} failed on test {test}, seed {self.seed:016x}:",
                 result,
+                stderr_force_content=True,
             )
 
 

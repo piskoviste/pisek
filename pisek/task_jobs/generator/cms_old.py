@@ -47,7 +47,11 @@ class CmsOldListInputs(GeneratorListInputs):
         self._access_dir(gen_dir)
 
         if run_result.kind != RunResultKind.OK:
-            raise self._create_program_failure("Generator failed:", run_result)
+            raise self._create_program_failure(
+                "Generator failed:",
+                run_result,
+                stderr_force_content=True,
+            )
 
         testcases = []
         for inp in self._globs_to_files(["*"], TaskPath.generated_path(".")):
