@@ -287,13 +287,13 @@ tests=@auto
 
 build=@auto
 # Reference to the build section specifying how to build this program
-# @auto expands to '{program_type}:{subdir}/{program}', e.g. 'solution:solutions/solve' (default)
+# @auto expands to '{program_role}:{subdir}/{program}', e.g. 'solution:solutions/solve' (default)
 # See [build] for more
 
 exec=@auto
 # Filename of the program to execute (without suffix)
 # If a directory is chosen directory/run is executed instead
-# @auto expands to the value of the build key without '{program_type}:' (default)
+# @auto expands to the value of the build key without '{program_role}:' (default)
 args=--slow
 # Additional arguments for the program. (Given before any other arguments.)
 # (defaults to empty)

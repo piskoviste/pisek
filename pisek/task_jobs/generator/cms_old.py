@@ -14,7 +14,7 @@ import os
 import shutil
 
 from pisek.env.env import Env
-from pisek.config.config_types import ProgramType
+from pisek.config.config_types import ProgramRole
 from pisek.config.task_config import RunSection
 from pisek.utils.paths import TaskPath, LogPath
 from pisek.task_jobs.program import RunResultKind
@@ -39,7 +39,7 @@ class CmsOldListInputs(GeneratorListInputs):
         self.makedirs(gen_dir, exist_ok=False)
 
         run_result = self._run_program(
-            ProgramType.gen,
+            ProgramRole.gen,
             self.generator,
             args=[gen_dir.abspath],
             stderr=LogPath.generator_log(self.generator.name),

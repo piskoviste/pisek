@@ -76,7 +76,7 @@ def validate_test_points(points: str):
 TestPoints = Annotated[int | Literal["unscored"], BeforeValidator(validate_test_points)]
 
 
-class ProgramType(StrEnum):
+class ProgramRole(StrEnum):
     gen = auto()
     validator = auto()
     primary_solution = auto()
@@ -84,7 +84,7 @@ class ProgramType(StrEnum):
     judge = auto()
 
     def is_solution(self) -> bool:
-        return self in (ProgramType.primary_solution, ProgramType.secondary_solution)
+        return self in (ProgramRole.primary_solution, ProgramRole.secondary_solution)
 
     @property
     def build_name(self) -> str:

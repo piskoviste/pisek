@@ -13,7 +13,7 @@
 from typing import Optional
 
 from pisek.env.env import Env
-from pisek.config.config_types import ProgramType
+from pisek.config.config_types import ProgramRole
 from pisek.config.task_config import RunSection
 from pisek.utils.paths import InputPath
 from pisek.task_jobs.program import ProgramsJob, RunResultKind
@@ -55,7 +55,7 @@ class OpendataV1GeneratorJob(ProgramsJob):
         test = int(self.testcase_info.name)
 
         result = self._run_program(
-            ProgramType.gen,
+            ProgramRole.gen,
             self.generator,
             args=[str(test), f"{self.seed:016x}"],
             stdout=self.input_path.to_raw(self._env.config.tests.in_format),

@@ -17,7 +17,7 @@ from typing import Any
 
 from pisek.utils.paths import InputPath, OutputPath
 from pisek.env.env import Env
-from pisek.config.config_types import ProgramType
+from pisek.config.config_types import ProgramRole
 from pisek.config.task_config import RunSection
 from pisek.task_jobs.solution.solution_result import (
     Verdict,
@@ -137,7 +137,7 @@ class RunOpendataJudge(RunBatchChecker):
             self._access_file(self.correct_output)
 
         self._result = self._run_program(
-            ProgramType.judge,
+            ProgramRole.judge,
             self.judge,
             args=[
                 str(self.test),
