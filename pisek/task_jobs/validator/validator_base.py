@@ -60,4 +60,5 @@ class ValidatorJob(ProgramsJob):
             raise self._create_program_failure(
                 f"Validator failed on {self.input:p} (test {self.test}):",
                 result,
+                stderr_force_content=True,
             )

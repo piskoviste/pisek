@@ -108,8 +108,9 @@ class PisekV1ListInputs(GeneratorListInputs):
         )
         if self._run_result.kind != RunResultKind.OK:
             raise self._create_program_failure(
-                f"{self.generator} failed to list inputs",
+                f"{self.generator.name} failed to list inputs",
                 self._run_result,
+                stderr_force_content=True,
             )
 
     def _get_input_lines(self) -> list[str]:
@@ -152,6 +153,7 @@ class PisekV1GeneratorJob(ProgramsJob):
                 f"{self.generator.name} failed on input {self.testcase_info.name}"
                 + (":" if self.seed is None else f", seed {self.seed:016x}:"),
                 result,
+                stderr_force_content=True,
             )
 
 

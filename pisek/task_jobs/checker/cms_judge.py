@@ -49,12 +49,18 @@ class RunCMSJudge(RunChecker):
             points = Decimal(points_str)
         except (ValueError, InvalidOperation):
             raise self._create_program_failure(
-                "Judge didn't write points on stdout:", result
+                "Judge didn't write points on stdout:",
+                result,
+                status=False,
+                stdout_force_content=True,
             )
 
         if not 0 <= points <= 1:
             raise self._create_program_failure(
-                "Judge must give between 0 and 1 points:", result
+                "Judge must give between 0 and 1 points:",
+                result,
+                status=False,
+                stdout_force_content=True,
             )
 
         return points
@@ -77,7 +83,9 @@ class RunCMSJudge(RunChecker):
             )
         else:
             raise self._create_program_failure(
-                f"Judge failed on {self._checking_message()}:", judge_run_result
+                f"Judge failed on {self._checking_message()}:",
+                judge_run_result,
+                stderr_force_content=True,
             )
 
 
