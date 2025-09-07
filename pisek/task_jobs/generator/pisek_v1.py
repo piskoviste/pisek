@@ -15,7 +15,7 @@ from typing import Any, NoReturn, Optional
 
 from pisek.utils.text import tab
 from pisek.env.env import Env
-from pisek.config.config_types import ProgramType
+from pisek.config.config_types import ProgramRole
 from pisek.config.task_config import RunSection
 from pisek.utils.paths import TaskPath, InputPath, LogPath
 from pisek.task_jobs.program import ProgramsJob, RunResultKind
@@ -101,7 +101,7 @@ class PisekV1ListInputs(GeneratorListInputs):
 
     def _create_inputs_list(self) -> None:
         self._run_result = self._run_program(
-            ProgramType.gen,
+            ProgramRole.gen,
             self.generator,
             stdout=self._get_inputs_list_path(),
             stderr=LogPath.generator_log(self.generator.name),
@@ -141,7 +141,7 @@ class PisekV1GeneratorJob(ProgramsJob):
             args.append(f"{self.seed:016x}")
 
         result = self._run_program(
-            ProgramType.gen,
+            ProgramRole.gen,
             self.generator,
             args=args,
             stdout=self.input_path.to_raw(self._env.config.tests.in_format),

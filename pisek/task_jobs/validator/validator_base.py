@@ -14,7 +14,7 @@ from abc import abstractmethod
 
 from pisek.env.env import Env
 from pisek.utils.paths import InputPath
-from pisek.config.task_config import ProgramType, RunSection
+from pisek.config.task_config import ProgramRole, RunSection
 from pisek.task_jobs.run_result import RunResult
 from pisek.task_jobs.program import ProgramsJob
 
@@ -47,7 +47,7 @@ class ValidatorJob(ProgramsJob):
 
     def _validate(self) -> RunResult:
         return self._run_program(
-            ProgramType.validator,
+            ProgramRole.validator,
             self.validator,
             args=self._validation_args(),
             stdin=self.input,

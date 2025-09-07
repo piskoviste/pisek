@@ -46,7 +46,7 @@ from pisek.config.config_types import (
     ShuffleMode,
     DataFormat,
     TestPoints,
-    ProgramType,
+    ProgramRole,
     BuildStrategyName,
     CMSFeedbackLevel,
     CMSScoreMode,
@@ -151,9 +151,9 @@ class TaskConfig(BaseEnv):
         section_names = configs.sections()
 
         PROGRAMS = [
-            (ProgramType.gen, "in_gen"),
-            (ProgramType.validator, "validator"),
-            (ProgramType.judge, "out_judge"),
+            (ProgramRole.gen, "in_gen"),
+            (ProgramRole.validator, "validator"),
+            (ProgramRole.judge, "out_judge"),
         ]
         for t, program in PROGRAMS:
             if args["tests"][program].value:
@@ -524,9 +524,9 @@ class SolutionSection(BaseEnv):
             args["run"].value = name.value
 
         sol_type = (
-            ProgramType.primary_solution
+            ProgramRole.primary_solution
             if args["primary"].value in ()
-            else ProgramType.secondary_solution
+            else ProgramRole.secondary_solution
         )
 
         return {
@@ -599,18 +599,18 @@ class SolutionSection(BaseEnv):
         return self
 
 
-def get_run_defaults(program_type: ProgramType, program_name: str) -> list[str]:
-    if program_type.is_solution():
+def get_run_defaults(program_role: ProgramRole, program_name: str) -> list[str]:
+    if program_role.is_solution():
         return [
             f"run_solution:{program_name}",
-            f"run_{program_type}",
+            f"run_{program_role}",
             f"run_solution",
             f"run",
         ]
     else:
         return [
-            f"run_{program_type}:{program_name}",
-            f"run_{program_type}",
+            f"run_{program_role}:{program_name}",
+            f"run_{program_role}",
             f"run",
         ]
 
@@ -620,7 +620,7 @@ class RunSection(BaseEnv):
 
     _section: str
 
-    program_type: ProgramType
+    program_role: ProgramRole
     name: str
     subdir: str
     build: "BuildSection"
@@ -641,9 +641,9 @@ class RunSection(BaseEnv):
 
     @classmethod
     def load_dict(
-        cls, program_type: ProgramType, name: ConfigValue, configs: ConfigHierarchy
+        cls, program_role: ProgramRole, name: ConfigValue, configs: ConfigHierarchy
     ) -> ConfigValuesDict:
-        default_sections = get_run_defaults(program_type, name.value)
+        default_sections = get_run_defaults(program_role, name.value)
 
         section_name = configs.get_from_candidates(
             [(section, None) for section in default_sections]
@@ -653,17 +653,17 @@ class RunSection(BaseEnv):
                 [(section, key) for section in default_sections]
             )
             for key in cls.model_fields
-            if key not in ("name", "program_type")
+            if key not in ("name", "program_role")
         }
         if args["build"].value == "@auto":
             args["build"].value = (
-                f"{program_type.build_name}:{os.path.join(args['subdir'].value, name.value)}"
+                f"{program_role.build_name}:{os.path.join(args['subdir'].value, name.value)}"
             )
 
         return {
             "_section": section_name,
-            "program_type": ConfigValue.make_internal(
-                program_type.name, "run", "program_type"
+            "program_role": ConfigValue.make_internal(
+                program_role.name, "run", "program_role"
             ),
             "name": name,
             **args,
@@ -704,12 +704,12 @@ class BuildSection(BaseEnv):
     @classmethod
     def load_dict(cls, name: ConfigValue, configs: ConfigHierarchy) -> ConfigValuesDict:
         program = name
-        program_type = ConfigValue("", name.config, name.section, name.key)
+        program_role = ConfigValue("", name.config, name.section, name.key)
         default_sections = [f"build:{program.value}", "build"]
-        for pt in ProgramType:
+        for pt in ProgramRole:
             prefix = f"{pt.build_name}:"
             if name.value.startswith(prefix):
-                program_type, program = name.split(":")
+                program_role, program = name.split(":")
                 default_sections = [
                     f"build_{pt.build_name}:{program.value}",
                     f"build_{pt.build_name}",
@@ -743,7 +743,7 @@ class BuildSection(BaseEnv):
             "section_name": ConfigValue.make_internal(
                 default_sections[0], default_sections[0], None
             ),
-            "build_type": program_type,
+            "build_type": program_role,
             "program_name": program,
             **args,
         }

@@ -18,7 +18,7 @@ from typing import Optional
 
 from pisek.env.env import Env
 from pisek.utils.paths import InputPath
-from pisek.config.config_types import ProgramType
+from pisek.config.config_types import ProgramRole
 from pisek.config.task_config import RunSection
 from pisek.task_jobs.program import RunResult, ProgramsJob
 from pisek.task_jobs.solution.solution_result import Verdict, SolutionResult
@@ -50,11 +50,11 @@ class RunSolution(ProgramsJob):
             self.cancel()
         assert self._needed_by >= 0
 
-    def _solution_type(self) -> ProgramType:
+    def _solution_type(self) -> ProgramRole:
         return (
-            (ProgramType.primary_solution)
+            (ProgramRole.primary_solution)
             if self.is_primary
-            else (ProgramType.secondary_solution)
+            else (ProgramRole.secondary_solution)
         )
 
 
@@ -80,7 +80,7 @@ class RunBatchSolution(RunSolution):
 
     def _run(self) -> RunResult:
         return self._run_program(
-            program_type=self._solution_type(),
+            program_role=self._solution_type(),
             program=self.solution,
             stdin=self.input,
             stdout=self.output,
@@ -131,7 +131,7 @@ class RunInteractive(RunCMSJudge, RunSolution):
             ]
 
             self._load_program(
-                ProgramType.judge,
+                ProgramRole.judge,
                 self.judge,
                 stdin=self.input,
                 stdout=self.points_file,

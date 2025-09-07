@@ -20,7 +20,7 @@ import re
 from pisek.utils.text import eprint
 from pisek.utils.colors import ColorSettings
 from pisek.config.config_errors import TaskConfigError
-from pisek.config.config_types import ProgramType
+from pisek.config.config_types import ProgramRole
 
 
 def maybe_rename_key(
@@ -212,33 +212,33 @@ def update_to_v3(config: ConfigParser, task_path: str) -> None:
     maybe_rename_key(config, "tests", "tests", "checker", "validator")
 
     OLD_NAME = {
-        ProgramType.gen: "in_gen",
-        ProgramType.validator: "checker",
-        ProgramType.primary_solution: "solve",
-        ProgramType.secondary_solution: "sec_solve",
-        ProgramType.judge: "judge",
+        ProgramRole.gen: "in_gen",
+        ProgramRole.validator: "checker",
+        ProgramRole.primary_solution: "solve",
+        ProgramRole.secondary_solution: "sec_solve",
+        ProgramRole.judge: "judge",
     }
 
-    for new_program_type in ProgramType:
-        old_program_type = OLD_NAME[new_program_type]
-        if new_program_type == ProgramType.primary_solution:
+    for new_program_role in ProgramRole:
+        old_program_role = OLD_NAME[new_program_role]
+        if new_program_role == ProgramRole.primary_solution:
             section = "run_solution"
         else:
-            section = f"run_{new_program_type}"
+            section = f"run_{new_program_role}"
 
         config.add_section(section)
         config[section]["clock_mul"] = "0"
         config[section]["clock_min"] = config.get(
-            "limits", f"{old_program_type}_clock_limit", fallback="360"
+            "limits", f"{old_program_role}_clock_limit", fallback="360"
         )
-        maybe_delete_key(config, "limits", f"{old_program_type}_clock_limit")
+        maybe_delete_key(config, "limits", f"{old_program_role}_clock_limit")
 
         for limit in ("time", "mem", "process"):
             maybe_rename_key(
                 config,
                 "limits",
                 section,
-                f"{old_program_type}_{limit}_limit",
+                f"{old_program_role}_{limit}_limit",
                 f"{limit}_limit",
             )
 

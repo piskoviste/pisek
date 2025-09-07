@@ -22,7 +22,7 @@ from typing import Optional, Any, Union, Callable
 import signal
 import subprocess
 
-from pisek.config.task_config import ProgramType, RunSection
+from pisek.config.task_config import ProgramRole, RunSection
 from pisek.env.env import Env
 from pisek.utils.paths import TaskPath, LogPath
 from pisek.jobs.jobs import PipelineItemFailure
@@ -142,7 +142,7 @@ class ProgramsJob(TaskJob):
 
     def _load_program(
         self,
-        program_type: ProgramType,
+        program_role: ProgramRole,
         program: RunSection,
         args: list[str] = [],
         stdin: Optional[Union[TaskPath, int]] = None,
@@ -152,7 +152,7 @@ class ProgramsJob(TaskJob):
     ) -> None:
         """Adds program to execution pool."""
         time_limit: Optional[float] = None
-        if program_type.is_solution():
+        if program_role.is_solution():
             time_limit = self._env.time_limit
 
         self._load_executable(
@@ -279,12 +279,12 @@ class ProgramsJob(TaskJob):
 
     def _run_program(
         self,
-        program_type: ProgramType,
+        program_role: ProgramRole,
         program: RunSection,
         **kwargs,
     ) -> RunResult:
         """Loads one program and runs it."""
-        self._load_program(program_type, program, **kwargs)
+        self._load_program(program_role, program, **kwargs)
         return self._run_programs()[0]
 
     def _run_tool(
