@@ -48,10 +48,11 @@ class TaskHelper:
         self, globs: Iterable[str], directory: TaskPath
     ) -> list[TaskPath]:
         """Get files in given directory that match any glob."""
-        files: list[str] = sum(
-            (glob.glob(g, root_dir=directory.path) for g in globs),
-            start=[],
-        )
+        files_per_glob = [
+            glob.glob(g, root_dir=directory.path, recursive=True, include_hidden=True)
+            for g in globs
+        ]
+        files: list[str] = sum(files_per_glob, start=[])
         files = list(sorted(set(files)))
         return [TaskPath.from_abspath(directory.path, file) for file in files]
 
@@ -236,7 +237,7 @@ class TaskJob(Job, TaskHelper):
     def _globs_to_files(
         self, globs: Iterable[str], directory: TaskPath
     ) -> list[TaskPath]:
-        self._accessed_globs |= set(globs)
+        self._accessed_globs |= set(os.path.join(directory.path, g) for g in globs)
         return super()._globs_to_files(globs, directory)
 
     def _quote_file(self, file: TaskPath, **kwargs) -> str:

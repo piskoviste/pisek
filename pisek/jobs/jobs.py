@@ -245,7 +245,9 @@ class Job(PipelineItem, CaptureInitParams):
                 return (None, f"File nonexistent: {path}")
 
         for g in sorted(globs):
-            glob_sign = f"{g} -> " + " ".join(glob.glob(g))
+            glob_sign = f"{g} -> " + " ".join(
+                glob.glob(g, recursive=True, include_hidden=True)
+            )
             sign.update(glob_sign.encode())
 
         for name, result in sorted(results.items()):
