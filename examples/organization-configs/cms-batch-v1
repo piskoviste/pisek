@@ -1,0 +1,7 @@
+[task]
+version=v3
+use=cms-base-v1
+task_type=batch
+
+[tests]
+judge_type=cms-batch

@@ -1,0 +1,23 @@
+[task]
+version=v3
+
+[tests]
+gen_type=pisek-v1
+validator_type=simple-42
+
+# CMS doesn't support normalization so we need to use these options
+# to match the behavior of CMS:
+# - The input data should be well-behaved
+# - The output data can be anything
+in_format=strict-text
+out_format=binary
+
+static_subdir=static_tests/
+
+[run_solution]
+subdir=solutions/
+
+[checks]
+# Turn on some checks disabled by default
+solution_for_each_test=on
+all_inputs_in_last_test=on
