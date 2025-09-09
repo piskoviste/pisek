@@ -378,13 +378,9 @@ class JobManager(PipelineItem):
         """Filter this manager's jobs by state."""
         return list(filter(lambda j: j.state == state, self.jobs))
 
-    def _update(self) -> None:
-        """Override this function for manager-specific."""
-        pass
-
     def update(self) -> None:
         """Update this manager's state according to its jobs."""
-        self._update()
+        pass
 
     @abstractmethod
     def get_status(self) -> str:

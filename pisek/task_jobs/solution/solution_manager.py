@@ -222,7 +222,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
             inp,
         )
 
-    def _update(self):
+    def update(self):
         """Cancel running on inputs that can't change anything."""
         expected = self._env.config.solutions[self.solution_label].tests
 
