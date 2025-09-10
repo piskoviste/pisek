@@ -19,7 +19,7 @@ import subprocess
 import os
 import json
 import shutil
-from typing import Callable, Optional, TYPE_CHECKING
+from typing import Optional, Protocol, TYPE_CHECKING
 
 from pisek.utils.util import ChangedCWD
 from pisek.utils.text import tab
@@ -35,6 +35,16 @@ logger = logging.getLogger(__name__)
 ALL_STRATEGIES: dict[BuildStrategyName, type["BuildStrategy"]] = {}
 
 
+class Print(Protocol):
+    def __call__(self, msg: str, end: str = "\n", stderr: bool = False) -> None: ...
+
+
+class RunPopen(Protocol):
+    def __call__(
+        self, args: list[str], stdout: int, stderr: int, text: bool
+    ) -> subprocess.Popen: ...
+
+
 class BuildStrategy(ABC):
     name: BuildStrategyName
     extra_sources: Optional[str] = None
@@ -44,8 +54,8 @@ class BuildStrategy(ABC):
         self,
         build_section: "BuildSection",
         env: "Env",
-        _print: Callable[..., None],
-        _run_subprocess: Callable[..., subprocess.Popen],
+        _print: Print,
+        _run_subprocess: RunPopen,
     ) -> None:
         self._build_section = build_section
         self._env = env
