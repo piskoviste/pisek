@@ -11,6 +11,7 @@ dependencies = [
     "colorama",
     "pydantic",
     "editdistance",
+    "readchar",
 ]
 requires-python = ">=3.11"
 
