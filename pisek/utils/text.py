@@ -42,6 +42,11 @@ def fatal_user_error(msg, *args, **kwargs) -> NoReturn:
     exit(2)
 
 
+def stop() -> NoReturn:
+    eprint("\rStopping...")
+    sys.exit(130)
+
+
 def warn(msg: str, err: type, strict: bool = False) -> None:
     """Warn if strict is False, otherwise raise error."""
     if strict:

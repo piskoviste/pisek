@@ -24,7 +24,7 @@ import sys
 from typing import Optional
 
 from pisek.utils.util import clean_task_dir, log_level_mapper
-from pisek.utils.text import eprint, fatal_user_error
+from pisek.utils.text import eprint, stop
 from pisek.utils.colors import ColorSettings
 from pisek.visualize import visualize
 from pisek.config.config_tools import update_and_replace_config
@@ -38,8 +38,7 @@ LOG_FILE = os.path.join(INTERNALS_DIR, "log")
 
 
 def sigint_handler(sig, frame):
-    eprint("\rStopping...")
-    sys.exit(130)
+    stop()
 
 
 @locked_folder
