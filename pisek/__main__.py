@@ -27,6 +27,7 @@ from pisek.utils.util import clean_task_dir, log_level_mapper
 from pisek.utils.text import eprint, stop
 from pisek.utils.colors import ColorSettings
 from pisek.visualize import visualize
+from pisek.init import init_task
 from pisek.config.config_tools import update_and_replace_config
 from pisek.version import print_version
 
@@ -212,6 +213,10 @@ def main(argv) -> int:
 
     parser_clean = subparsers.add_parser("clean", help="clean task directory")
 
+    # ------------------------------- pisek init -------------------------------
+
+    parser_task = subparsers.add_parser("init", help="create a task skeleton")
+
     # ------------------------------- pisek config -------------------------------
 
     parser_config = subparsers.add_parser("config", help="manage task config")
@@ -322,8 +327,11 @@ def main(argv) -> int:
 
     result = None
 
+    # Taskless subcommands
     if args.subcommand == "version":
         return print_version()
+    elif args.subcommand == "init":
+        return init_task()
 
     if not is_task_dir(PATH, args.pisek_dir):
         # !!! Ensure this is always run before clean_directory !!!

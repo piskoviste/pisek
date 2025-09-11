@@ -9,7 +9,10 @@ T = TypeVar("T")
 
 
 def input_string(message: str) -> str:
-    return input(message)
+    inp = ""
+    while not inp:
+        inp = input(message).strip()
+    return inp
 
 
 def input_choice(message: str, choices: Sequence[tuple[T, str]]) -> T:
