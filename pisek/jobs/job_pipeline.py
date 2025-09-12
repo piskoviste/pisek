@@ -61,10 +61,16 @@ class JobPipeline(ABC):
 
                 if not self._update(cache, env):
                     self._reporter.refresh([])
-                    # FIXME: We need to kill running subprocess manually, otherwise exiting will wait for the jobs to be finished
                     break
 
                 self._reporter.refresh(list(self._futures.values()))
+
+            for job in self._futures.values():
+                if job.state == State.succeeded:
+                    self._finalize_job(job, cache)
+                else:
+                    job.cancel()
+            self._reporter.refresh([])
 
         cache.export()  # Save last version of cache
         return any(man.state == State.failed for man in self.job_managers)
