@@ -15,17 +15,12 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from abc import ABC, abstractmethod
-from collections import deque
-from colorama import Cursor, ansi
-from math import ceil
-import sys
-import re
-import time
+from concurrent.futures import ThreadPoolExecutor, Future, wait, thread
 
 from pisek.env.env import Env
-from pisek.utils.terminal import terminal_width
-from pisek.jobs.jobs import State, PipelineItem, Job, JobManager
+from pisek.jobs.jobs import State, Job, JobManager
 from pisek.jobs.cache import Cache
+from pisek.jobs.reporting import Reporter, CommandLineReporter
 
 
 class JobPipeline(ABC):
@@ -33,95 +28,114 @@ class JobPipeline(ABC):
 
     @abstractmethod
     def __init__(self) -> None:
-        self.failed: bool = False
+        self.job_managers: list[JobManager] = []
         self._tmp_lines: int = 0
         self.all_accessed_files: set[str] = set()
 
     def run_jobs(self, cache: Cache, env: Env) -> bool:
-        self.job_managers: deque[JobManager] = deque()
-        self.pipeline: deque[PipelineItem] = deque(self.pipeline)
-        while len(self.pipeline) or len(self.job_managers):
-            p_item = self.pipeline.popleft()
-            if isinstance(p_item, JobManager):
-                self.job_managers.append(p_item)
-                self.pipeline.extendleft(reversed(p_item.create_jobs(env)))
-            elif isinstance(p_item, Job):
-                p_item.run_job(cache)
-                p_item.finish()
-                self.all_accessed_files |= p_item.accessed_files
-            else:
-                raise TypeError(
-                    f"Objects in {self.__class__.__name__} should be either Job or JobManager."
+        self._reporter: Reporter = CommandLineReporter(env, self.job_managers)
+
+        self._futures: dict[Future, Job] = {}
+        self._queue: list[Job] = []
+        self._envs: list[Env] = [env.model_copy(deep=True) for _ in range(env.jobs)]
+
+        for job_man in self.job_managers:
+            job_man.set_env(env)
+
+        with ThreadPoolExecutor(max_workers=env.jobs) as self._thread_pool:
+            self._update(cache, env)
+            while not all(man.state.finished() for man in self.job_managers):
+                done, _ = wait(
+                    self._futures, timeout=0.1, return_when="FIRST_COMPLETED"
                 )
 
-            if p_item.dirty:
-                self._tmp_lines = 0
+                for future in done:
+                    exception = future.exception()
+                    if exception is not None:
+                        raise exception
 
-            # we really need to call status_update to update messages
-            # Also no logs into env for just writing to stdout
-            self.failed |= not self._status_update(env)
-            if self.failed and not env.full:
-                break
+                    job = self._futures[future]
+                    del self._futures[future]
+                    self._envs.append(job._env)
+                    self._finalize_job(job, cache)
+
+                if not self._update(cache, env):
+                    self._reporter.refresh([])
+                    break
+
+                self._reporter.refresh(list(self._futures.values()))
+
+            for job in self._futures.values():
+                if job.state == State.succeeded:
+                    self._finalize_job(job, cache)
+                else:
+                    job.cancel()
+            self._reporter.refresh([])
 
         cache.export()  # Save last version of cache
-        return self.failed
+        return any(man.state == State.failed for man in self.job_managers)
 
-    def _status_update(self, env: Env) -> bool:
-        """Display current progress. Return true if there were no failures."""
-        self._clear_print_tmp()
-        while len(self.job_managers):
-            job_man = self.job_managers.popleft()
-            # We are updating job_man's state with this call!
-            ongoing_msg = job_man.update()
-            if not env.full and job_man.any_failed():
-                self._print(ongoing_msg, env)
-                self._print(job_man.failures(), env, end="", file=sys.stderr)
-                return False
-            if job_man.state == State.failed or job_man.ready():
-                self._print_tmp(ongoing_msg, env)
-                self._print_active_item(job_man, env)
+    def _update(self, cache: Cache, env: Env) -> bool:
+        """Updates currently running JobManagers and Jobs, runs new ones
+        and returns if we should continue in testing."""
 
-                job_man.dirty = False
-                msg = job_man.finalize()
-                if job_man.dirty:
-                    self._tmp_lines = 0
+        # Start new managers
+        for manager in self.job_managers:
+            if manager.state == State.in_queue and manager.prerequisites == 0:
+                self._queue.extend(manager.create_jobs())
+                if manager.any_failed():
+                    manager.finalize()
+                    self._report(manager)
+                    if not env.full:
+                        return False
+                self._reporter.update()
+                break  # We don't want to start many managers at once because that can lead to UI freeze
 
-                if msg:
-                    self._print(msg, env)
-                if job_man.state == State.failed:
-                    self._print(job_man.failures(), env, end="", file=sys.stderr)
-                    return False
-            elif job_man.state == State.cancelled:
-                self._print(ongoing_msg, env)
-            else:
-                self._print_tmp(ongoing_msg, env)
-                self.job_managers.appendleft(job_man)
+        # Process new jobs
+        started: list[Job] = []
+        to_run: list[tuple[Job, Env]] = []
+        for job in self._queue:
+            if len(self._envs) == 0:
                 break
 
-        if len(self.pipeline):
-            self._print_active_item(self.pipeline[0], env)
+            if job.prerequisites == 0:
+                job.prepare(cache)
+                if job.state.finished():
+                    self._finalize_job(job, cache)
+                elif job.state:
+                    to_run.append((job, self._envs.pop()))
+                started.append(job)
+
+        for job in started:
+            self._queue.remove(job)
+
+        # Update managers
+        for manager in self.job_managers:
+            if manager.state == State.running:
+                manager.update()
+                if manager.ready() or manager.any_failed():
+                    manager.finalize()
+                    self._report(manager)
+                if manager.any_failed() and not env.full:
+                    return False
+
+        # Start new jobs
+        for job, env in to_run:
+            if job.state == State.in_queue:
+                self._futures[self._thread_pool.submit(job.run, env)] = job
+            else:
+                self._envs.append(env)
+
         return True
 
-    def _clear_print_tmp(self):
-        for _ in range(self._tmp_lines):
-            print(f"{Cursor.UP()}{ansi.clear_line()}", end="")
-        self._tmp_lines = 0
+    def _finalize_job(self, job: Job, cache: Cache) -> None:
+        job.finalize(cache)
+        self.all_accessed_files |= job.accessed_files
+        self._report(job)
 
-    def _print_active_item(self, p_item: PipelineItem, env: Env):
-        t = time.strftime("%H:%M:%S", time.localtime())
-        self._print_tmp(f"Active job: {p_item.name} ({t})", env)
-
-    def _print_tmp(self, msg, env: Env, *args, **kwargs):
-        """Prints a text to be rewriten latter."""
-        ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
-        if not env.no_jumps:
-            self._tmp_lines += sum(
-                max(ceil(len(re.sub(ansi_escape, "", line)) / terminal_width), 1)
-                for line in msg.split("\n")
-            )
-            print(str(msg), *args, **kwargs)
-
-    def _print(self, msg, env: Env, *args, **kwargs):
-        """Prints a text."""
-        self._clear_print_tmp()
-        print(str(msg), *args, **kwargs)
+    def _report(self, pitem: Job | JobManager) -> None:
+        self._reporter.update()
+        if isinstance(pitem, Job):
+            self._reporter.report_job(pitem)
+        else:
+            self._reporter.report_manager(pitem)

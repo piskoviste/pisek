@@ -17,6 +17,7 @@ import time
 from typing import Optional
 
 from pisek.env.env import Env
+from pisek.jobs.jobs import State
 from pisek.utils.paths import InputPath
 from pisek.config.config_types import ProgramRole
 from pisek.config.task_config import RunSection
@@ -46,7 +47,7 @@ class RunSolution(ProgramsJob):
 
     def unrequire(self):
         self._needed_by -= 1
-        if self._needed_by == 0:
+        if self._needed_by == 0 and self.state == State.in_queue:
             self.cancel()
         assert self._needed_by >= 0
 

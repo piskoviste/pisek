@@ -157,6 +157,12 @@ def main(argv) -> int:
     )
 
     parser_test.add_argument(
+        "--jobs",
+        "-j",
+        type=int,
+        help="how many jobs to run in parallel",
+    )
+    parser_test.add_argument(
         "--verbosity",
         "-v",
         action="count",

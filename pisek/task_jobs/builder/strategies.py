@@ -19,7 +19,7 @@ import subprocess
 import os
 import json
 import shutil
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, Protocol, TYPE_CHECKING
 
 from pisek.utils.util import ChangedCWD
 from pisek.utils.text import tab
@@ -35,15 +35,32 @@ logger = logging.getLogger(__name__)
 ALL_STRATEGIES: dict[BuildStrategyName, type["BuildStrategy"]] = {}
 
 
+class Print(Protocol):
+    def __call__(self, msg: str, end: str = "\n", stderr: bool = False) -> None: ...
+
+
+class RunPopen(Protocol):
+    def __call__(
+        self, args: list[str], stdout: int, stderr: int, text: bool
+    ) -> subprocess.Popen: ...
+
+
 class BuildStrategy(ABC):
     name: BuildStrategyName
     extra_sources: Optional[str] = None
     extra_nonsources: Optional[str] = None
 
-    def __init__(self, build_section: "BuildSection", env: "Env", _print) -> None:
+    def __init__(
+        self,
+        build_section: "BuildSection",
+        env: "Env",
+        _print: Print,
+        _run_subprocess: RunPopen,
+    ) -> None:
         self._build_section = build_section
         self._env = env
         self._print = _print
+        self._run_popen = _run_subprocess
 
     def __init_subclass__(cls):
         if not inspect.isabstract(cls):
@@ -105,7 +122,10 @@ class BuildStrategy(ABC):
     def _check_tool(self, tool: str) -> None:
         """Checks that a tool exists."""
         try:
-            # tool.split() because some tools have more parts (e.g. '/usr/bin/env python3')
+            # XXX: We should technically use self._run_popen but that doesn't implement timeout properly
+            # But as we set it to zero, it doesn't matter
+            #
+            # Also tool.split() because some tools have more parts (e.g. '/usr/bin/env python3')
             subprocess.run(
                 tool.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=0
             )
@@ -118,24 +138,24 @@ class BuildStrategy(ABC):
         self._check_tool(args[0])
 
         logger.debug("Building '" + " ".join(args) + "'")
-        comp = subprocess.Popen(
+        comp = self._run_popen(
             args, **kwargs, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
         )
 
         assert comp.stderr is not None
         assert comp.stdout is not None
 
-        while True:
-            line = comp.stderr.readline()
-            if not line:
-                break
-            self._print(line, end="", stderr=True)
+        stderr: str = comp.stderr.read()
+        if self._env.verbosity >= 1:
+            if stderr.strip():
+                self._print(stderr, stderr=True)
 
-        comp.wait()
         if comp.returncode != 0:
             raise PipelineItemFailure(
                 f"Build of {program} failed.\n"
-                + tab(self._env.colored(" ".join(args), "yellow"))
+                + tab(self._env.colored("> " + " ".join(args), "magenta"))
+                + "\n"
+                + tab(self._env.colored(stderr, "yellow"))
             )
         return comp.stdout.read()
 

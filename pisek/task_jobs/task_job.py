@@ -21,12 +21,10 @@ from math import ceil
 import os
 import shutil
 from typing import (
-    Any,
     Callable,
     Concatenate,
     Iterable,
     Literal,
-    Optional,
     ParamSpec,
     TypeVar,
 )
@@ -35,7 +33,7 @@ import subprocess
 from pisek.env.env import Env
 from pisek.utils.paths import TaskPath
 from pisek.utils.text import tab
-from pisek.jobs.jobs import Job
+from pisek.jobs.jobs import State, Job, PipelineItemAbort
 
 T = TypeVar("T")
 P = ParamSpec("P")
@@ -226,14 +224,6 @@ class TaskJob(Job, TaskHelper):
     def _files_equal(self, file_a: TaskPath, file_b: TaskPath) -> bool:
         return filecmp.cmp(file_a.path, file_b.path)
 
-    @_file_access(2)
-    def _diff_files(self, file_a: TaskPath, file_b: TaskPath) -> str:
-        diff = subprocess.run(
-            ["diff", file_a.path, file_b.path, "-Bb", "-u2"],
-            stdout=subprocess.PIPE,
-        )
-        return diff.stdout.decode("utf-8")
-
     def _globs_to_files(
         self, globs: Iterable[str], directory: TaskPath
     ) -> list[TaskPath]:
@@ -256,3 +246,19 @@ class TaskJob(Job, TaskHelper):
             return f"{file.col(self._env)}\n{self._colored(tab(self._quote_file(file, **kwargs)), 'yellow')}\n"
         else:
             return f"{file.col(self._env)}\n"
+
+    def _run_subprocess(self, *args, **kwargs) -> subprocess.Popen:
+        process = subprocess.Popen(*args, **kwargs)
+        self._wait_for_subprocess(process)
+        return process
+
+    def _wait_for_subprocess(self, popen: subprocess.Popen) -> None:
+        while popen.poll() is None:
+            try:
+                popen.wait(timeout=0.2)
+            except subprocess.TimeoutExpired:
+                pass
+
+            if self.state == State.cancelled:
+                popen.terminate()
+                raise PipelineItemAbort(self)

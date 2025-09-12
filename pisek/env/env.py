@@ -15,6 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from enum import StrEnum, auto
+import os
 from pydantic import Field
 from typing import Optional
 
@@ -38,6 +39,7 @@ class Env(BaseEnv):
     Attributes:
         target: What is being tested
         config: Environment variables defined by task config
+        jobs: How many jobs to run at most in parallel
         verbosity: How much verbose to be
         file_contents: Show file contents in errors
         full: Whether to stop after the first failure
@@ -54,6 +56,7 @@ class Env(BaseEnv):
 
     target: TestingTarget
     config: TaskConfig
+    jobs: int
     verbosity: int
     file_contents: bool
     full: bool
@@ -69,7 +72,8 @@ class Env(BaseEnv):
 
     @staticmethod
     def load(
-        target: str | None = TestingTarget.all,
+        target: str = TestingTarget.all,
+        jobs: int | None = None,
         verbosity: int = 0,
         file_contents: bool = False,
         full: bool = False,
@@ -106,6 +110,9 @@ class Env(BaseEnv):
 
         return Env(
             target=TestingTarget(TestingTarget.all if target is None else target),
+            jobs=(
+                max(1, min((os.cpu_count() or 2) // 2, 32)) if jobs is None else jobs
+            ),
             config=config,
             verbosity=verbosity,
             file_contents=file_contents,

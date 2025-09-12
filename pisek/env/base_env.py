@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Any, TYPE_CHECKING, Callable
+from typing import Any, TYPE_CHECKING
 
 from pisek.env.context import ContextModel
 
@@ -59,26 +59,19 @@ class BaseEnv(ContextModel):
                 assert all(map(is_env, item.values()))
                 self._dict_subenvs.append(key)
 
-    @staticmethod
-    def _recursive_call(
-        function: Callable[["BaseEnv"], None],
-    ) -> Callable[["BaseEnv"], None]:
-        def recursive(self: "BaseEnv") -> None:
-            for direct_subenv in super().__getattribute__("_direct_subenvs"):
-                recursive(super().__getattribute__(direct_subenv))
-
-            for dict_subenv in super().__getattribute__("_dict_subenvs"):
-                subenv = super().__getattribute__(dict_subenv)
-                for subitem in subenv.values():
-                    recursive(subitem)
-
-            function(self)
-
-        return recursive
-
-    @_recursive_call
     def clear_accesses(self) -> None:
         """Remove all logged accesses."""
+        accessed = super().__getattribute__("_accessed")
+        for direct_subenv in super().__getattribute__("_direct_subenvs"):
+            if direct_subenv in accessed:
+                super().__getattribute__(direct_subenv).clear_accesses()
+
+        for dict_subenv in super().__getattribute__("_dict_subenvs"):
+            if dict_subenv in accessed:
+                subenv = super().__getattribute__(dict_subenv)
+                for subitem in subenv.values():
+                    subitem.clear_accesses()
+
         super().__getattribute__("_accessed").clear()
 
     def get_accessed(self) -> set[tuple[str, ...]]:

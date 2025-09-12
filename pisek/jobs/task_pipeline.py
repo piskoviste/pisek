@@ -125,7 +125,7 @@ class TaskPipeline(JobPipeline):
             for solution in solutions:
                 completeness_check[0].add_prerequisite(*solution)
 
-        self.pipeline = deque(map(lambda x: x[0], named_pipeline))
+        self.job_managers = [job_man for job_man, _ in named_pipeline]
 
     def input_dataset(self) -> list[InputPath]:
         if self.input_generator.result is None:
