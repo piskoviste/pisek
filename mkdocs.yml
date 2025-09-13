@@ -52,6 +52,7 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Installation: installation.md
   - Task overview: task-overview.md
   - Config documentation: config-docs.md
   - Task parts:
