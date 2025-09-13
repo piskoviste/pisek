@@ -66,6 +66,14 @@ To its stderr it should write a single-line message to the contestant.
 **Unlike the CMS documentation specifies, the files should be single-line only.**
 There will be a warning otherwise.
 
+??? example "Example `cms-batch` judge"
+
+	For a [task](https://github.com/piskoviste/pisek/blob/master/examples/cms-batch) of printing *N* positive integers that sum up to *K*,
+	the judge may look like this:
+    ```py
+    --8<-- "examples/cms-batch/gen.py"
+    ```
+
 ### Opendata-v2 judge
 
 The opendata-v2 judge is run in this way:
