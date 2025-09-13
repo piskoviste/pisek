@@ -11,6 +11,7 @@ dependencies = [
     "colorama",
     "pydantic",
     "editdistance",
+    "readchar",
 ]
 requires-python = ">=3.11"
 
@@ -57,6 +58,7 @@ pisek = [
     "tools/**",
     "config/*-defaults",
     "config/config-description",
+    "../examples/**"
 ]
 
 [tool.setuptools.dynamic]
