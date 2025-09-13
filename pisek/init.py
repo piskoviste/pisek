@@ -63,7 +63,7 @@ def input_program(
         (t, t + (recommended() if t in recommended_types else "")) for t in types
     ]
     type_ = input_choice(f"Choose {p_role}_type:", choices)
-    filename = input_string(f"Enter {p_role} filename")
+    filename = input_string(f"Enter {p_role} filename: ")
     print()
     return type_, filename
 
@@ -149,7 +149,7 @@ def from_scratch() -> int:
     config["run_solution"]["time_limit"] = "1"
     config["run_solution"]["subdir"] = "solutions"
 
-    sol = input_string("Enter primary solution filename")
+    sol = input_string("Enter primary solution filename: ")
     touch(os.path.join(SOLUTION_SUBDIR, sol))
     sol_sec = f"solution_{remove_suffix(sol)}"
     config.add_section(sol_sec)
