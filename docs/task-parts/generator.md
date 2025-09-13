@@ -43,6 +43,14 @@ For example:
 02_complete_graph seeded=false
 ```
 
+??? example "Example `pisek-v1` generator"
+
+	For a [task](https://github.com/piskoviste/pisek/blob/master/examples/cms-batch) of printing *N* positive integers that sum up to *K*,
+	the generator may look like this:
+    ```py
+    --8<-- "examples/cms-batch/gen.py"
+    ```
+
 ### Generating inputs
 The generator is then repeatedly asked to generated the input `input_name` from
 the inputs list.
