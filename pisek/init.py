@@ -136,8 +136,8 @@ def from_scratch() -> int:
     if out_check == OutCheck.judge:
         judge_type, judge_name = input_program(
             ProgramRole.judge,
-            [t for t in OFFERED_JUDGE_TYPES[task_type]],
-            [t for t in RECOMMENDED_JUDGE_TYPES[task_type]],
+            OFFERED_JUDGE_TYPES[task_type],
+            RECOMMENDED_JUDGE_TYPES[task_type],
         )
         touch(judge_name)
         config["tests"]["out_judge"] = remove_suffix(judge_name)
