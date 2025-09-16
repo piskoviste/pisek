@@ -723,8 +723,19 @@ box_inside(void *arg)
   setup_rlimits();
   char **env = setup_environment();
 
-  if (set_cwd && chdir(set_cwd))
-    die("chdir: %m");
+  
+    // Replace chdir with execve's cwd handling
+    if (set_cwd) {
+      int fd = open(set_cwd, O_RDONLY);
+      if (fd < 0)
+          die("Failed to open directory '%s': %m", set_cwd);
+
+      if (fchdir(fd) < 0)
+          die("Failed to change directory to '%s': %m", set_cwd);
+
+      close(fd);
+  }
+
 
   execve(args[0], args, env);
   die("execve(\"%s\"): %m", args[0]);
