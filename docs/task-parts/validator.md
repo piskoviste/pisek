@@ -4,8 +4,8 @@ The validator is used for validating inputs, i.e. making sure they conform to th
 ## Validator type
 There are currently 2 validator types available:
 
-- simple-42
-- simple-0
+- [simple-42](#simple-42)
+- [simple-0](#simple-0)
 
 ### Simple-42
 The simple-42 validator is run as follows:
