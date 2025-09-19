@@ -61,3 +61,4 @@ nav:
     - Batch checker: task-parts/batch-checker.md
     - Interactive judge: task-parts/interactive-judge.md
   - CMS integration: CMS.md
+  - Cheatsheet: cheatsheet.md
