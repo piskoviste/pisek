@@ -4,9 +4,9 @@ If you already made some tasks, you can just look at the task type diagrams
 for a [batch task](#batch-task) and an [interactive task](#interactive-task)
 to brush up on potential differences in terminology.*
 
-## Task components
+## Task parts
 
-There are several task components the author needs to write.
+There are several task parts the author needs to write:
 
 ### Task statement
 
