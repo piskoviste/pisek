@@ -728,8 +728,8 @@
 <h1 id="usage">Usage</h1>
 <h2 id="creating-a-task">Creating a task</h2>
 <p>First, you will need a task to test:</p>
-<div class="highlight"><pre><span></span><code>pisek<span class="w"> </span>init
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pisek<span class="w"> </span>init
+</span></code></pre></div>
 <p>You can either create a task skeleton or choose one of our example task to try out pisek on.</p>
 <h2 id="what-task-looks-like">What task looks like</h2>
 <p>Task is a single directory containing programs, task data and most importantly a <code>config</code> file.
@@ -740,24 +740,24 @@ However, it is customary to give them self-descriptive names like <code>gen.py</
 or in <code>static_subdir</code> as specified in <code>config</code>. </p>
 <h2 id="testing-tasks">Testing tasks</h2>
 <p>Tasks are tested by running:
-<div class="highlight"><pre><span></span><code>pisek<span class="w"> </span><span class="nb">test</span>
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pisek<span class="w"> </span><span class="nb">test</span>
+</span></code></pre></div></p>
 <p>For testing only some solutions, you can use:
-<div class="highlight"><pre><span></span><code>pisek<span class="w"> </span><span class="nb">test</span><span class="w"> </span>solutions<span class="w"> </span>solution1<span class="w"> </span>solution2<span class="w"> </span>...
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pisek<span class="w"> </span><span class="nb">test</span><span class="w"> </span>solutions<span class="w"> </span>solution1<span class="w"> </span>solution2<span class="w"> </span>...
+</span></code></pre></div></p>
 <p>Similarly for only testing the generator:
-<div class="highlight"><pre><span></span><code>pisek<span class="w"> </span><span class="nb">test</span><span class="w"> </span>generator
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pisek<span class="w"> </span><span class="nb">test</span><span class="w"> </span>generator
+</span></code></pre></div></p>
 <h2 id="cleaning">Cleaning</h2>
 <p>During task testing, pisek generates binaries, testing data, caches, logs, etc.
 You can remove all of them with:
-<div class="highlight"><pre><span></span><code>pisek<span class="w"> </span>clean
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pisek<span class="w"> </span>clean
+</span></code></pre></div></p>
 <h2 id="visualization">Visualization</h2>
 <p>Finally, you can visualize solution times and their closeness to the time limit:
-<div class="highlight"><pre><span></span><code>pisek<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--testing-log
-pisek<span class="w"> </span>visualize
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>pisek<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--testing-log
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>pisek<span class="w"> </span>visualize
+</span></code></pre></div></p>
 
 
 
@@ -806,7 +806,7 @@ pisek<span class="w"> </span>visualize
     
     
       
-      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.expand"], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy", "navigation.expand"], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../assets/javascripts/bundle.92b07e13.min.js"></script>

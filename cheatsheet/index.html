@@ -744,47 +744,47 @@
 <h1 id="cheatsheet">Cheatsheet</h1>
 <h2 id="task-creation">Task creation</h2>
 <p>Create a task skeleton:
-<div class="highlight"><pre><span></span><code>pisek<span class="w"> </span>init
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pisek<span class="w"> </span>init
+</span></code></pre></div></p>
 <h2 id="task-testing">Task testing</h2>
 <p>Test a task:
-<div class="highlight"><pre><span></span><code>pisek<span class="w"> </span><span class="nb">test</span>
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pisek<span class="w"> </span><span class="nb">test</span>
+</span></code></pre></div></p>
 <p>Test only specific solutions:
-<div class="highlight"><pre><span></span><code>pisek<span class="w"> </span><span class="nb">test</span><span class="w"> </span>solutions<span class="w"> </span>solution1<span class="w"> </span>solution2<span class="w"> </span>...
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pisek<span class="w"> </span><span class="nb">test</span><span class="w"> </span>solutions<span class="w"> </span>solution1<span class="w"> </span>solution2<span class="w"> </span>...
+</span></code></pre></div></p>
 <p>Test only generator:
-<div class="highlight"><pre><span></span><code>pisek<span class="w"> </span><span class="nb">test</span><span class="w"> </span>generator
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pisek<span class="w"> </span><span class="nb">test</span><span class="w"> </span>generator
+</span></code></pre></div></p>
 <h2 id="testing-with-flags">Testing with flags</h2>
 <p>Show file <strong>c</strong>ontents on failure:
-<div class="highlight"><pre><span></span><code>pisek<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-C
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pisek<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-C
+</span></code></pre></div></p>
 <p>Override time limit for solutions to 3 seconds:
-<div class="highlight"><pre><span></span><code>pisek<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-t<span class="w"> </span><span class="m">3</span>
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>pisek<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-t<span class="w"> </span><span class="m">3</span>
+</span></code></pre></div></p>
 <p>Test all inputs (don't skip those which do not matter):
-<div class="highlight"><pre><span></span><code>pisek<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-a
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>pisek<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-a
+</span></code></pre></div></p>
 <p>Be verbose:
-<div class="highlight"><pre><span></span><code>pisek<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-v
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>pisek<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-v
+</span></code></pre></div></p>
 <p>Do final pre-production check. Test all inputs, be verbose and interpret warnings as failures.
-<div class="highlight"><pre><span></span><code>pisek<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-a<span class="w"> </span>-v<span class="w"> </span>--strict
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>pisek<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-a<span class="w"> </span>-v<span class="w"> </span>--strict
+</span></code></pre></div></p>
 <h2 id="clean">Clean</h2>
 <p>Clean pisek cache and created files (executables in <code>build/</code> and test data in <code>tests/</code>):
-<div class="highlight"><pre><span></span><code>pisek<span class="w"> </span>clean
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>pisek<span class="w"> </span>clean
+</span></code></pre></div></p>
 <h2 id="visualization">Visualization</h2>
 <p>Visualize all solutions and their closeness to time limit. Calculate valid time limits:
-<div class="highlight"><pre><span></span><code>pisek<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-af<span class="w"> </span>--testing-log
-pisek<span class="w"> </span>visualize<span class="w"> </span><span class="p">|</span><span class="w"> </span>less<span class="w"> </span>-R
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>pisek<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-af<span class="w"> </span>--testing-log
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>pisek<span class="w"> </span>visualize<span class="w"> </span><span class="p">|</span><span class="w"> </span>less<span class="w"> </span>-R
+</span></code></pre></div></p>
 <h2 id="configs">Configs</h2>
 <p>Update config to newest version
-<div class="highlight"><pre><span></span><code>pisek<span class="w"> </span>config<span class="w"> </span>update
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>pisek<span class="w"> </span>config<span class="w"> </span>update
+</span></code></pre></div></p>
 
 
 
@@ -833,7 +833,7 @@ pisek<span class="w"> </span>visualize<span class="w"> </span><span class="p">|<
     
     
       
-      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.expand"], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy", "navigation.expand"], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../assets/javascripts/bundle.92b07e13.min.js"></script>

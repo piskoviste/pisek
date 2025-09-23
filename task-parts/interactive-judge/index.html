@@ -661,8 +661,8 @@ It should report whether the contestant solution is correct.</p>
 <p><em>See <a href="https://cms.readthedocs.io/en/v1.4/Task%20types.html?highlight=Manager#communication">CMS documentation</a> for more, however only one user process is supported.</em></p>
 <p>The solution and the judge run simultaneously. They communicate via FIFO (named pipes).</p>
 <p>The judge is run:
-<div class="highlight"><pre><span></span><code>./judge &lt;FIFO from solution&gt; &lt;FIFO to solution&gt; &lt; input
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>./judge &lt;FIFO from solution&gt; &lt;FIFO to solution&gt; &lt; input
+</span></code></pre></div>
 FIFOs point to the solutions stdout and stdin respectively.</p>
 <p>The judge should print a relative number of points (a float between 0.0 and 1.0) to it's stdout as a single line.
 To its stderr it should write a single-line message to the contestant.
@@ -716,7 +716,7 @@ There will be a warning otherwise.</p>
     
     
       
-      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.expand"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.copy", "navigation.expand"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../assets/javascripts/bundle.92b07e13.min.js"></script>
