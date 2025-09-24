@@ -13,17 +13,8 @@ be it both globally or in the same [virtual environment](https://docs.python.org
 You can either install Pisek onto one of the servers hosting CMS,
 or you can install both onto a separate computer.
 
-Installing Pisek and CMS together is no easy feat.
-CMS only supports Python up to version 3.9, while Pisek requires Python 3.11.
-Getting CMS to work in Python 3.11 requires updating some dependencies
-and making a few small changes to its source code to work around
-breaking changes in Python's standard libraries.
-For details, refer to the provided Dev Container Dockerfile.
-
-Additionally, you will need to provide a `cms.conf` config file.
+Additionally, you will need to provide a `cms.toml` config file.
 Pisek uses CMS's utilities to locate it, so using it on a CMS server will require no further setup.
-The config file should be located at `/etc/cms.conf` or `/usr/local/etc/cms.conf`.
-You can also specify the path to the config file using the `CMS_CONFIG` environment variable.
 
 ## Configuration
 
@@ -34,6 +25,7 @@ However, there are a couple of options that you'll probably want to change:
 
 ```ini
 [cms]
+name=rabbit # The name of the task used in the URL and menu
 title=Rabbit pathfinding # The display name of the task
 time_limit=1.5 # The time limit, in seconds
 mem_limit=512 # The memory limit, in mebibytes
