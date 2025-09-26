@@ -16,7 +16,7 @@ You can create a task with:
 pisek init
 ```
 
-Test the task in cwd with: 
+Test the task in the current directory with: 
 ```bash
 pisek test
 ```

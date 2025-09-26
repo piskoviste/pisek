@@ -5,9 +5,9 @@ It should say whether the contestant output is correct.
 
 There are various types of checkers you can use:
 
-- `tokens` - fast, versatile file equality checker
-- `diff` - file equality checker based on the `diff` command line tool (don't use, as it has a quadratic time complexity)
-- `judge` - custom checker
+- `tokens` – fast, versatile file equality checker
+- `diff` – file equality checker based on the `diff` command line tool (avoid this option, as it has a quadratic time complexity)
+- `judge` – custom checker
 
 If there is only a single correct output (eg. the minimum of an array), `tokens` is strongly recommended.
 Otherwise, when there are multiple correct outputs (eg. the shortest path in a graph),
@@ -38,13 +38,13 @@ Ignores whitespace and empty lines.
 
 ??? danger "This `out_check` is not recommended"
 
-    In some cases `diff` has quadratic complexity, leading to unexpectedly slow checking of outputs.
+    In some cases, `diff` has quadratic time complexity, leading to unexpectedly slow checking of outputs.
 
 ## Custom judge
 
 If there can be multiple correct solutions, it is necessary to write a custom judge.
 Set `out_judge` to the path to the source code of your judge, `judge_type` to *ehm* the judge type (see below),
-and `judge_needs_in`, `judge_needs_out` to `0`/`1` depending whether the judge needs the input and the correct output.
+and `judge_needs_in`, `judge_needs_out` to `0`/`1`, depending on whether the judge needs the input and the correct output.
 
 When writing a custom judge, you can chose from multiple judge types: 
 
@@ -71,7 +71,7 @@ There will be a warning otherwise.
 	For a [task](https://github.com/piskoviste/pisek/blob/master/examples/cms-batch) of printing *N* positive integers that sum up to *K*,
 	the judge may look like this:
     ```py
-    --8<-- "examples/cms-batch/gen.py"
+    --8<-- "examples/cms-batch/judge.py"
     ```
 
 ### Opendata-v2 judge
@@ -96,9 +96,9 @@ Optionally, the judge can write a one-line message for the contestant
 to stderr (at most 255 bytes), followed by a sequence of lines with `KEY=value` pairs.
 The following keys are allowed:
 
-- `POINTS` — Number of points awarded for this test case (used only if the exit code says "OK").
-- `LOG` — A message that should be logged.
-- `NOTE` — An internal note recorded in the database, but not visible to contestants.
+- `POINTS` – Number of points awarded for this test case (used only if the exit code says "OK").
+- `LOG` – A message that should be logged.
+- `NOTE` – An internal note recorded in the database, but not visible to contestants.
 
 Values are again limited to 255 bytes.
 

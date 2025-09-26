@@ -46,7 +46,7 @@ Be verbose:
 pisek test -v
 ```
 
-Do final pre-production check. Test all inputs, be verbose and interpret warnings as failures.
+Do final pre-production check. Test all inputs, be verbose and interpret warnings as failures:
 ```bash
 pisek test -a -v --strict
 ```
@@ -67,7 +67,7 @@ pisek visualize | less -R
 ```
 
 ## Configs
-Update config to newest version
+Update config to newest version:
 ```bash
 pisek config update
 ```
