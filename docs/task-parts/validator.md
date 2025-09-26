@@ -12,7 +12,7 @@ The simple-42 validator is run as follows:
 ```
 ./validate <test_num> < input
 ```
-Where `test_num` is number of the test to which the input belongs.
+Where `test_num` is the number of the test to which the input belongs.
 If the input is valid, the validator should exit with **return code 42**.
 Otherwise, it should exit with any other return code.
 
