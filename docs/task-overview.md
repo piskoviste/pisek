@@ -65,7 +65,7 @@ graph TD;
     CS -->|Correct output| C;
 ```
 
-#### [Batch checkers](./task-parts/batch-checker.md)
+#### [Batch checker](./task-parts/batch-checker.md)
 
 A batch checker gets the solution output and determines whether it is correct.
 It can also get the correct output (from the primary solution) if specified in the config.

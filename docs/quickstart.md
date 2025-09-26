@@ -8,7 +8,8 @@ First, you will need a task to test. You can create a task skeleton by running:
 pisek init
 ```
 
-You can either create a task skeleton or choose one of our example task to try out pisek on.
+You can also choose one of our [example tasks](https://github.com/piskoviste/pisek/tree/master/examples)
+to try pisek on.
 
 ## What a task looks like
 

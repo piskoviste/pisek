@@ -11,7 +11,7 @@ pip install pisek
 
 ## Usage
 
-You can create a task with:
+You can create a task skeleton with:
 ```bash
 pisek init
 ```

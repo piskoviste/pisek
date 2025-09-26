@@ -23,7 +23,7 @@ For the output to be correct, the tokens need to be same as in the correct outpu
 
 You can customize the tokens judge with `tokens_ignore_newlines` or `tokens_ignore_case`.
 For comparing floats, set `tokens_float_rel_error` and `tokens_float_abs_error`.
-Details can be found in [config-documentation](./config-docs).
+Details can be found in [config-documentation](../config-docs.md).
 
 ## Shuffle judge
 
@@ -105,12 +105,9 @@ Values are again limited to 255 bytes.
 ### Opendata-v1 judge
 
 The opendata-v1 judge is the same as opendata-v2, with the exception of using different
-returncodes, returncode 0 for a correct output and returncode 1 for a wrong output.
-
-However, usage of this judge type is discouraged as these returncodes can
-also be the result of an internal judge bug.
+return codes, return code 0 for a correct output and return code 1 for a wrong output.
 
 ??? danger "This `judge_type` is not recommended"
 
-    Return with exitcode 1 is very common and is for example trigger by any exception in Python.
-    This 
+    Return with exit code 1 is very common and is for example trigger by any exception in Python.
+    This can lead to internal judge bugs disguising themselves as wrong answers. 
