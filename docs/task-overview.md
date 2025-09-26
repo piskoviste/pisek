@@ -1,6 +1,6 @@
 # Task overview
-*The Task overview is for those who are familiar with competitive programming but haven't made tasks yet.
-If you already made some tasks, you can just look at the task type diagrams
+*The Task overview is meant for those who are familiar with competitive programming but haven't made any tasks yet.
+If you have already set tasks before, you can just look at the task type diagrams
 for a [batch task](#batch-task) and an [interactive task](#interactive-task)
 to brush up on potential differences in terminology.*
 
@@ -32,8 +32,8 @@ It is also recommended to write some wrong solutions to ensure they don't pass.
 
 ### [Generator](./task-parts/generator.md)
 
-The generator is used for generating inputs that the solution is tested upon.
-Ideally the generator should generate diverse enough inputs to break any wrong solution.
+The generator is used for generating inputs that the solution is tested on.
+Ideally, the generator should generate diverse enough inputs to break any wrong solution.
 
 ### Checker
 
@@ -44,12 +44,12 @@ A task-specific checker provided by the task author is called a **judge**.
 
 ### [Validator](./task-parts/validator.md)
 
-The validator is used for validating inputs produced by generator
+The validator is used for making sure that inputs produced by the generator
 conform to the task statement. It adds an additional degree of safety.
 
 ## Task types
 
-There are few types of tasks pisek supports:
+There are a few types of tasks pisek supports:
 
 1. [Batch tasks](#batch-task)
 2. [Interactive tasks](#interactive-task)
@@ -65,9 +65,9 @@ graph TD;
     CS -->|Correct output| C;
 ```
 
-#### [Batch checkers](./task-parts/batch-checker.md)
+#### [Batch checker](./task-parts/batch-checker.md)
 
-A batch checker gets the solution output and should say whether it is correct.
+A batch checker gets the solution output and determines whether it is correct.
 It can also get the correct output (from the primary solution) if specified in the config.
 
 ### Interactive task
@@ -80,8 +80,8 @@ graph TD;
     S ==>|Communication| J;
 ```
 
-Interactive task should be used when part of the input should remain hidden
-from the contestant's solution. For example when it can ask questions about the input.
+An interactive task is used when a part of the input should remain hidden
+from the contestant's solution. For example, when it can ask questions about the input.
 
 #### [Interactive judge](./task-parts/interactive-judge.md)
 

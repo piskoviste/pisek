@@ -8,14 +8,14 @@ There are currently 3 generator types available:
 - [cms-old](#cms-old)
 - [opendata-v1](#opendata-v1)
 
-However we strongly recommend using the pisek-gen type
+However, we strongly recommend using the pisek-gen type
 for better debugging and easy conversion between open data and closed data tasks.
 
 ## Terminology
 There are two requirements for generators:
 
-- **Generators must be deterministic.** — For the same arguments, it should generate the same input(s).
-- If a generator takes a seed as an argument, the generator should **respect the seed**. — For different seeds
+- **Generators must be deterministic.** For the same arguments, it should always generate the same input(s).
+- If a generator takes a seed as an argument, the generator should **respect the seed**. For different seeds,
   it should generate different inputs. This can be disabled in the `[checks]` section, but be careful.
 
 ## Pisek-v1
@@ -83,8 +83,8 @@ The generator should generate all input files to this directory. The generator m
 
     We don't recommend using this generator type for these reasons:
 
-    - It's **hard to debug**, as you don't know during generation of what input the bug occurs.
-    - You need to write **your own management code** for which inputs to generate, how many times and what seeds to use.
+    - It's **hard to debug**, as you don't know during the generation of what input the bug occurs.
+    - You need to write **your own management code** for which inputs to generate, how many times, and what seeds to use.
 
 ## Opendata-v1
 The generator is run:

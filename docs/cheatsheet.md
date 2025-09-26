@@ -9,7 +9,7 @@ pisek init
 
 ## Task testing
 
-Test a task:
+Test the task:
 ```bash
 pisek test
 ```
@@ -36,7 +36,7 @@ Override time limit for solutions to 3 seconds:
 pisek test -t 3
 ```
 
-Test all inputs (don't skip those which do not matter):
+Test all inputs (even when not necessary):
 ```bash
 pisek test -a
 ```
@@ -46,7 +46,7 @@ Be verbose:
 pisek test -v
 ```
 
-Do final pre-production check. Test all inputs, be verbose and interpret warnings as failures.
+Do final pre-production check. Test all inputs, be verbose and interpret warnings as failures:
 ```bash
 pisek test -a -v --strict
 ```
@@ -67,7 +67,7 @@ pisek visualize | less -R
 ```
 
 ## Configs
-Update config to newest version
+Update config to newest version:
 ```bash
 pisek config update
 ```

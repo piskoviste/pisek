@@ -11,12 +11,12 @@ pip install pisek
 
 ## Usage
 
-You can create a task with:
+You can create a task skeleton with:
 ```bash
 pisek init
 ```
 
-Test the task in cwd with: 
+Test the task in the current directory with: 
 ```bash
 pisek test
 ```

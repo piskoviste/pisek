@@ -13,8 +13,8 @@ The simple-42 validator is run as follows:
 ./validate <test_num> < input
 ```
 Where `test_num` is number of the test to which the input belongs.
-If the input is valid, the validator should exit with **returncode 42**.
-Otherwise, it should exit with any other returncode.
+If the input is valid, the validator should exit with **return code 42**.
+Otherwise, it should exit with any other return code.
 
 ??? example "Example `simple-42` validator"
 
@@ -29,11 +29,11 @@ The simple-0 validator is run as follows:
 ```
 ./validate <test_num> < input
 ```
-Where `test_num` is number of the test to which the input belongs.
-If the input is valid, the validator should exit with **returncode 0**.
-Otherwise, it should exit with any other returncode.
+Where `test_num` is the number of the test to which the input belongs.
+If the input is valid, the validator should exit with **return code 0**.
+Otherwise, it should exit with any other return code.
 
 ??? warning "This `validator_type` is not recommended"
 
-    Return with exitcode 0 can be sometimes caused by libraries.
+    Return with exit code 0 can be sometimes caused by libraries.
     It is better to avoid this pitfall and use the simple-42 validator type instead.

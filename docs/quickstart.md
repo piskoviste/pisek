@@ -2,28 +2,29 @@
 
 ## Creating a task
 
-First, you will need a task to test:
+First, you will need a task to test. You can create a task skeleton by running:
 
 ```bash
 pisek init
 ```
 
-You can either create a task skeleton or choose one of our example task to try out pisek on.
+You can also choose one of our [example tasks](https://github.com/piskoviste/pisek/tree/master/examples)
+to try pisek on.
 
-## What task looks like
+## What a task looks like
 
-Task is a single directory containing programs, task data and most importantly a `config` file.
-It holds all the metadata for this task (how to run programs, scoring, limits, etc.).
+A task is a single directory containing programs, task data, and most importantly a `config` file
+which holds all the metadata for the task (scoring, limits, how to run programs, etc.).
 
-Programs have their roles (generator, solution, judge,...) specified in `config`.
-However, it is customary to give them self-descriptive names like `gen.py` or `solve_slow.cpp`.
+Programs have their roles (generator, solution, judge, …) specified in the `config`.
+However, it is customary to also give them self-descriptive names such as `gen.py` or `solve_slow.cpp`.
 
-Additionally static inputs (`*.in`) and outputs (`*.in`) are contained in top-level
-or in `static_subdir` as specified in `config`. 
+Additionally, static inputs (`*.in`) and outputs (`*.out`) are contained in the top-level folder
+or in `static_subdir`, as specified in the `config`.
 
 ## Testing tasks
 
-Tasks are tested by running:
+The task is tested by running:
 ```bash
 pisek test
 ```
@@ -33,14 +34,14 @@ For testing only some solutions, you can use:
 pisek test solutions solution1 solution2 ...
 ```
 
-Similarly for only testing the generator:
+Similarly, for testing just the generator:
 ```bash
 pisek test generator
 ```
 
 ## Cleaning
 During task testing, pisek generates binaries, testing data, caches, logs, etc.
-You can remove all of them with:
+You can remove all these files with:
 ```bash
 pisek clean
 ```
