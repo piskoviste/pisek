@@ -8,7 +8,7 @@ There are currently 3 generator types available:
 - [cms-old](#cms-old)
 - [opendata-v1](#opendata-v1)
 
-However, we strongly recommend using the pisek-gen type
+However, we strongly recommend using the first (pisek-gen) type
 for better debugging and easy conversion between open data and closed data tasks.
 
 ## Terminology
@@ -20,7 +20,7 @@ There are two requirements for generators:
 
 ## Pisek-v1
 ### Listing inputs
-When run without arguments it should list all inputs it can generate in the following format: 
+When run without arguments it should list all inputs it can generate in the following format:
 ```
 input_name key1=value1 key2=value2
 ```
@@ -32,7 +32,7 @@ The following keys are supported:
 | Key    | Meaning                                        | Value type | Default value |
 | ------ | ---------------------------------------------- | ---------- | ------------- |
 | repeat | How many times should this input be generated? | int        | 1             |
-| seeded | Is this input generated with a random seed?    | bool       | true          | 
+| seeded | Is this input generated with a random seed?    | bool       | true          |
 
 If the input is not seeded, repeat must be 1.
 
@@ -52,23 +52,23 @@ For example:
     ```
 
 ### Generating inputs
-The generator is then repeatedly asked to generated the input `input_name` from
+The generator is then repeatedly asked to generate the input `input_name` from
 the inputs list.
 
-If `input_name` is seeded the generator is run with:
+If `input_name` is seeded, the generator is run with:
 ```
 ./gen <input_name> <seed>
 ```
 Where `seed` is a 16-digit hexadecimal number. The generator must be deterministic and
 respect the seed.
 
-If `input_name` is unseeded the generator is called with  
+If `input_name` is unseeded, the generator is called with
 ```
 ./gen <input_name>
 ```
 The generator must be deterministic.
 
-In either case, the generator should print the input to its stdout. 
+In either case, the generator should print the input to its stdout.
 
 ## Cms-old
 

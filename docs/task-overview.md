@@ -85,11 +85,11 @@ from the contestant's solution. For example, when it can ask questions about the
 
 #### [Interactive judge](./task-parts/interactive-judge.md)
 
-The judge in a interactive task gets the task input and is run together with the solution.
-The solution can make requests to the judge about the input. Finally, the judge says
+The judge in an interactive task gets the task input and is run together with the solution.
+The solution can make requests to the judge about the input. Finally, the judge determines
 whether the solution is correct.
 
-One example would be that judge gets a hidden sequence in the input.
+One example would be that the judge gets a hidden sequence in the input.
 The solution then makes queries to the judge and reconstructs the hidden sequence.
 After giving this sequence to the judge, the solution is marked by the judge
 as correct on this input.
