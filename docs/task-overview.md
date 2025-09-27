@@ -1,10 +1,12 @@
 # Task overview
-*The Task overview is for those who are familiar with competitive programming but haven't made tasks yet.*
-*If you already made some tasks, look at the task type diagrams [here](#batch-task) and [here](#interactive-task), to brush up on potential differences in terminology.*
+*The Task overview is meant for those who are familiar with competitive programming but haven't made any tasks yet.
+If you have already set tasks before, you can just look at the task type diagrams
+for a [batch task](#batch-task) and an [interactive task](#interactive-task)
+to brush up on potential differences in terminology.*
 
-## Task components
+## Task parts
 
-There are several task components the author needs to write.
+There are several task parts the author needs to write:
 
 ### Task statement
 
@@ -28,11 +30,10 @@ It is the same as what the contestant should write - taking the input and produc
 One of the solutions should be the **primary solution**, always producing the correct output.
 It is also recommended to write some wrong solutions to ensure they don't pass.
 
-### Generator
-*More details about the generator are [generator.md](./generator.md).*
+### [Generator](./task-parts/generator.md)
 
-The generator is used for generating inputs that the solution is tested upon.
-Ideally the generator should generate diverse enough inputs to break any wrong solution.
+The generator is used for generating inputs that the solution is tested on.
+Ideally, the generator should generate diverse enough inputs to break any wrong solution.
 
 ### Checker
 
@@ -41,14 +42,15 @@ It greatly differs between task types, so you can read more there.
 
 A task-specific checker provided by the task author is called a **judge**.
 
-### Validator
+### [Validator](./task-parts/validator.md)
 
-The validator is used for validating inputs produced by generator
+The validator is used for making sure that inputs produced by the generator
 conform to the task statement. It adds an additional degree of safety.
 
 ## Task types
 
-There are few types of tasks pisek supports:
+There are a few types of tasks pisek supports:
+
 1. [Batch tasks](#batch-task)
 2. [Interactive tasks](#interactive-task)
 
@@ -63,10 +65,9 @@ graph TD;
     CS -->|Correct output| C;
 ```
 
-#### Batch checkers
-*More details about the batch checkers are in [batch_checker.md](./batch_checker.md).*
+#### [Batch checker](./task-parts/batch-checker.md)
 
-A batch checker gets the solution output and should say whether it is correct.
+A batch checker gets the solution output and determines whether it is correct.
 It can also get the correct output (from the primary solution) if specified in the config.
 
 ### Interactive task
@@ -79,17 +80,16 @@ graph TD;
     S ==>|Communication| J;
 ```
 
-Interactive task should be used when part of the input should remain hidden
-from the contestant's solution. For example when it can ask questions about the input.
+An interactive task is used when a part of the input should remain hidden
+from the contestant's solution. For example, when it can ask questions about the input.
 
-#### Interactive judge
-*More details about the interactive judges are in [interactive_judge.md](./interactive_judge.md).*
+#### [Interactive judge](./task-parts/interactive-judge.md)
 
-The judge in a interactive task gets the task input and is run together with the solution.
-The solution can make requests to the judge about the input. Finally, the judge says
+The judge in an interactive task gets the task input and is run together with the solution.
+The solution can make requests to the judge about the input. Finally, the judge determines
 whether the solution is correct.
 
-One example would be that judge gets a hidden sequence in the input.
+One example would be that the judge gets a hidden sequence in the input.
 The solution then makes queries to the judge and reconstructs the hidden sequence.
 After giving this sequence to the judge, the solution is marked by the judge
 as correct on this input.

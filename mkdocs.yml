@@ -1,0 +1,65 @@
+site_name: Pisek docs
+repo_url: https://github.com/piskoviste/pisek
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      primary: indigo
+      accent: amber
+      scheme: default 
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      primary: indigo
+      accent: amber
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+  favicon: assets/logo.png
+  logo: assets/logo.png
+  features:
+    - content.code.copy
+    - navigation.expand
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Quickstart: quickstart.md
+  - Task overview: task-overview.md
+  - Config documentation: config-docs.md
+  - Task parts:
+    - Generator: task-parts/generator.md
+    - Validator: task-parts/validator.md
+    - Batch checker: task-parts/batch-checker.md
+    - Interactive judge: task-parts/interactive-judge.md
+  - CMS integration: CMS.md
+  - Cheatsheet: cheatsheet.md
