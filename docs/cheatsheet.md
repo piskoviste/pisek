@@ -9,7 +9,7 @@ pisek init
 
 ## Task testing
 
-Test a task:
+Test the task:
 ```bash
 pisek test
 ```
@@ -36,7 +36,7 @@ Override time limit for solutions to 3 seconds:
 pisek test -t 3
 ```
 
-Test all inputs (don't skip those which do not matter):
+Test all inputs (even when not necessary):
 ```bash
 pisek test -a
 ```
