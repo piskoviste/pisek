@@ -14,7 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from collections import defaultdict
 from configparser import (
     ConfigParser,
     DuplicateSectionError,
@@ -40,6 +39,12 @@ V2_DEFAULTS = {
 }
 
 CONFIG_FILENAME = "config"
+
+
+def new_config_parser() -> ConfigParser:
+    config = ConfigParser(interpolation=None)
+    config.optionxform = lambda x: x  # type: ignore
+    return config
 
 
 @dataclass
@@ -93,7 +98,7 @@ class ConfigHierarchy:
 
     def _load_config(self, path: str, info: bool = True) -> None:
         self._config_paths.append(path)
-        self._configs.append(config := ConfigParser(interpolation=None))
+        self._configs.append(config := new_config_parser())
         if not self._read_config(config, path):
             raise TaskConfigError(f"Missing config {path}. Is this task folder?")
 
@@ -201,7 +206,7 @@ class ConfigHierarchy:
                 for key, value in config[section].items():
                     if re.fullmatch(regex_key, key) and key not in found:
                         found[key] = ConfigValue(value, config_path, section, key)
-        
+
         return {key: val for key, val in found.items() if val != "!unset"}
 
     def sections(self) -> list[ConfigValue]:
