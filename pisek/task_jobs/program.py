@@ -91,6 +91,18 @@ class ProgramsJob(TaskJob):
         self._program_pool: list[ProgramPoolItem] = []
         self._callback: Optional[Callable[[subprocess.Popen], None]] = None
 
+    @staticmethod
+    def _env_disjoint_union(
+        env1: dict[str, str], env2: dict[str, str]
+    ) -> dict[str, str]:
+        union = env1 | env2
+        if len(union) != len(env1) + len(env2):
+            duplicates = list(set(env1.keys()) & set(env2.keys()))
+            raise PipelineItemFailure(
+                f"Environment variable '{duplicates[0]}' is used by the protocol and cannot be overwritten."
+            )
+        return union
+
     def _load_executable(
         self,
         executable: TaskPath,
@@ -102,7 +114,7 @@ class ProgramsJob(TaskJob):
         stdin: Optional[Union[TaskPath, int]] = None,
         stdout: Optional[Union[TaskPath, int]] = None,
         stderr: Optional[LogPath] = None,
-        env={},
+        env: dict[str, str] = {},
     ):
         if self._is_file(executable):
             self._access_file(executable)
@@ -165,7 +177,7 @@ class ProgramsJob(TaskJob):
             stdin=stdin,
             stdout=stdout,
             stderr=stderr,
-            env=env,
+            env=self._env_disjoint_union(env, program.env),
         )
 
     def _load_callback(self, callback: Callable[[subprocess.Popen], None]) -> None:

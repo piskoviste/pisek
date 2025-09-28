@@ -632,6 +632,7 @@ class RunSection(BaseEnv):
     process_limit: int = Field(ge=0)  # [1]
     # limit=0 means unlimited
     args: ListStr
+    env: dict[str, str]
 
     def clock_limit(self, override_time_limit: Optional[float] = None) -> float:
         tl = override_time_limit if override_time_limit is not None else self.time_limit
@@ -653,12 +654,17 @@ class RunSection(BaseEnv):
                 [(section, key) for section in default_sections]
             )
             for key in cls.model_fields
-            if key not in ("name", "program_role")
+            if key not in ("name", "program_role", "env")
         }
         if args["build"].value == "@auto":
             args["build"].value = (
                 f"{program_role.build_name}:{os.path.join(args['subdir'].value, name.value)}"
             )
+
+        envs = configs.get_regex_from_candidates(
+            (section, "env_(.*)") for section in default_sections
+        )
+        envs = {key.removeprefix("env_"): val for key, val in envs.items()}
 
         return {
             "_section": section_name,
@@ -668,6 +674,7 @@ class RunSection(BaseEnv):
             "name": name,
             **args,
             "build": BuildSection.load_dict(args["build"], configs),
+            "env": envs,
         }
 
     @field_validator("exec", mode="before")
