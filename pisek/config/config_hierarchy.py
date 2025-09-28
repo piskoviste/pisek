@@ -24,6 +24,7 @@ from configparser import (
 from dataclasses import dataclass
 from importlib.resources import files
 import os
+import re
 from typing import Optional, Iterable
 
 from pisek.utils.text import tab
@@ -183,6 +184,25 @@ class ConfigHierarchy:
 
         candidates_str = " or\n".join(map(msg, candidates))
         raise TaskConfigError(f"Unset value for:\n{tab(candidates_str)}")
+
+    def get_regex(self, section: str, regex_key: str) -> dict[str, ConfigValue]:
+        return self.get_regex_from_candidates([(section, regex_key)])
+
+    def get_regex_from_candidates(
+        self, candidates: Iterable[tuple[str, str]]
+    ) -> dict[str, ConfigValue]:
+        found: dict[str, ConfigValue] = {}
+        for section, regex_key in candidates:
+            for config_path, config in zip(self._config_paths, self._configs):
+                if section not in config:
+                    continue
+
+                config_path = os.path.basename(config_path)
+                for key, value in config[section].items():
+                    if re.fullmatch(regex_key, key) and key not in found:
+                        found[key] = ConfigValue(value, config_path, section, key)
+        
+        return {key: val for key, val in found.items() if val != "!unset"}
 
     def sections(self) -> list[ConfigValue]:
         sections = {

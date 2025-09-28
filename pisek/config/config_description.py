@@ -23,7 +23,7 @@ def regex_score(regex: str, name: str) -> int:
 
 class ApplicabilityCondition(ABC):
     @abstractmethod
-    def check(self, section: str, config: "ConfigHierarchy") -> str:
+    def check(self, section: str, key: str, config: "ConfigHierarchy") -> str:
         pass
 
 
@@ -43,12 +43,13 @@ class KeyValueCond(ApplicabilityCondition):
     def _op(self, current_value) -> bool:
         pass
 
-    def check(self, section: str, config: "ConfigHierarchy") -> str:
+    def check(self, section: str, key: str, config: "ConfigHierarchy") -> str:
         section = self.section.transform_name(section)
-        current_value = self.key.get(config, section=section)
+        key = self.key.transform_name(key)
+        current_value = self.key.get(section, key, config)
         if self._op(current_value):
             return ""
-        return f"[{section}] {self.key.key}={current_value}\n"
+        return f"[{section}] {key}={current_value}\n"
 
 
 class KeyHasValue(KeyValueCond):
@@ -85,10 +86,12 @@ class ConfigKeyDescription:
         self.defaults_to: list[tuple[str, str]] = []
         self.dynamic_default: bool = False
         self.applicability_conditions: list[ApplicabilityCondition] = []
+        self.similarity_function: Optional[Callable[[str, str], int]] = None
 
-    def get(self, config: "ConfigHierarchy", section: str) -> str:
+    def get(self, section: str, key: str, config: "ConfigHierarchy") -> str:
         return config.get_from_candidates(
-            [(self.section.transform_name(section), self.key)] + self.defaults()
+            [(self.section.transform_name(section), self.transform_name(key))]
+            + self.defaults()
         ).value
 
     def defaults(self) -> list[tuple[str, str]]:
@@ -97,16 +100,22 @@ class ConfigKeyDescription:
         return self.defaults_to + [(d, self.key) for d in self.section.defaults_to]
 
     def similarity(self, key: str) -> int:
-        return editdistance.distance(self.key, key)
+        if self.similarity_function is None:
+            return editdistance.distance(self.key, key)
+        else:
+            return self.similarity_function(self.key, key)
 
     def score(self, section: str, key: str) -> int:
         return self.section.similarity(section) + self.similarity(key)
 
-    def applicable(self, section: str, config: "ConfigHierarchy") -> str:
+    def applicable(self, section: str, key: str, config: "ConfigHierarchy") -> str:
         text = ""
         for cond in self.applicability_conditions:
-            text += cond.check(section, config)
+            text += cond.check(section, key, config)
         return text
+
+    def transform_name(self, name: str) -> str:
+        return name if self.similarity(name) == 0 else self.key
 
 
 class ConfigKeysHelper:
@@ -129,8 +138,10 @@ class ConfigKeysHelper:
                     assert section is not None
                     [fun, *args] = line.removeprefix("#!").split()
                     if fun == "regex":
-                        assert last_key is None
-                        section.similarity_function = regex_score
+                        if last_key is None:
+                            section.similarity_function = regex_score
+                        else:
+                            last_key.similarity_function = regex_score
                     elif fun == "if":
                         assert section is not None
                         assert last_key is not None
@@ -234,7 +245,7 @@ class ConfigKeysHelper:
     ) -> tuple[int, str, str]:
         for candidate in self.keys.values():
             if candidate.score(section, key) == 0:
-                if text := candidate.applicable(section, config):
+                if text := candidate.applicable(section, key, config):
                     raise TaskConfigError(
                         f"Key '{key}' not allowed in this context:\n{tab(text).rstrip()}"
                     )
@@ -242,7 +253,11 @@ class ConfigKeysHelper:
                     return (0, section, candidate.key)
 
         recommendation = min(
-            (k.score(section, key), k.section.transform_name(section), k.key)
+            (
+                k.score(section, key),
+                k.section.transform_name(section),
+                k.transform_name(key),
+            )
             for k in self.keys.values()
         )
         assert recommendation[0] > 0
