@@ -98,6 +98,8 @@ mem_limit=
 process_limit=
 args=
 subdir=
+env_(.*)=
+#!regex
 
 [run_gen]
 #!default run
@@ -110,6 +112,8 @@ mem_limit=
 process_limit=
 args=
 subdir=
+env_(.*)=
+#!regex
 
 [run_gen:(.*)]
 #!regex
@@ -123,6 +127,8 @@ mem_limit=
 process_limit=
 args=
 subdir=
+env_(.*)=
+#!regex
 
 [run_validator]
 #!default run
@@ -135,6 +141,8 @@ mem_limit=
 process_limit=
 args=
 subdir=
+env_(.*)=
+#!regex
 
 [run_validator:(.*)]
 #!regex
@@ -148,6 +156,8 @@ mem_limit=
 process_limit=
 args=
 subdir=
+env_(.*)=
+#!regex
 
 [run_solution]
 #!default run
@@ -160,6 +170,8 @@ mem_limit=
 process_limit=
 args=
 subdir=
+env_(.*)=
+#!regex
 
 [run_primary_solution]
 #!default run_solution
@@ -172,6 +184,8 @@ mem_limit=
 process_limit=
 args=
 subdir=
+env_(.*)=
+#!regex
 
 [run_secondary_solution]
 #!default run_solution
@@ -184,6 +198,8 @@ mem_limit=
 process_limit=
 args=
 subdir=
+env_(.*)=
+#!regex
 
 [run_solution:(.*)]
 #!regex
@@ -197,6 +213,8 @@ mem_limit=
 process_limit=
 args=
 subdir=
+env_(.*)=
+#!regex
 
 [run_judge]
 #!default run
@@ -209,6 +227,8 @@ mem_limit=
 process_limit=
 args=
 subdir=
+env_(.*)=
+#!regex
 
 [run_judge:(.*)]
 #!regex
@@ -222,6 +242,8 @@ mem_limit=
 process_limit=
 args=
 subdir=
+env_(.*)=
+#!regex
 
 # -------------- builds--------------
 [build]

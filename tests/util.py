@@ -1,5 +1,3 @@
-import configparser
-import glob
 import io
 import os
 import shutil
@@ -161,7 +159,7 @@ def modify_config(task_dir: str, modification_fn):
         config["tests"]["out_judge"] = "judge"  # To specify the judge program file
     """
 
-    config = configparser.ConfigParser(interpolation=None)
+    config = config_hierarchy.new_config_parser()
     config_path = os.path.join(task_dir, config_hierarchy.CONFIG_FILENAME)
     read_files = config.read(config_path)
     if not read_files:

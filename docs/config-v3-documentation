@@ -1,7 +1,7 @@
 # Example and explanation of a config file for a task made in pisek
 
 # Values beginning with ! or @ are reserved and have special meaning:
-# - Only ! value is !unset, which is always invalid
+# - Only ! value is !unset, which makes the key have no value (and thus ignore higher level defaults)
 # - @ values autoexpand depending on context
 
 # Bool type switches can have the following values:
@@ -315,6 +315,10 @@ process_limit=
 # limits greater than 1 are interpreted as "unlimited". (defaults to 1)
 # Please keep in mind that killing multiple processes
 # upon errors is inherently unreliable.
+
+env_KEY=VALUE
+# Sets an environment variable when running this program.
+# For example this sets the environment variable KEY to have value VALUE
 
 [run_gen]
 # Overriding process_limit for generator
