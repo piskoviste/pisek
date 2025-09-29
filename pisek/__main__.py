@@ -357,13 +357,13 @@ def main(argv) -> int:
         elif args.target is None or args.target == "all":
             result = test_task(args, solutions=None)
         else:
-            raise RuntimeError(f"Unknown testing target: {args.target}")
+            assert False, "Unknown command"
 
     elif args.subcommand == "config":
         if args.config_subcommand == "update":
             result = not update_and_replace_config(PATH, args.pisek_dir)
         else:
-            raise RuntimeError(f"Unknown config subcommand: {args.config_subcommand}")
+            assert False, "Unknown command"
 
     elif args.subcommand == "cms":
         args, unknown_args = parser.parse_known_args()
@@ -395,14 +395,14 @@ def main(argv) -> int:
         elif args.cms_subcommand == "check":
             result = cms.check(args)
         else:
-            raise RuntimeError(f"Unknown CMS command {args.cms_subcommand}")
+            assert False, "Unknown command"
 
     elif args.subcommand == "clean":
         result = not clean_directory(args)
     elif args.subcommand == "visualize":
         result = visualize(PATH, **vars(args))
     else:
-        raise RuntimeError(f"Unknown subcommand {args.subcommand}")
+        assert False, "Unknown command"
 
     return result
 
