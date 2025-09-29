@@ -46,8 +46,8 @@ dev = [
 pisek = "pisek.__main__:main_wrapped"
 
 [project.urls]
-Homepage = "https://github.com/kasiopea-org/pisek"
-Issues = "https://github.com/kasiopea-org/pisek/issues"
+Homepage = "https://piskoviste.github.io/pisek/"
+Issues = "https://github.com/piskoviste/pisek/issues"
 
 [tool.setuptools.packages.find]
 exclude = ["fixtures"]
