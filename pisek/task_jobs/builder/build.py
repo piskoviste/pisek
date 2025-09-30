@@ -14,6 +14,7 @@
 import os
 import shutil
 from typing import Optional
+import uuid
 
 from pisek.utils.text import tab
 from pisek.utils.paths import TaskPath, BUILD_DIR
@@ -33,7 +34,7 @@ from pisek.task_jobs.builder.strategies import (
     ALL_STRATEGIES,
 )
 
-WORKING_DIR = os.path.join(BUILD_DIR, "_workspace")
+WORKING_DIR_BASE = "_workspace"
 
 
 class BuildManager(TaskJobManager):
@@ -54,6 +55,12 @@ class BuildManager(TaskJobManager):
 
         jobs.append(self._build_program_job(self._env.config.tests.in_gen))
         jobs.append(self._build_program_job(self._env.config.tests.validator))
+
+        # If builds from previous run ended unsuccessfully, clean up
+        for path in os.listdir(BUILD_DIR):
+            if path.startswith(WORKING_DIR_BASE):
+                shutil.rmtree(os.path.join(BUILD_DIR, path))
+
         if self._env.target in (TestingTarget.solutions, TestingTarget.all):
             if self._env.config.tests.out_check == OutCheck.judge:
                 jobs.append(self._build_program_job(self._env.config.tests.out_judge))
@@ -70,9 +77,6 @@ class BuildManager(TaskJobManager):
         filtered_jobs: list[Job] = []
         for j in jobs:
             if j is not None:
-                # TODO: Because BuildJobs change cwd, they cannot be run in parallel (yet)
-                if len(filtered_jobs):
-                    j.add_prerequisite(filtered_jobs[-1])
                 filtered_jobs.append(j)
 
         return filtered_jobs
@@ -152,13 +156,12 @@ class Build(TaskJob):
             msg = f"Building '{self.build_section.program_name}' using build strategy '{strategy.name}'."
             self._print(self._colored(msg, "magenta"))
 
-        if os.path.exists(WORKING_DIR):
-            shutil.rmtree(WORKING_DIR)
-        os.makedirs(WORKING_DIR, exist_ok=True)
+        workdir = os.path.join(BUILD_DIR, f"{WORKING_DIR_BASE}_{uuid.uuid4()}")
+        os.makedirs(workdir)
 
         for path in sources | extras:
             # Intentionally avoiding caching results
-            dst = os.path.join(WORKING_DIR, path.name)
+            dst = os.path.join(workdir, path.name)
             if self._is_dir(path):
                 shutil.copytree(path.path, dst)
                 self._access_dir(path)
@@ -178,11 +181,11 @@ class Build(TaskJob):
         executable_name = strategy(
             self.build_section, self._env, self._print, self._run_subprocess
         ).build(
-            WORKING_DIR,
+            workdir,
             list(map(lambda p: p.name, sources)),
             list(map(lambda p: p.name, extras)),
         )
-        executable = os.path.join(WORKING_DIR, executable_name)
+        executable = os.path.join(workdir, executable_name)
         # Intentionally avoiding caching sources
         if os.path.isdir(executable):
             shutil.copytree(executable, target.path, symlinks=True)
@@ -190,6 +193,8 @@ class Build(TaskJob):
         else:
             shutil.copy(executable, target.path)
             self._access_file(target)
+
+        shutil.rmtree(workdir)
 
     def _resolve_strategy(self, sources: set[TaskPath]) -> type[BuildStrategy]:
         applicable = []
