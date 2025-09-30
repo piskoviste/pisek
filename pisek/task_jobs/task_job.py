@@ -222,7 +222,7 @@ class TaskJob(Job, TaskHelper):
 
     @_file_access(2)
     def _files_equal(self, file_a: TaskPath, file_b: TaskPath) -> bool:
-        return filecmp.cmp(file_a.path, file_b.path)
+        return filecmp.cmp(file_a.path, file_b.path, shallow=False)
 
     def _globs_to_files(
         self, globs: Iterable[str], directory: TaskPath
