@@ -12,8 +12,8 @@ assignees: ''
 **Proposed name:**
 **Program role:** generator / validator / judge
 
-**Describe the interface**
-Add accurate description of the program interface, i.e. command line arguments, environment variables, used files etc.
+**Interface description**
+Add an accurate description of the program interface, i.e. command line arguments, environment variables, used files, etc.
 
 **Additional context**
 Add any other context or screenshots about the feature request here.
