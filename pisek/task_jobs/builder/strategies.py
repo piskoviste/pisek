@@ -19,9 +19,8 @@ import subprocess
 import os
 import json
 import shutil
-from typing import Optional, Protocol, TYPE_CHECKING
+from typing import Any, IO, Optional, Protocol, TYPE_CHECKING
 
-from pisek.utils.util import ChangedCWD
 from pisek.utils.text import tab
 from pisek.jobs.jobs import PipelineItemFailure
 from pisek.config.config_types import BuildStrategyName
@@ -35,13 +34,26 @@ logger = logging.getLogger(__name__)
 ALL_STRATEGIES: dict[BuildStrategyName, type["BuildStrategy"]] = {}
 
 
+class FakeChangedCWD:
+    def __init__(self, strategy: "BuildStrategy", path: str):
+        self._strategy = strategy
+        self.new = strategy._path(path)
+
+    def __enter__(self):
+        self.old = self._strategy.workdir
+        self._strategy.workdir = self.new
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self._strategy.workdir = self.old
+
+
 class Print(Protocol):
     def __call__(self, msg: str, end: str = "\n", stderr: bool = False) -> None: ...
 
 
 class RunPopen(Protocol):
     def __call__(
-        self, args: list[str], stdout: int, stderr: int, text: bool
+        self, args: list[str], stdout: int, stderr: int, text: bool, cwd: str | None
     ) -> subprocess.Popen: ...
 
 
@@ -61,6 +73,8 @@ class BuildStrategy(ABC):
         self._env = env
         self._print = _print
         self._run_popen = _run_subprocess
+
+        self.workdir = "."
 
     def __init_subclass__(cls):
         if not inspect.isabstract(cls):
@@ -92,7 +106,7 @@ class BuildStrategy(ABC):
         self.sources = sources
         self.extras = extras
         self.target = os.path.basename(self._build_section.program_name)
-        with ChangedCWD(directory):
+        with FakeChangedCWD(self, directory):
             return self._build()
 
     @abstractmethod
@@ -107,9 +121,43 @@ class BuildStrategy(ABC):
     def _all_end_with(cls, sources: list[str], suffixes: list[str]) -> bool:
         return all(cls._ends_with(source, suffixes) for source in sources)
 
+    # ---- fake cwd utils ----
+
+    def _path(self, path: str) -> str:
+        return os.path.join(self.workdir, path)
+
+    def _exists(self, path: str) -> bool:
+        return os.path.exists(self._path(path))
+
+    def _isdir(self, path: str) -> bool:
+        return os.path.isdir(self._path(path))
+
+    def _listdir(self, path: str | None = None) -> list[str]:
+        return os.listdir(self.workdir if path is None else self._path(path))
+
+    def _stat(self, path: str) -> os.stat_result:
+        return os.stat(self._path(path))
+
+    def _open(self, file: str, mode: str = "r", newline: str | None = None) -> IO[Any]:
+        return open(self._path(file), mode=mode, newline=newline)
+
+    def _chmod(self, path: str, mode: int) -> None:
+        os.chmod(self._path(path), mode)
+
+    def _copy(self, src: str, dst: str, follow_symlinks: bool = True) -> None:
+        shutil.copy(self._path(src), self._path(dst), follow_symlinks=follow_symlinks)
+
+    def _symlink(self, src: str, dst: str) -> None:
+        os.symlink(src, self._path(dst))
+
+    def _makedirs(self, name: str, exist_ok: bool = False) -> None:
+        os.makedirs(self._path(name), exist_ok=exist_ok)
+
+    # ---- build helpers ----
+
     def _load_shebang(self, program: str) -> str:
         """Load shebang from program."""
-        with open(program, "r", newline="\n") as f:
+        with self._open(program, "r", newline="\n") as f:
             first_line = f.readline()
 
         if not first_line.startswith("#!"):
@@ -127,7 +175,11 @@ class BuildStrategy(ABC):
             #
             # Also tool.split() because some tools have more parts (e.g. '/usr/bin/env python3')
             subprocess.run(
-                tool.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=0
+                tool.split(),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=0,
+                cwd=self.workdir,
             )
         except subprocess.TimeoutExpired:
             pass
@@ -139,7 +191,12 @@ class BuildStrategy(ABC):
 
         logger.debug("Building '" + " ".join(args) + "'")
         comp = self._run_popen(
-            args, **kwargs, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+            args,
+            **kwargs,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            cwd=self.workdir,
         )
 
         assert comp.stderr is not None
@@ -206,8 +263,8 @@ class BuildScript(BuildStrategy):
     def _build_script(self, program: str) -> str:
         interpreter = self._load_shebang(program)
         self._check_tool(interpreter)
-        st = os.stat(program)
-        os.chmod(program, st.st_mode | 0o111)
+        st = self._stat(program)
+        self._chmod(program, st.st_mode | 0o111)
         return program
 
 
@@ -233,7 +290,7 @@ class Python(BuildScript):
             return self._build_script(entrypoint)
         else:
             self._check_no_run()
-            os.symlink(self._build_script(entrypoint), "run")
+            self._symlink(self._build_script(entrypoint), "run")
             return "."
 
 
@@ -331,13 +388,13 @@ class Java(BuildStrategy):
         self._run_subprocess(arguments, self._build_section.program_name)
         self._check_no_run()
         run_path = os.path.join(self.target, "run")
-        with open(run_path, "w") as run_file:
+        with self._open(run_path, "w") as run_file:
             run_file.write(
                 "#!/usr/bin/bash\n"
                 + f"exec java --class-path ${{0%/run}} {entry_class} $@\n"
             )
-        st = os.stat(run_path)
-        os.chmod(run_path, st.st_mode | 0o111)
+        st = self._stat(run_path)
+        self._chmod(run_path, st.st_mode | 0o111)
         return self.target
 
 
@@ -354,15 +411,15 @@ class Make(BuildStrategy):
         return os.path.exists(os.path.join(directory, "Makefile"))
 
     def _build(self) -> str:
-        directory = os.listdir()[0]
-        with ChangedCWD(directory):
-            if os.path.exists(self._target_subdir):
+        directory = self._listdir()[0]
+        with FakeChangedCWD(self, directory):
+            if self._exists(self._target_subdir):
                 raise PipelineItemFailure(
                     f"Makefile strategy: '{self._target_subdir}' already exists"
                 )
-            os.makedirs(self._target_subdir)
+            self._makedirs(self._target_subdir)
             self._run_subprocess(["make"], self._build_section.program_name)
-            if not os.path.isdir(self._target_subdir):
+            if not self._isdir(self._target_subdir):
                 raise PipelineItemFailure(
                     f"Makefile must create '{self._target_subdir}/' directory"
                 )
@@ -383,10 +440,9 @@ class Cargo(BuildStrategy):
         return os.path.exists(os.path.join(directory, "Cargo.toml"))
 
     def _build(self) -> str:
-        directory = os.listdir()[0]
-
-        with ChangedCWD(directory):
-            if os.path.exists(self._target_subdir):
+        directory = self._listdir()[0]
+        with FakeChangedCWD(self, directory):
+            if self._exists(self._target_subdir):
                 raise PipelineItemFailure(
                     f"Cargo strategy: '{self._target_subdir}' already exists"
                 )
@@ -407,7 +463,7 @@ class Cargo(BuildStrategy):
                 self._build_section.program_name,
             )
 
-        os.mkdir(self._artifact_dir)
+        self._makedirs(self._artifact_dir)
         exectables = []
 
         for line in output.splitlines():
@@ -422,10 +478,10 @@ class Cargo(BuildStrategy):
             name = os.path.basename(path)
             exectables.append(os.path.basename(name))
 
-            shutil.copy(path, os.path.join(self._artifact_dir, name))
+            self._copy(path, os.path.join(self._artifact_dir, name))
 
         if len(exectables) == 1 and exectables != ["run"]:
-            os.symlink(
+            self._symlink(
                 exectables[0],
                 os.path.join(self._artifact_dir, "run"),
             )
