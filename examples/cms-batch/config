@@ -28,18 +28,18 @@ all_inputs_in_last_test=on
 
 [test01]
 name=Subtask A
-points=2
+points=20
 in_globs=*equal*.in
 
 [test02]
 name=Subtask B
-points=2
+points=30
 in_globs=*small*.in
 predecessors=1
 
 [test03]
 name=Subtask C
-points=6
+points=50
 in_globs=*.in
 predecessors=2
 
