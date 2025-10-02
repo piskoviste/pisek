@@ -43,6 +43,7 @@ shuffle_ignore_case=
 static_subdir=
 
 name=
+points=
 in_globs=
 predecessors=
 checks.validate=
