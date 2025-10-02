@@ -88,12 +88,13 @@ class Env(BaseEnv):
         repeat: int = 1,
         iteration: int = 0,
         pisek_dir: Optional[str] = None,
+        config_filename: str = "config",
         **_,
     ) -> Optional["Env"]:
         no_jumps |= plain
         no_colors |= plain
 
-        config = load_config(".", strict, pisek_directory=pisek_dir)
+        config = load_config(".", pisek_dir, config_filename, strict)
         if config is None:
             return None
 

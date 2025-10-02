@@ -256,16 +256,18 @@ def show_slowest(results: list[LoggedResult]) -> list[LoggedResult]:
 
 
 def visualize(
-    path: str = ".",
-    filter: str = "all",
-    bundle: bool = False,
-    solutions: Optional[list[str]] = None,
-    limit: Optional[float] = None,
-    filename: str = "testing_log.json",
-    segments: Optional[int] = None,
+    path: str,
+    filter: str,
+    bundle: bool,
+    solutions: Optional[list[str]],
+    limit: Optional[float],
+    filename: str,
+    segments: Optional[int],
+    pisek_dir: Optional[str],
+    config_filename: str,
     **_,
 ) -> int:
-    config = load_config(path)
+    config = load_config(path, pisek_dir, config_filename)
     if config is None:
         return 2
 
