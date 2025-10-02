@@ -41,7 +41,11 @@ class TestFixture(unittest.TestCase):
             os.path.join(self.fixtures_dir, "pisek"),
         )
 
-        if not is_task_dir(self.task_dir, os.environ["PISEK_DIRECTORY"]):
+        if not is_task_dir(
+            self.task_dir,
+            os.environ["PISEK_DIRECTORY"],
+            config_hierarchy.DEFAULT_CONFIG_FILENAME,
+        ):
             exit(1)
         clean_task_dir(self.task_dir, os.environ["PISEK_DIRECTORY"])
 
@@ -161,7 +165,7 @@ def modify_config(task_dir: str, modification_fn):
     """
 
     config = config_hierarchy.new_config_parser()
-    config_path = os.path.join(task_dir, config_hierarchy.CONFIG_FILENAME)
+    config_path = os.path.join(task_dir, config_hierarchy.DEFAULT_CONFIG_FILENAME)
     read_files = config.read(config_path)
     if not read_files:
         raise FileNotFoundError(f"Missing configuration file {config_path}.")

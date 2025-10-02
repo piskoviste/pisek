@@ -22,6 +22,7 @@ from typing import Optional
 from pisek.utils.text import eprint
 from pisek.utils.colors import ColorSettings
 from pisek.env.base_env import BaseEnv
+from pisek.config.config_hierarchy import DEFAULT_CONFIG_FILENAME
 from pisek.config.task_config import load_config, TaskConfig
 from pisek.config.select_solutions import expand_solutions, UnknownSolutions
 
@@ -88,12 +89,13 @@ class Env(BaseEnv):
         repeat: int = 1,
         iteration: int = 0,
         pisek_dir: Optional[str] = None,
+        config_filename: str = DEFAULT_CONFIG_FILENAME,
         **_,
     ) -> Optional["Env"]:
         no_jumps |= plain
         no_colors |= plain
 
-        config = load_config(".", strict, pisek_directory=pisek_dir)
+        config = load_config(".", pisek_dir, config_filename, strict)
         if config is None:
             return None
 

@@ -1,11 +1,9 @@
 import os
-import shutil
 
 import unittest
 
 from pisek.utils.paths import TESTS_DIR, GENERATED_SUBDIR
 from util import TestFixtureVariant, overwrite_file, modify_config
-from pisek.config.task_config import load_config
 
 
 class TestSumCMS(TestFixtureVariant):

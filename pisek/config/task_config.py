@@ -903,13 +903,16 @@ def _convert_errors(e: ValidationError, config_values: ConfigValuesDict) -> list
 
 def load_config(
     path: str,
+    pisek_directory: Optional[str],
+    config_filename: str,
     strict: bool = False,
     suppress_warnings: bool = False,
-    pisek_directory: Optional[str] = None,
 ) -> Optional[TaskConfig]:
     """Loads config from given path."""
     try:
-        config_hierarchy = ConfigHierarchy(path, not suppress_warnings, pisek_directory)
+        config_hierarchy = ConfigHierarchy(
+            path, not suppress_warnings, pisek_directory, config_filename
+        )
         config_values = TaskConfig.load_dict(config_hierarchy)
         config = TaskConfig(**_to_values(config_values))
         config_hierarchy.check_all()

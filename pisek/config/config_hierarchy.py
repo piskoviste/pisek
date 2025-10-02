@@ -38,7 +38,7 @@ V2_DEFAULTS = {
     for task_type in ["kasiopea", "cms"]
 }
 
-CONFIG_FILENAME = "config"
+DEFAULT_CONFIG_FILENAME = "config"
 
 
 def new_config_parser() -> ConfigParser:
@@ -84,8 +84,9 @@ class ConfigHierarchy:
     def __init__(
         self,
         task_path: str,
-        info: bool = True,
-        pisek_directory: Optional[str] = None,
+        info: bool,
+        pisek_directory: Optional[str],
+        config_filename: str,
     ) -> None:
         self._task_path = task_path
         self._pisek_directory = pisek_directory
@@ -93,7 +94,7 @@ class ConfigHierarchy:
         self._config_paths: list[str] = []
         self._configs: list[ConfigParser] = []
 
-        self._load_config(os.path.join(task_path, CONFIG_FILENAME), info)
+        self._load_config(os.path.join(task_path, config_filename), info)
         self._load_config(GLOBAL_DEFAULTS, False)
 
     def _load_config(self, path: str, info: bool = True) -> None:

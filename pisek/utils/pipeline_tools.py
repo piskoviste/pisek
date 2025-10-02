@@ -110,10 +110,12 @@ def with_env(fun: Callable[[Env, Namespace], int]) -> Callable[[Namespace], int]
     return wrap
 
 
-def is_task_dir(task_dir: str, pisek_directory: Optional[str]) -> bool:
+def is_task_dir(
+    task_dir: str, pisek_directory: Optional[str], config_filename: str
+) -> bool:
     # XXX: Safeguard, raises an exception if task_dir isn't really a task
     # directory
     config = load_config(
-        task_dir, suppress_warnings=True, pisek_directory=pisek_directory
+        task_dir, pisek_directory, config_filename, suppress_warnings=True
     )
     return config is not None
