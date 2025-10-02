@@ -139,11 +139,6 @@ class ConfigHierarchy:
         if self._pisek_directory is not None:
             return load_from_path(os.path.join(self._task_path, self._pisek_directory))
 
-        if "PISEK_DIRECTORY" in os.environ:
-            return load_from_path(
-                os.path.join(self._task_path, os.environ["PISEK_DIRECTORY"])
-            )
-
         current_path = os.path.abspath(self._task_path)
         while current_path:
             if os.path.exists(os.path.join(current_path, ".git")):

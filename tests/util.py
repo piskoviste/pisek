@@ -41,9 +41,9 @@ class TestFixture(unittest.TestCase):
             os.path.join(self.fixtures_dir, "pisek"),
         )
 
-        if not is_task_dir(self.task_dir, None):
+        if not is_task_dir(self.task_dir, os.environ["PISEK_DIRECTORY"]):
             exit(1)
-        clean_task_dir(self.task_dir, None)
+        clean_task_dir(self.task_dir, os.environ["PISEK_DIRECTORY"])
 
         self.cwd_orig = os.getcwd()
         os.chdir(self.task_dir)
@@ -125,6 +125,7 @@ class TestFixtureVariant(TestFixture):
                 full=False,
                 time_limit=0.2,
                 plain=False,
+                pisek_dir=os.environ["PISEK_DIRECTORY"],
             )
 
         runner = unittest.TextTestRunner(failfast=True)
