@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-*Please note that we can support only deterministic programs.*
+<!-- *Please note that we can support only deterministic programs.* -->
 
 **Proposed name:**
 **Program role:** generator / validator / judge
