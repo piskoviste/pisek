@@ -323,6 +323,9 @@ def main(argv) -> int:
 
     argcomplete.autocomplete(parser)
     args = parser.parse_args(argv)
+
+    if args.pisek_dir is None and "PISEK_DIRECTORY" in os.environ:
+        args.pisek_dir = os.path.join(os.getcwd(), os.environ["PISEK_DIRECTORY"])
     ColorSettings.set_state(not args.plain and not args.no_colors)
 
     result = None
