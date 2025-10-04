@@ -168,7 +168,7 @@ def from_scratch(config_filename: str) -> int:
     if os.path.exists(config_filename):
         return invalid_config_name(config_filename)
 
-    with open(config_filename, "w") as f:
+    with open(config_filename, "x") as f:
         config.write(f, space_around_delimiters=False)
 
     print()
@@ -178,7 +178,7 @@ def from_scratch(config_filename: str) -> int:
 
 
 def from_template(path: str, config_filename: str) -> int:
-    if config_filename in os.listdir(path):
+    if os.path.exists(os.path.join(path, config_filename)):
         return invalid_config_name(config_filename)
 
     for item in os.listdir(path):
