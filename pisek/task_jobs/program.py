@@ -190,7 +190,7 @@ class ProgramsJob(TaskJob):
         running_pool: list[subprocess.Popen] = []
         meta_files: list[str] = []
         tmp_dirs: list[str] = []
-        minibox = TaskPath.executable_path("minibox").abspath
+        minibox = TaskPath.executable_path("_minibox").abspath
         for pool_item in self._program_pool:
             fd, meta_file = tempfile.mkstemp()
             os.close(fd)

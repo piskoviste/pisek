@@ -52,7 +52,7 @@ class PrepareMinibox(TaskJob):
 
     def _run(self):
         source = files("pisek").joinpath("tools/minibox.c")
-        executable = TaskPath.executable_path("minibox")
+        executable = TaskPath.executable_path("_minibox")
         self._access_file(executable)
         gcc = self._run_subprocess(
             [
@@ -82,7 +82,7 @@ class PrepareTextPreprocessor(TaskJob):
 
     def _run(self):
         source = files("pisek").joinpath("tools/text-preproc.c")
-        executable = TaskPath.executable_path("text-preproc")
+        executable = TaskPath.executable_path("_text-preproc")
         self._access_file(executable)
         gcc = self._run_subprocess(
             [
@@ -114,7 +114,7 @@ class PrepareJudgeLibChecker(TaskJob):
         source_dir = files("pisek").joinpath("tools/judgelib")
         sources = [source_dir.joinpath(file) for file in source_files]
 
-        executable = TaskPath.executable_path(self.judge)
+        executable = TaskPath.executable_path("_" + self.judge)
         self._access_file(executable)
 
         gpp = self._run_subprocess(
@@ -181,7 +181,7 @@ class TextPreprocAbstract(ProgramsJob):
             pass
 
         result = self._run_tool(
-            "text-preproc",
+            "_text-preproc",
             stdin=input_,
             stdout=output,
             stderr=input_.to_sanitization_log(),
