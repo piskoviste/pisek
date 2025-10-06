@@ -28,6 +28,7 @@ from pisek.utils.text import eprint, stop
 from pisek.utils.colors import ColorSettings
 from pisek.visualize import visualize
 from pisek.init import init_task
+from pisek.config.config_hierarchy import DEFAULT_CONFIG_FILENAME
 from pisek.config.config_tools import update_and_replace_config
 from pisek.version import print_version
 
@@ -132,6 +133,12 @@ def main(argv) -> int:
     parser.add_argument(
         "--pisek-dir",
         help="pisek directory for higher level settings",
+        type=str,
+    )
+    parser.add_argument(
+        "--config-filename",
+        help="override name of the configuration file",
+        default=DEFAULT_CONFIG_FILENAME,
         type=str,
     )
 
@@ -334,9 +341,9 @@ def main(argv) -> int:
     if args.subcommand == "version":
         return print_version()
     elif args.subcommand == "init":
-        return init_task()
+        return init_task(args.config_filename)
 
-    if not is_task_dir(PATH, args.pisek_dir):
+    if not is_task_dir(PATH, args.pisek_dir, args.config_filename):
         # !!! Ensure this is always run before clean_directory !!!
         return 2
 
@@ -364,7 +371,9 @@ def main(argv) -> int:
 
     elif args.subcommand == "config":
         if args.config_subcommand == "update":
-            result = not update_and_replace_config(PATH, args.pisek_dir)
+            result = not update_and_replace_config(
+                PATH, args.pisek_dir, args.config_filename
+            )
         else:
             assert False, "Unknown command"
 

@@ -1,8 +1,9 @@
 from configparser import ConfigParser
+from functools import partial
 from importlib.resources import files
 import os
 import shutil
-from typing import Sequence
+from typing import Callable, Sequence
 
 from pisek.utils.text import eprint
 from pisek.utils.colors import ColorSettings
@@ -14,7 +15,7 @@ from pisek.config.config_types import (
     OutCheck,
     JudgeType,
 )
-from pisek.config.config_hierarchy import CONFIG_FILENAME
+from pisek.config.config_hierarchy import DEFAULT_CONFIG_FILENAME
 from pisek.task_jobs.program import ProgramRole
 
 EXAMPLE_TASKS_DIR = str(files("pisek").joinpath("../examples"))
@@ -54,6 +55,16 @@ def recommended() -> str:
     return " (" + ColorSettings.colored("recommended", "green") + ")"
 
 
+def invalid_config_name(config_filename: str) -> int:
+    eprint(
+        ColorSettings.colored(
+            f"Config filename '{config_filename}' already in use.",
+            "red",
+        )
+    )
+    return 2
+
+
 def input_program(
     p_role: ProgramRole, types: Sequence[str], recommended_types: Sequence[str]
 ) -> tuple[str, str]:
@@ -67,14 +78,14 @@ def input_program(
     return type_, filename
 
 
-def init_task() -> int:
+def init_task(config_filename: str) -> int:
     if os.listdir():
         eprint(ColorSettings.colored("Current directory is not empty", "red"))
         return 1
 
-    example_tasks = [
+    example_tasks: list[tuple[Callable[[str], int], str]] = [
         (
-            lambda: from_template(os.path.join(EXAMPLE_TASKS_DIR, task)),
+            partial(from_template, os.path.join(EXAMPLE_TASKS_DIR, task)),
             task + " example task",
         )
         for task in EXAMPLE_TASKS
@@ -82,10 +93,10 @@ def init_task() -> int:
     create = input_choice(
         "Create a task", [(from_scratch, "From scratch")] + example_tasks
     )
-    return create()
+    return create(config_filename)
 
 
-def from_scratch() -> int:
+def from_scratch(config_filename: str) -> int:
     config = ConfigParser(interpolation=None)
     config.add_section("task")
     config.add_section("tests")
@@ -154,8 +165,11 @@ def from_scratch() -> int:
     config.add_section(sol_sec)
     config[sol_sec]["primary"] = "yes"
 
-    with open(CONFIG_FILENAME, "w") as f:
-        config.write(f, space_around_delimiters=False)
+    try:
+        with open(config_filename, "x") as f:
+            config.write(f, space_around_delimiters=False)
+    except FileExistsError:
+        return invalid_config_name(config_filename)
 
     print()
     print("For more information visit our docs: https://piskoviste.github.io/pisek/")
@@ -163,12 +177,17 @@ def from_scratch() -> int:
     return 0
 
 
-def from_template(path: str) -> int:
+def from_template(path: str, config_filename: str) -> int:
+    if os.path.exists(os.path.join(path, config_filename)):
+        return invalid_config_name(config_filename)
+
     for item in os.listdir(path):
         s = os.path.join(path, item)
         if os.path.isdir(s):
             shutil.copytree(s, item)
         else:
             shutil.copy(s, item)
+
+    shutil.move(DEFAULT_CONFIG_FILENAME, config_filename)
 
     return 0
