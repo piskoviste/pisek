@@ -54,6 +54,7 @@ class CommandLineReporter(Reporter):
     def __init__(self, env: Env, job_managers: list[JobManager]) -> None:
         self._finished_jm = 0
         self._tmp_lines = 0
+        self._dirty_lines = 0
         self._manager_tmp_lines = 0
         super().__init__(env, job_managers)
 
@@ -120,19 +121,14 @@ class CommandLineReporter(Reporter):
                     f"{len(active_jobs)} active job{'s' if len(active_jobs) >= 2 else ''}, longest running: {self._format_job(active_jobs[0], now)}"
                 )
         else:
-            dirty_lines = self._env.jobs - len(active_jobs)
             if active_jobs:
                 self._print_tmp("Active jobs:")
-            else:
-                dirty_lines += 1
 
             for job in active_jobs:
                 self._print_tmp("- " + self._format_job(job, now))
 
-            print(
-                f"{ansi.clear_line()}\n" * dirty_lines + Cursor.UP() * dirty_lines,
-                end="",
-            )
+            self._clear_lines(self._dirty_lines)
+            self._dirty_lines = 0
 
     def _format_job(self, job: Job, now: float) -> str:
         run_time: float = 0 if job.started is None else max(0, now - job.started)
@@ -154,8 +150,10 @@ class CommandLineReporter(Reporter):
         clear_lines = max(0, self._tmp_lines - leave)
         if clear:
             print(f"{Cursor.UP()}{ansi.clear_line()}" * clear_lines, end="")
+            self._dirty_lines = 0
         else:
             print(Cursor.UP() * clear_lines, end="")
+            self._dirty_lines += clear_lines
         self._tmp_lines -= clear_lines
 
     @_jumps
@@ -163,6 +161,7 @@ class CommandLineReporter(Reporter):
         """Prints a text to be rewritten latter."""
         lines = self._lines(msg)
         self._tmp_lines += lines
+        self._dirty_lines -= lines
         self._clear_lines(lines)
         print(str(msg), *args, **kwargs)
 
@@ -170,6 +169,7 @@ class CommandLineReporter(Reporter):
         """Prints a text."""
         self._reset_tmp_lines()
         self._clear_lines(self._lines(msg))
+        self._dirty_lines -= self._lines(msg)
         print(str(msg), *args, **kwargs)
 
     @_jumps
