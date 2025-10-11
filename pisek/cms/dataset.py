@@ -24,7 +24,7 @@ from pisek.cms.testcase import create_testcase
 from pisek.env.env import Env
 from pisek.config.task_config import TaskConfig
 from pisek.config.config_types import JudgeType, OutCheck, TaskType, DataFormat
-from pisek.utils.paths import TaskPath, InputPath
+from pisek.utils.paths import TaskPath, InputPath, BUILD_DIR
 
 T = TypeVar("T")
 
@@ -199,12 +199,14 @@ def add_judge(session: Session, files: FileCacher, env: Env, dataset: Dataset):
     assert config.tests.out_judge is not None
 
     run_section = config.tests.out_judge
-    judge_path = TaskPath.executable_path(path.splitext(run_section.exec.name)[0]).path
+    judge_path = TaskPath(BUILD_DIR, run_section.exec.path).path
 
     if config.task.task_type == TaskType.batch:
         judge_name = "checker"
     elif config.task.task_type == TaskType.interactive:
         judge_name = "manager"
+    else:
+        assert False
 
     judge = files.put_file_from_path(judge_path, f"{judge_name} for {config.cms.name}")
     session.add(Manager(dataset=dataset, filename=judge_name, digest=judge))
@@ -234,6 +236,8 @@ def add_stubs(session: Session, files: FileCacher, env: Env, dataset: Dataset):
         stub_basename = "grader"
     elif config.task.task_type == TaskType.interactive:
         stub_basename = "stub"
+    else:
+        assert False
 
     exts = set()
     for stub in config.cms.stubs:
