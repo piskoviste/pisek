@@ -18,7 +18,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from os import path, listdir
 import re
 import datetime
-from typing import Callable, TypeVar
+from typing import Callable, TypeVar, assert_never
 
 from pisek.cms.testcase import create_testcase
 from pisek.env.env import Env
@@ -206,7 +206,7 @@ def add_judge(session: Session, files: FileCacher, env: Env, dataset: Dataset):
     elif config.task.task_type == TaskType.interactive:
         judge_name = "manager"
     else:
-        assert False
+        assert_never(config.task.task_type)
 
     judge = files.put_file_from_path(judge_path, f"{judge_name} for {config.cms.name}")
     session.add(Manager(dataset=dataset, filename=judge_name, digest=judge))
@@ -237,7 +237,7 @@ def add_stubs(session: Session, files: FileCacher, env: Env, dataset: Dataset):
     elif config.task.task_type == TaskType.interactive:
         stub_basename = "stub"
     else:
-        assert False
+        assert_never(config.task.task_type)
 
     exts = set()
     for stub in config.cms.stubs:
