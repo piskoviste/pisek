@@ -29,9 +29,12 @@ class OpendataV1ListInputs(GeneratorListInputs):
         super().__init__(env=env, generator=generator, **kwargs)
 
     def _run(self) -> list[TestcaseInfo]:
+        # Although for test in self._env.config.test_sections
+        # would be shorter, this doesn't actually access env variables
+        # and that leads to caching bug.
         return [
             TestcaseInfo.generated(f"{test:02}")
-            for test in self._env.config.test_sections
+            for test in range(self._env.config.tests_count)
             if test != 0
         ]
 
