@@ -201,6 +201,17 @@ def add_judge(session: Session, files: FileCacher, env: Env, dataset: Dataset):
     run_section = config.tests.out_judge
     judge_path = TaskPath(BUILD_DIR, run_section.exec.path).path
 
+    if path.isdir(judge_path):
+        run_path = path.join(judge_path, "run")
+
+        for file in listdir(judge_path):
+            file = path.join(judge_path, file)
+            assert path.realpath(file) == path.realpath(
+                run_path
+            ), f"{judge_path} contains {file}, which is not run. Multi-file judges are not supported."
+
+        judge_path = run_path
+
     if config.task.task_type == TaskType.batch:
         judge_name = "checker"
     elif config.task.task_type == TaskType.interactive:
