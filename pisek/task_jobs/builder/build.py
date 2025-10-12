@@ -144,17 +144,13 @@ class Build(TaskJob):
         self._check_valid_sources(sources)
 
         if self.build_section.strategy == BuildStrategyName.auto:
-            strategy = self._resolve_strategy(sources)
+            strategy_cls = self._resolve_strategy(sources)
         else:
-            strategy = ALL_STRATEGIES[self.build_section.strategy]
+            strategy_cls = ALL_STRATEGIES[self.build_section.strategy]
 
-        sources = self._strategy_sources(strategy, sources)
-        extras = self._strategy_extras(strategy, extras)
+        sources = self._strategy_sources(strategy_cls, sources)
+        extras = self._strategy_extras(strategy_cls, extras)
         self._check_valid_sources(sources)
-
-        if self._env.verbosity >= 1:
-            msg = f"Building '{self.build_section.program_name}' using build strategy '{strategy.name}'."
-            self._print(self._colored(msg, "magenta"))
 
         workdir = os.path.join(BUILD_DIR, f"{WORKING_DIR_BASE}_{uuid.uuid4()}")
         os.makedirs(workdir)
@@ -178,13 +174,18 @@ class Build(TaskJob):
         elif os.path.isfile(target.path):
             os.remove(target.path)
 
-        executable_name = strategy(
-            self.build_section, self._env, self._print, self._run_subprocess
-        ).build(
+        strategy = strategy_cls(self.build_section, self._env, self._run_subprocess)
+        executable_name = strategy.build(
             workdir,
             list(map(lambda p: p.name, sources)),
             list(map(lambda p: p.name, extras)),
         )
+
+        if self._env.verbosity >= 1 or strategy.stderr_output:
+            msg = f"Built '{self.build_section.program_name}' using build strategy '{strategy_cls.name}'."
+            self._print(self._colored(msg, "magenta"))
+            self._print(strategy.stderr_output, end="", stderr=True)
+
         executable = os.path.join(workdir, executable_name)
         # Intentionally avoiding caching sources
         if os.path.isdir(executable):

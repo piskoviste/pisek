@@ -47,10 +47,6 @@ class FakeChangedCWD:
         self._strategy.workdir = self.old
 
 
-class Print(Protocol):
-    def __call__(self, msg: str, end: str = "\n", stderr: bool = False) -> None: ...
-
-
 class RunPopen(Protocol):
     def __call__(
         self, args: list[str], stdout: int, stderr: int, text: bool, cwd: str | None
@@ -66,12 +62,11 @@ class BuildStrategy(ABC):
         self,
         build_section: "BuildSection",
         env: "Env",
-        _print: Print,
         _run_subprocess: RunPopen,
     ) -> None:
         self._build_section = build_section
         self._env = env
-        self._print = _print
+        self.stderr_output = ""
         self._run_popen = _run_subprocess
 
         self.workdir = "."
@@ -80,6 +75,9 @@ class BuildStrategy(ABC):
         if not inspect.isabstract(cls):
             ALL_STRATEGIES[cls.name] = cls
         return super().__init_subclass__()
+
+    def _print_stderr(self, msg) -> None:
+        self.stderr_output += msg + "\n"
 
     @classmethod
     @abstractmethod
@@ -203,9 +201,8 @@ class BuildStrategy(ABC):
         assert comp.stdout is not None
 
         stderr: str = comp.stderr.read()
-        if self._env.verbosity >= 1:
-            if stderr.strip():
-                self._print(stderr, stderr=True)
+        if stderr.strip():
+            self._print_stderr(stderr)
 
         if comp.returncode != 0:
             raise PipelineItemFailure(
@@ -454,18 +451,31 @@ class Cargo(BuildStrategy):
                     f"Cargo strategy: '{self._target_subdir}' already exists"
                 )
 
+            args = [
+                "--release",
+                "--workspace",
+                "--bins",
+                "--quiet",
+                "--color",
+                ("never" if self._env.no_colors else "always"),
+            ]
+
+            self._run_subprocess(
+                [
+                    "cargo",
+                    "check",
+                    *args,
+                ],
+                self._build_section.program_name,
+            )
+
             output = self._run_subprocess(
                 [
                     "cargo",
                     "build",
-                    "--release",
-                    "--workspace",
-                    "--bins",
+                    *args,
                     "--message-format",
                     "json",
-                    "--quiet",
-                    "--color",
-                    ("never" if self._env.no_colors else "always"),
                 ],
                 self._build_section.program_name,
             )
