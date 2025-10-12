@@ -444,18 +444,31 @@ class Cargo(BuildStrategy):
                     f"Cargo strategy: '{self._target_subdir}' already exists"
                 )
 
+            args = [
+                "--release",
+                "--workspace",
+                "--bins",
+                "--quiet",
+                "--color",
+                ("never" if self._env.no_colors else "always"),
+            ]
+
+            self._run_subprocess(
+                [
+                    "cargo",
+                    "check",
+                    *args,
+                ],
+                self._build_section.program_name,
+            )
+
             output = self._run_subprocess(
                 [
                     "cargo",
                     "build",
-                    "--release",
-                    "--workspace",
-                    "--bins",
+                    *args,
                     "--message-format",
                     "json",
-                    "--quiet",
-                    "--color",
-                    ("never" if self._env.no_colors else "always"),
                 ],
                 self._build_section.program_name,
             )
