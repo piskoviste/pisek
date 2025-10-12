@@ -312,7 +312,7 @@ class C(BuildBinary):
         return cls._all_end_with(sources, [".h", ".c"])
 
     def _build(self) -> str:
-        c_flags = ["-std=c17", "-O2", "-Wall", "-lm", "-Wshadow"]
+        c_flags = ["-std=c17", "-O2", "-Wall", "-lm", "-Wshadow", "-Wno-sign-compare"]
         c_flags.append(
             "-fdiagnostics-color=" + ("never" if self._env.no_colors else "always")
         )
@@ -336,7 +336,14 @@ class Cpp(BuildBinary):
         return cls._all_end_with(sources, [".h", ".hpp", ".cpp", ".cc"])
 
     def _build(self) -> str:
-        cpp_flags = ["-std=c++20", "-O2", "-Wall", "-lm", "-Wshadow"]
+        cpp_flags = [
+            "-std=c++20",
+            "-O2",
+            "-Wall",
+            "-lm",
+            "-Wshadow",
+            "-Wno-sign-compare",
+        ]
         cpp_flags.append(
             "-fdiagnostics-color=" + ("never" if self._env.no_colors else "always")
         )
