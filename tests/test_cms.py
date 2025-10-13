@@ -61,6 +61,16 @@ class TestDifferentlyScoringSolution(TestSumCMS):
         )
 
 
+class TestNoSolutions(TestSumCMS):
+    def modify_task(self):
+        def modification_fn(raw_config):
+            for section in raw_config.sections():
+                if section.startswith("solution_"):
+                    del raw_config[section]
+
+        modify_config(self.task_dir, modification_fn)
+
+
 class TestPartialJudge(TestSumCMS):
     def expecting_success(self):
         return False
