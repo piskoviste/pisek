@@ -90,7 +90,7 @@ class CompletenessCheck(TaskJobManager):
                 continue
 
             for out in outs:
-                all_same &= filecmp.cmp(outs[0].path, out.path)
+                all_same &= filecmp.cmp(outs[0].path, out.path, shallow=False)
 
             if all_same:
                 self._warn(f"All outputs of {test.name} are the same")
