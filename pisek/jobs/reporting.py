@@ -156,9 +156,9 @@ class CommandLineReporter(Reporter):
     def _print_tmp(self, msg, *args, **kwargs) -> None:
         """Prints a text to be rewritten latter."""
         lines = self._lines(msg)
+        self._clear_lines(lines)
         self._tmp_lines += lines
         self._dirty_lines -= lines
-        self._clear_lines(lines)
         print(str(msg), *args, **kwargs)
 
     def _print(self, msg, *args, **kwargs) -> None:
