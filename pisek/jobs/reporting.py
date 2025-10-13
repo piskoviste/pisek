@@ -92,6 +92,7 @@ class CommandLineReporter(Reporter):
             self._report_manager(job_manager)
 
     def _report_manager(self, job_manager: JobManager) -> None:
+        self._clear_lines(self._dirty_lines)
         report_about: list[PipelineItem] = job_manager.jobs + [job_manager]
 
         # Prints and warnings
@@ -128,7 +129,6 @@ class CommandLineReporter(Reporter):
                 self._print_tmp("- " + self._format_job(job, now))
 
             self._clear_lines(self._dirty_lines)
-            self._dirty_lines = 0
 
     def _format_job(self, job: Job, now: float) -> str:
         run_time: float = 0 if job.started is None else max(0, now - job.started)
@@ -146,15 +146,11 @@ class CommandLineReporter(Reporter):
         return g
 
     @_jumps
-    def _reset_tmp_lines(self, clear: bool = False, leave: int = 0) -> None:
-        clear_lines = max(0, self._tmp_lines - leave)
-        if clear:
-            print(f"{Cursor.UP()}{ansi.clear_line()}" * clear_lines, end="")
-            self._dirty_lines = 0
-        else:
-            print(Cursor.UP() * clear_lines, end="")
-            self._dirty_lines += clear_lines
-        self._tmp_lines -= clear_lines
+    def _reset_tmp_lines(self, leave: int = 0) -> None:
+        up = max(0, self._tmp_lines - leave)
+        print(Cursor.UP() * up, end="")
+        self._dirty_lines += up
+        self._tmp_lines -= up
 
     @_jumps
     def _print_tmp(self, msg, *args, **kwargs) -> None:
@@ -174,6 +170,8 @@ class CommandLineReporter(Reporter):
 
     @_jumps
     def _clear_lines(self, count: int) -> None:
+        if count >= self._dirty_lines:
+            self._dirty_lines = 0
         print(f"{ansi.clear_line()}\n" * count + Cursor.UP() * count, end="")
 
     def _lines(self, text: str) -> int:
