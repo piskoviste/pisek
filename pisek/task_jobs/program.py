@@ -122,11 +122,12 @@ class ProgramsJob(TaskJob):
             self._access_dir(executable)
             executable = executable.join("run")
 
-        if not self._is_file(executable):
+        if self._is_dir(executable):
             raise PipelineItemFailure(
-                f"Program {executable:p} does not exist, "
-                f"although it should have been compiled already."
+                f"Cannot execute '{executable:p}': Is a directory.."
             )
+        elif not self._exists(executable):
+            raise PipelineItemFailure(f"Cannot execute '{executable:p}': File missing.")
 
         if isinstance(stdin, TaskPath):
             self._access_file(stdin)
@@ -168,7 +169,7 @@ class ProgramsJob(TaskJob):
             time_limit = self._env.time_limit
 
         self._load_executable(
-            executable=TaskPath.executable_file(program.exec.path),
+            executable=program.executable,
             args=program.args + args,
             time_limit=program.time_limit if time_limit is None else time_limit,
             clock_limit=program.clock_limit(time_limit),

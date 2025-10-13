@@ -291,9 +291,10 @@ build=@auto
 # See [build] for more
 
 exec=@auto
-# Filename of the program to execute (without suffix)
+# Filename of the program to execute relative to the built directory
 # If a directory is chosen directory/run is executed instead
-# @auto expands to the value of the build key without '{program_role}:' (default)
+# Defaults to empty (which chooses the built file / directory itself)
+
 args=--slow
 # Additional arguments for the program. (Given before any other arguments.)
 # (defaults to empty)

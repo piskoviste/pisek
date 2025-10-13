@@ -634,6 +634,10 @@ class RunSection(BaseEnv):
     args: ListStr
     env: dict[str, str]
 
+    @property
+    def executable(self) -> TaskPath:
+        return TaskPath.executable_path(self.build.program_name, self.exec.path)
+
     def clock_limit(self, override_time_limit: Optional[float] = None) -> float:
         tl = override_time_limit if override_time_limit is not None else self.time_limit
         if tl == 0:
@@ -676,15 +680,6 @@ class RunSection(BaseEnv):
             "build": BuildSection.load_dict(args["build"], configs),
             "env": envs,
         }
-
-    @field_validator("exec", mode="before")
-    @classmethod
-    def convert_exec(cls, value: str, info: ValidationInfo) -> str:
-        if value == "@auto":
-            value = info.data.get("build").program_name  # type: ignore
-            return value
-        else:
-            return value
 
 
 class BuildSection(BaseEnv):

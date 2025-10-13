@@ -35,7 +35,7 @@ points_max=X
 tests=@auto
 
 [run]
-exec=@auto
+exec=
 time_limit=360
 clock_mul=2
 clock_min=1

@@ -105,11 +105,6 @@ class TaskPath:
         return TaskPath(BUILD_DIR, *path)
 
     @staticmethod
-    def executable_file(program: str) -> "TaskPath":
-        program = os.path.splitext(program)[0]
-        return TaskPath.executable_path(program)
-
-    @staticmethod
     def data_path(*path: str) -> "TaskPath":
         return TaskPath(TESTS_DIR, *path)
 
