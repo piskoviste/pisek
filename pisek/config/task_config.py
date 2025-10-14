@@ -91,6 +91,22 @@ def _to_values(config_values_dict: ConfigValuesDict) -> ValuesDict:
     return {key: convert(val) for key, val in config_values_dict.items()}
 
 
+def _validate_program_name(key: str, value: str) -> str:
+    error_key = key.lower().replace(" ", "_")
+    for banned_char in "[]":
+        if banned_char in value:
+            raise PydanticCustomError(
+                f"invalid_{error_key}",
+                f"{key.capitalize()} must not contain '{banned_char}'",
+            )
+    if value.startswith("_"):
+        raise PydanticCustomError(
+            f"invalid_{error_key}",
+            f"{key.capitalize()} must not start with '_'",
+        )
+    return value
+
+
 class TaskConfig(BaseEnv):
     """Configuration of task loaded from config file."""
 
@@ -538,19 +554,8 @@ class SolutionSection(BaseEnv):
 
     @field_validator("name", mode="after")
     @classmethod
-    def convert_checker(cls, value: str) -> str:
-        for banned_char in ".[]":
-            if banned_char in value:
-                raise PydanticCustomError(
-                    "invalid_solution_name",
-                    f"Solution name must not contain '{banned_char}'",
-                )
-        if value.startswith("_"):
-            raise PydanticCustomError(
-                "invalid_solution_name",
-                f"Solution name must not start with '_'",
-            )
-        return value
+    def validate_name(cls, value: str) -> str:
+        return _validate_program_name("solution name", value)
 
     @field_validator("tests", mode="after")
     def validate_tests(cls, value, info: ValidationInfo):
@@ -681,6 +686,11 @@ class RunSection(BaseEnv):
             "env": envs,
         }
 
+    @field_validator("name", mode="after")
+    @classmethod
+    def validate_name(cls, value: str) -> str:
+        return _validate_program_name("program name", value)
+
 
 class BuildSection(BaseEnv):
     program_names: ClassVar[dict[str, str]] = {}
@@ -749,6 +759,11 @@ class BuildSection(BaseEnv):
             "program_name": program,
             **args,
         }
+
+    @field_validator("program_name", mode="after")
+    @classmethod
+    def validate_program_name(cls, value: str) -> str:
+        return _validate_program_name("program name", value)
 
     @field_validator("sources", mode="before")
     @classmethod
