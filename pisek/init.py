@@ -124,7 +124,7 @@ def from_scratch(config_filename: str) -> int:
         ProgramRole.validator, OFFERED_VALIDATOR_TYPES, RECOMMENDED_VALIDATOR_TYPES
     )
     touch(val_name)
-    config["tests"]["validator"] = val_name
+    config["tests"]["validator"] = remove_suffix(val_name)
     config["tests"]["validator_type"] = val_type
 
     # --- out_check ---
