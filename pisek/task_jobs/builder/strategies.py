@@ -103,7 +103,7 @@ class BuildStrategy(ABC):
         self.inputs = os.listdir(directory)
         self.sources = sources
         self.extras = extras
-        self.target = os.path.basename(self._build_section.program_name)
+        self.target = "_" + os.path.basename(self._build_section.program_name)
         with FakeChangedCWD(self, directory):
             return self._build()
 
