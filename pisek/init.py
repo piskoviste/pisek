@@ -3,8 +3,9 @@ from functools import partial
 from importlib.resources import files
 import os
 import shutil
-from typing import Callable, Sequence
+from typing import Callable, NoReturn, Sequence
 
+from pisek.user_errors import InvalidArgument, InvalidOperation
 from pisek.utils.text import eprint
 from pisek.utils.colors import ColorSettings
 from pisek.utils.user_input import input_string, input_choice
@@ -55,14 +56,8 @@ def recommended() -> str:
     return " (" + ColorSettings.colored("recommended", "green") + ")"
 
 
-def invalid_config_name(config_filename: str) -> int:
-    eprint(
-        ColorSettings.colored(
-            f"Config filename '{config_filename}' already in use.",
-            "red",
-        )
-    )
-    return 2
+def invalid_config_name(config_filename: str) -> NoReturn:
+    raise InvalidArgument(f"Config filename '{config_filename}' already in use.")
 
 
 def input_program(
@@ -78,12 +73,11 @@ def input_program(
     return type_, filename
 
 
-def init_task(config_filename: str) -> int:
+def init_task(config_filename: str) -> None:
     if os.listdir():
-        eprint(ColorSettings.colored("Current directory is not empty", "red"))
-        return 1
+        raise InvalidOperation("Current directory is not empty")
 
-    example_tasks: list[tuple[Callable[[str], int], str]] = [
+    example_tasks: list[tuple[Callable[[str], None], str]] = [
         (
             partial(from_template, os.path.join(EXAMPLE_TASKS_DIR, task)),
             task + " example task",
@@ -93,10 +87,10 @@ def init_task(config_filename: str) -> int:
     create = input_choice(
         "Create a task", [(from_scratch, "From scratch")] + example_tasks
     )
-    return create(config_filename)
+    create(config_filename)
 
 
-def from_scratch(config_filename: str) -> int:
+def from_scratch(config_filename: str) -> None:
     config = ConfigParser(interpolation=None)
     config.add_section("task")
     config.add_section("tests")
@@ -169,17 +163,15 @@ def from_scratch(config_filename: str) -> int:
         with open(config_filename, "x") as f:
             config.write(f, space_around_delimiters=False)
     except FileExistsError:
-        return invalid_config_name(config_filename)
+        invalid_config_name(config_filename)
 
     print()
     print("For more information visit our docs: https://piskoviste.github.io/pisek/")
 
-    return 0
 
-
-def from_template(path: str, config_filename: str) -> int:
+def from_template(path: str, config_filename: str) -> None:
     if os.path.exists(os.path.join(path, config_filename)):
-        return invalid_config_name(config_filename)
+        invalid_config_name(config_filename)
 
     for item in os.listdir(path):
         s = os.path.join(path, item)
@@ -189,5 +181,3 @@ def from_template(path: str, config_filename: str) -> int:
             shutil.copy(s, item)
 
     shutil.move(DEFAULT_CONFIG_FILENAME, config_filename)
-
-    return 0

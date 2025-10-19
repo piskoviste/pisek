@@ -2,7 +2,6 @@ from colorama import Cursor
 from readchar import readkey, key
 from typing import Sequence, TypeVar
 
-from pisek.utils.text import stop
 from pisek.utils.colors import ColorSettings
 
 T = TypeVar("T")
@@ -30,10 +29,7 @@ def input_choice(message: str, choices: Sequence[tuple[T, str]]) -> T:
             else:
                 print(" " + full_text)
 
-        try:
-            k = readkey()
-        except KeyboardInterrupt:
-            stop()
+        k = readkey()
         if k in (key.SPACE, key.ENTER):
             return choices[selected][0]
         elif k in "123456789":

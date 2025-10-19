@@ -17,6 +17,7 @@ from cms.db.filecacher import FileCacher
 from sqlalchemy.orm import Session
 import json
 
+from pisek.user_errors import TestingFailed
 from pisek.cms.submission import get_submission
 from pisek.utils.colors import ColorSettings
 from pisek.env.env import Env
@@ -37,7 +38,7 @@ TIME_LIMIT_MESSAGES = [
 ]
 
 
-def create_testing_log(session: Session, env: Env, dataset: Dataset) -> bool:
+def create_testing_log(session: Session, env: Env, dataset: Dataset) -> None:
     config = env.config
     files = FileCacher()
 
@@ -97,10 +98,11 @@ def create_testing_log(session: Session, env: Env, dataset: Dataset) -> bool:
     with open(TESTING_LOG, "w") as file:
         json.dump(payload, file, indent=4)
 
-    return success
+    if not success:
+        raise TestingFailed()
 
 
-def check_results(session: Session, env: Env, dataset: Dataset) -> bool:
+def check_results(session: Session, env: Env, dataset: Dataset) -> None:
     config = env.config
     files = FileCacher()
 
@@ -182,7 +184,8 @@ def check_results(session: Session, env: Env, dataset: Dataset) -> bool:
 
             print(tab(message))
 
-    return success
+    if not success:
+        raise TestingFailed()
 
 
 def get_subtask_score_fractions(score_details: Any) -> Optional[list[float]]:

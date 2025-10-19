@@ -18,12 +18,13 @@ from math import ceil, inf
 import os
 from typing import Any, Optional
 
+from pisek.user_errors import MissingFile
 from pisek.utils.text import pad, tab, eprint
 from pisek.utils.colors import ColorSettings
 from pisek.utils.terminal import terminal_width
 from pisek.config.config_types import TestPoints
 from pisek.config.task_config import load_config, TaskConfig
-from pisek.config.select_solutions import expand_solutions, UnknownSolutions
+from pisek.config.select_solutions import expand_solutions
 from pisek.task_jobs.solution.solution_result import Verdict
 from pisek.task_jobs.solution.verdicts_eval import evaluate_verdicts
 
@@ -266,23 +267,17 @@ def visualize(
     pisek_dir: Optional[str],
     config_filename: str,
     **_,
-) -> int:
+) -> None:
     config = load_config(path, pisek_dir, config_filename)
-    if config is None:
-        return 2
 
     log_path = os.path.join(path, filename)
     try:
         with open(log_path) as log_file:
             testing_log = json.load(log_file)
     except FileNotFoundError:
-        eprint(
-            ColorSettings.colored(
-                f"File {log_path} not found. Test with --testing-log to create a log.",
-                "red",
-            )
+        raise MissingFile(
+            f"File {log_path} not found. Test with --testing-log to create a log."
         )
-        return 2
 
     if testing_log["source"] == "cms":
         limit_default = config.cms.time_limit
@@ -294,11 +289,7 @@ def visualize(
 
     segment_cnt = terminal_width // 8 if segments is None else segments
 
-    try:
-        expanded_solutions = expand_solutions(config, solutions)
-    except UnknownSolutions as err:
-        eprint(ColorSettings.colored(str(err), "red"))
-        return 2
+    expanded_solutions = expand_solutions(config, solutions)
 
     results: dict[str, SolutionResults] = {}
     max_test_length = 0
@@ -369,5 +360,3 @@ def visualize(
     else:
         limit_msg = "No valid time limit found."
     print(ColorSettings.colored(limit_msg, "cyan"))
-
-    return 0

@@ -19,13 +19,22 @@ import argcomplete
 import argparse
 import logging
 import os
-import signal
 import sys
 from typing import Optional
 
+from pisek.user_errors import (
+    UserError,
+    TaskConfigError,
+    TestingFailed,
+    MissingFile,
+    InvalidArgument,
+    InvalidOperation,
+)
+
 from pisek.utils.util import clean_task_dir, log_level_mapper
-from pisek.utils.text import eprint, stop
+from pisek.utils.text import eprint
 from pisek.utils.colors import ColorSettings
+
 from pisek.visualize import visualize
 from pisek.init import init_task
 from pisek.config.config_hierarchy import DEFAULT_CONFIG_FILENAME
@@ -33,41 +42,42 @@ from pisek.config.config_tools import update_and_replace_config
 from pisek.version import print_version
 
 from pisek.jobs.task_pipeline import TaskPipeline
-from pisek.utils.pipeline_tools import run_pipeline, PATH, locked_folder, is_task_dir
+from pisek.utils.pipeline_tools import (
+    run_pipeline,
+    PATH,
+    locked_folder,
+    assert_task_dir,
+)
 from pisek.utils.paths import INTERNALS_DIR
 
 LOG_FILE = os.path.join(INTERNALS_DIR, "log")
 
 
-def sigint_handler(sig, frame):
-    stop()
-
-
 @locked_folder
-def test_task(args, **kwargs):
+def test_task(args, **kwargs) -> None:
     return test_task_path(PATH, **vars(args), **kwargs)
 
 
-def test_task_path(path, solutions: Optional[list[str]] = None, **env_args):
+def test_task_path(path, solutions: Optional[list[str]] = None, **env_args) -> None:
     return run_pipeline(path, TaskPipeline, solutions=solutions, **env_args)
 
 
-def test_solutions(args):
+def test_solutions(args) -> None:
     return test_task(args)
 
 
-def test_generator(args):
+def test_generator(args) -> None:
     return test_task(args, solutions=[])
 
 
 @locked_folder
-def clean_directory(args) -> bool:
+def clean_directory() -> None:
     task_dir = PATH
     eprint(f"Cleaning directory: {os.path.abspath(task_dir)}")
-    return clean_task_dir(task_dir, args.pisek_dir)
+    return clean_task_dir(task_dir)
 
 
-def main(argv) -> int:
+def _main(argv: list[str]) -> None:
     parser = argparse.ArgumentParser(
         description=(
             "Tool for developing tasks for programming competitions. "
@@ -335,20 +345,17 @@ def main(argv) -> int:
         args.pisek_dir = os.path.join(os.getcwd(), os.environ["PISEK_DIRECTORY"])
     ColorSettings.set_state(not args.plain and not args.no_colors)
 
-    result = None
-
     # Taskless subcommands
     if args.subcommand == "version":
         return print_version()
     elif args.subcommand == "init":
         return init_task(args.config_filename)
 
-    if not is_task_dir(PATH, args.pisek_dir, args.config_filename):
-        # !!! Ensure this is always run before clean_directory !!!
-        return 2
+    # !!! Ensure this is always run before clean_directory !!!
+    assert_task_dir(PATH, args.pisek_dir, args.config_filename)
 
     if args.clean:
-        clean_directory(args)
+        clean_directory()
 
     os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
     open(LOG_FILE, "w").close()
@@ -361,19 +368,17 @@ def main(argv) -> int:
 
     if args.subcommand == "test":
         if args.target == "generator":
-            result = test_generator(args)
+            return test_generator(args)
         elif args.target == "solutions":
-            result = test_solutions(args)
+            return test_solutions(args)
         elif args.target is None or args.target == "all":
-            result = test_task(args, solutions=None)
+            return test_task(args, solutions=None)
         else:
             assert False, "Unknown command"
 
     elif args.subcommand == "config":
         if args.config_subcommand == "update":
-            result = not update_and_replace_config(
-                PATH, args.pisek_dir, args.config_filename
-            )
+            return update_and_replace_config(PATH, args.pisek_dir, args.config_filename)
         else:
             assert False, "Unknown command"
 
@@ -395,35 +400,48 @@ def main(argv) -> int:
                 root_logger.removeHandler(handler)
 
         if args.cms_subcommand == "create":
-            result = cms.create(args)
+            return cms.create(args)
         elif args.cms_subcommand == "update":
-            result = cms.update(args)
+            return cms.update(args)
         elif args.cms_subcommand == "add":
-            result = cms.add(args)
+            return cms.add(args)
         elif args.cms_subcommand == "submit":
-            result = cms.submit(args)
+            return cms.submit(args)
         elif args.cms_subcommand == "testing-log":
-            result = cms.testing_log(args)
+            return cms.testing_log(args)
         elif args.cms_subcommand == "check":
-            result = cms.check(args)
+            return cms.check(args)
         else:
             assert False, "Unknown command"
 
     elif args.subcommand == "clean":
-        result = not clean_directory(args)
+        return clean_directory()
     elif args.subcommand == "visualize":
-        result = visualize(PATH, **vars(args))
+        return visualize(PATH, **vars(args))
     else:
         assert False, "Unknown command"
 
-    return result
+
+def main(argv: list[str]) -> int:
+    try:
+        _main(argv)
+    except TestingFailed:
+        return 1
+    except (TaskConfigError, MissingFile, InvalidArgument, InvalidOperation) as e:
+        print(ColorSettings.colored(str(e), "red"))
+        return 2
+    except UserError:
+        raise NotImplementedError()
+    except KeyboardInterrupt:
+        eprint("\rStopping...")
+        return 130
+
+    return 0
 
 
-def main_wrapped():
-    signal.signal(signal.SIGINT, sigint_handler)
-    result = main(sys.argv[1:])
-    exit(result)
+def main_wrapped() -> int:
+    return main(sys.argv[1:])
 
 
 if __name__ == "__main__":
-    main_wrapped()
+    exit(main_wrapped())

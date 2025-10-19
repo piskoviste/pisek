@@ -13,12 +13,12 @@
 import os
 from typing import Optional
 
+from pisek.user_errors import InvalidArgument
 from pisek.utils.text import tab
-from pisek.config.config_errors import TaskConfigError
 from pisek.config.task_config import TaskConfig, SolutionSection
 
 
-class UnknownSolutions(TaskConfigError):
+class UnknownSolutions(InvalidArgument):
     def __init__(
         self, unknown: list[str], solutions: dict[str, "SolutionSection"]
     ) -> None:
