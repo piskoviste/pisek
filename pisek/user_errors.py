@@ -1,6 +1,6 @@
 # pisek  - Tool for developing tasks for programming competitions.
 #
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2025        Daniel Skýpala <daniel@honza.info>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -11,10 +11,30 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-class TaskConfigError(Exception):
+class UserError(Exception):
+    pass
+
+
+class TaskConfigError(UserError):
     pass
 
 
 class TaskConfigParsingError(TaskConfigError):
     def __init__(self, path: str, msg: str) -> None:
         super().__init__(f"Unable to parse '{path}': {msg}")
+
+
+class MissingFile(UserError):
+    pass
+
+
+class TestingFailed(UserError):
+    pass
+
+
+class InvalidArgument(UserError):
+    pass
+
+
+class InvalidOperation(UserError):
+    pass

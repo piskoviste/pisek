@@ -5,8 +5,7 @@ import re
 from typing import TYPE_CHECKING, Callable, Optional
 
 from pisek.utils.text import tab
-
-from .config_errors import TaskConfigError
+from pisek.user_errors import TaskConfigError
 
 if TYPE_CHECKING:
     from .config_hierarchy import ConfigHierarchy

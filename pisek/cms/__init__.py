@@ -83,7 +83,7 @@ def check_config(env: Env):
 
 
 @with_env
-def create(env: Env, args: Namespace) -> int:
+def create(env: Env, args: Namespace) -> None:
     check_config(env)
     testcases = generate_testcases(env)
     session = Session()
@@ -104,11 +104,10 @@ def create(env: Env, args: Namespace) -> int:
     print(
         f'Created task {task.name} (id {task.id}) with dataset "{dataset.description}" (id {dataset.id})'
     )
-    return 0
 
 
 @with_env
-def update(env: Env, args: Namespace) -> int:
+def update(env: Env, args: Namespace) -> None:
     check_config(env)
     session = Session()
 
@@ -118,11 +117,10 @@ def update(env: Env, args: Namespace) -> int:
     session.commit()
 
     print(f"Updated task {task.name} (id {task.id})")
-    return 0
 
 
 @with_env
-def add(env: Env, args: Namespace) -> int:
+def add(env: Env, args: Namespace) -> None:
     check_config(env)
     testcases = generate_testcases(env)
     session = Session()
@@ -144,11 +142,10 @@ def add(env: Env, args: Namespace) -> int:
         ) from e
 
     print(f'Added dataset "{dataset.description}" (id {dataset.id})')
-    return 0
 
 
 @with_env
-def submit(env: Env, args: Namespace) -> int:
+def submit(env: Env, args: Namespace) -> None:
     check_config(env)
     session = Session()
 
@@ -162,7 +159,6 @@ def submit(env: Env, args: Namespace) -> int:
 
     for solution, submission in submissions:
         print(f"Submitted {solution} with id {submission.id}")
-    return 0
 
 
 def get_dataset_from_args(session: SessionType, task: Task, args: Namespace) -> Dataset:
@@ -175,24 +171,20 @@ def get_dataset_from_args(session: SessionType, task: Task, args: Namespace) -> 
 
 
 @with_env
-def testing_log(env: Env, args: Namespace) -> int:
+def testing_log(env: Env, args: Namespace) -> None:
     check_config(env)
     session = Session()
 
     task = get_task(session, env.config)
     dataset = get_dataset_from_args(session, task, args)
-    success = create_testing_log(session, env, dataset)
-
-    return 0 if success else 1
+    create_testing_log(session, env, dataset)
 
 
 @with_env
-def check(env: Env, args: Namespace) -> int:
+def check(env: Env, args: Namespace) -> None:
     check_config(env)
     session = Session()
 
     task = get_task(session, env.config)
     dataset = get_dataset_from_args(session, task, args)
-    success = check_results(session, env, dataset)
-
-    return 0 if success else 1
+    check_results(session, env, dataset)

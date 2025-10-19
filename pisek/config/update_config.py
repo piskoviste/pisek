@@ -17,9 +17,9 @@ from itertools import product
 import os
 import re
 
+from pisek.user_errors import TaskConfigError
 from pisek.utils.text import eprint
 from pisek.utils.colors import ColorSettings
-from pisek.config.config_errors import TaskConfigError
 from pisek.config.config_types import ProgramRole
 
 

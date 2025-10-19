@@ -35,18 +35,13 @@ class ChangedCWD:
         os.chdir(self._orig_path)
 
 
-def _clean_subdirs(task_dir: str, subdirs: list[str]) -> None:
-    for subdir in subdirs:
+def clean_task_dir(task_dir: str) -> None:
+    for subdir in [BUILD_DIR, TESTS_DIR, INTERNALS_DIR]:
         full = os.path.join(task_dir, subdir)
         try:
             shutil.rmtree(full)
         except FileNotFoundError:
             pass
-
-
-def clean_task_dir(task_dir: str, pisek_directory: Optional[str]) -> bool:
-    _clean_subdirs(task_dir, [BUILD_DIR, TESTS_DIR, INTERNALS_DIR])
-    return True
 
 
 def clean_non_relevant_files(accessed_files: set[str]) -> None:

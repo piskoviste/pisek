@@ -5,10 +5,11 @@ import tempfile
 import unittest
 from unittest import mock
 
+from pisek.user_errors import UserError
 from pisek.config import config_hierarchy
 from pisek.__main__ import test_task_path
 from pisek.utils.util import clean_task_dir
-from pisek.utils.pipeline_tools import is_task_dir
+from pisek.utils.pipeline_tools import assert_task_dir
 
 
 class TestFixture(unittest.TestCase):
@@ -41,13 +42,12 @@ class TestFixture(unittest.TestCase):
             os.path.join(self.fixtures_dir, "pisek"),
         )
 
-        if not is_task_dir(
+        assert_task_dir(
             self.task_dir,
             os.environ["PISEK_DIRECTORY"],
             config_hierarchy.DEFAULT_CONFIG_FILENAME,
-        ):
-            exit(1)
-        clean_task_dir(self.task_dir, os.environ["PISEK_DIRECTORY"])
+        )
+        clean_task_dir(self.task_dir)
 
         self.cwd_orig = os.getcwd()
         os.chdir(self.task_dir)
@@ -121,20 +121,24 @@ class TestFixtureVariant(TestFixture):
         # and we want to consider it a time limit
         @mock.patch("sys.stdout", new_callable=io.StringIO)
         @mock.patch("sys.stderr", new_callable=io.StringIO)
-        def run(*args):
-            return test_task_path(
-                self.task_dir,
-                inputs=1,
-                strict=False,
-                full=False,
-                time_limit=0.2,
-                plain=False,
-                pisek_dir=os.environ["PISEK_DIRECTORY"],
-            )
+        def run(*args) -> bool:
+            try:
+                test_task_path(
+                    self.task_dir,
+                    inputs=1,
+                    strict=False,
+                    full=False,
+                    time_limit=0.2,
+                    plain=False,
+                    pisek_dir=os.environ["PISEK_DIRECTORY"],
+                )
+                return True
+            except UserError:
+                return False
 
         runner = unittest.TextTestRunner(failfast=True)
 
-        self.assertEqual(run(), not self.expecting_success())
+        self.assertEqual(run(), self.expecting_success())
 
         self.check_end_state()
         self.check_files()

@@ -27,8 +27,8 @@ import re
 from typing import Optional, Iterable
 
 from pisek.utils.text import tab
+from pisek.user_errors import TaskConfigError, TaskConfigParsingError
 
-from .config_errors import TaskConfigError, TaskConfigParsingError
 from .update_config import update_config
 from .config_description import ConfigKeysHelper
 

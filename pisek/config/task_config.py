@@ -33,8 +33,7 @@ from typing import Any, Annotated, ClassVar, Mapping, Optional, TypeVar, Union
 
 from pisek.utils.paths import TaskPath
 from pisek.utils.text import tab
-from pisek.utils.text import eprint, warn
-from pisek.utils.colors import ColorSettings
+from pisek.utils.text import warn
 from pisek.env.base_env import BaseEnv
 from pisek.config.config_hierarchy import ConfigValue, TaskConfigError, ConfigHierarchy
 from pisek.config.config_types import (
@@ -917,7 +916,7 @@ def load_config(
     config_filename: str,
     strict: bool = False,
     suppress_warnings: bool = False,
-) -> Optional[TaskConfig]:
+) -> TaskConfig:
     """Loads config from given path."""
     try:
         config_hierarchy = ConfigHierarchy(
@@ -929,14 +928,7 @@ def load_config(
         if config_hierarchy.check_todos() and not suppress_warnings:
             warn("Unsolved TODOs in config.", TaskConfigError, strict)
         return config
-    except TaskConfigError as err:
-        eprint(ColorSettings.colored(str(err), "red"))
     except ValidationError as err:
-        eprint(
-            ColorSettings.colored(
-                "Invalid config:\n\n"
-                + "\n\n".join(_convert_errors(err, config_values)),
-                "red",
-            )
+        raise TaskConfigError(
+            "Invalid config:\n\n" + "\n\n".join(_convert_errors(err, config_values))
         )
-    return None

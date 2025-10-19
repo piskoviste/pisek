@@ -17,10 +17,12 @@
 
 from argparse import Namespace
 from datetime import datetime
+from functools import wraps
 import os
 import sys
-from typing import Callable, Optional
+from typing import Callable, Optional, ParamSpec, TypeVar
 
+from pisek.user_errors import TestingFailed
 from pisek.jobs.job_pipeline import JobPipeline
 from pisek.utils.util import clean_non_relevant_files, ChangedCWD
 from pisek.utils.text import eprint
@@ -31,16 +33,20 @@ from pisek.env.env import Env
 from pisek.config.task_config import load_config
 from pisek.jobs.cache import Cache
 
+P = ParamSpec("P")
+R = TypeVar("R")
+
+
 PATH = "."
 
 LOCK_FILE = os.path.join(INTERNALS_DIR, "lock")
 
 
-def run_pipeline(path: str, pipeline_class: Callable[[Env], JobPipeline], **env_args):
+def run_pipeline(
+    path: str, pipeline_class: Callable[[Env], JobPipeline], **env_args
+) -> None:
     with ChangedCWD(path):
         env = Env.load(**env_args)
-        if env is None:
-            return True
         cache = Cache.load()
 
         all_accessed_files: set[str] = set()
@@ -57,13 +63,12 @@ def run_pipeline(path: str, pipeline_class: Callable[[Env], JobPipeline], **env_
                 print()
 
             pipeline = pipeline_class(env.fork())
-            result = pipeline.run_jobs(cache, env)
-            if result:
-                return result
+            failed = pipeline.run_jobs(cache, env)
+            if failed:
+                raise TestingFailed()
             all_accessed_files |= pipeline.all_accessed_files
 
         clean_non_relevant_files(all_accessed_files)
-        return False
 
 
 class Lock:
@@ -89,8 +94,9 @@ class Lock:
             os.unlink(self._lock_file)
 
 
-def locked_folder(f):
-    def g(*args, **kwargs):
+def locked_folder(f: Callable[P, R]) -> Callable[P, R]:
+    @wraps(f)
+    def g(*args, **kwargs) -> R:
         with Lock(PATH):
             res = f(*args, **kwargs)
         return res
@@ -98,24 +104,18 @@ def locked_folder(f):
     return g
 
 
-def with_env(fun: Callable[[Env, Namespace], int]) -> Callable[[Namespace], int]:
-    def wrap(args) -> int:
+def with_env(fun: Callable[[Env, Namespace], None]) -> Callable[[Namespace], None]:
+    @wraps(fun)
+    def wrap(args: Namespace) -> None:
         env = Env.load(**vars(args))
-
-        if env is None:
-            return 1
-
         return fun(env, args)
 
     return wrap
 
 
-def is_task_dir(
+def assert_task_dir(
     task_dir: str, pisek_directory: Optional[str], config_filename: str
-) -> bool:
+) -> None:
     # XXX: Safeguard, raises an exception if task_dir isn't really a task
     # directory
-    config = load_config(
-        task_dir, pisek_directory, config_filename, suppress_warnings=True
-    )
-    return config is not None
+    load_config(task_dir, pisek_directory, config_filename, suppress_warnings=True)
