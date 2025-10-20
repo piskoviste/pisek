@@ -24,6 +24,7 @@ from pydantic import (
     computed_field,
     field_validator,
     BeforeValidator,
+    TypeAdapter,
     ValidationError,
     ValidationInfo,
     model_validator,
@@ -540,7 +541,7 @@ class SolutionSection(BaseEnv):
 
         sol_type = (
             ProgramRole.primary_solution
-            if args["primary"].value in ()
+            if TypeAdapter(bool).validate_strings(args["primary"].value)
             else ProgramRole.secondary_solution
         )
 
