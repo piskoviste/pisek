@@ -340,13 +340,15 @@ class TestsSection(BaseEnv):
     def load_dict(task_type: str, configs: ConfigHierarchy) -> ConfigValuesDict:
         GLOBAL_KEYS = [
             "in_gen",
-            "gen_type",
             "validator",
-            "validator_type",
             "out_check",
             "in_format",
             "out_format",
             "static_subdir",
+        ]
+        PROGRAM_TYPES = [
+            ("gen_type", "in_gen"),
+            ("validator_type", "validator"),
         ]
         OUT_CHECK_SPECIFIC_KEYS = [
             ((None, "judge"), "out_judge", ""),
@@ -363,6 +365,12 @@ class TestsSection(BaseEnv):
         args: dict[str, ConfigValue] = {
             key: configs.get("tests", key) for key in GLOBAL_KEYS
         }
+
+        for program_type, program in PROGRAM_TYPES:
+            if args[program].value:
+                args[program_type] = configs.get("tests", program_type)
+            else:
+                args[program_type] = ConfigValue.make_internal("", "tests", program_type)
 
         # Load judge specific keys
         for (task_type_cond, out_check), key, default in OUT_CHECK_SPECIFIC_KEYS:
