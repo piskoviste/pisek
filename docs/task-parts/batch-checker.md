@@ -102,6 +102,15 @@ The following keys are allowed:
 
 Values are again limited to 255 bytes.
 
+??? example "Example `opendata-v2` judge"
+
+	For a [task](https://github.com/piskoviste/pisek/blob/master/examples/opendata) of printing *N* positive integers that sum up to *K*,
+	the judge may look like this:
+    ```py
+    --8<-- "examples/opendata/judge.py"
+    ```
+
+
 ### Opendata-v1 judge
 
 The opendata-v1 judge is the same as opendata-v2, with the exception of using different
