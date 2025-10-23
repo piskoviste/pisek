@@ -370,7 +370,9 @@ class TestsSection(BaseEnv):
             if args[program].value:
                 args[program_type] = configs.get("tests", program_type)
             else:
-                args[program_type] = ConfigValue.make_internal("", "tests", program_type)
+                args[program_type] = ConfigValue.make_internal(
+                    "", "tests", program_type
+                )
 
         # Load judge specific keys
         for (task_type_cond, out_check), key, default in OUT_CHECK_SPECIFIC_KEYS:
