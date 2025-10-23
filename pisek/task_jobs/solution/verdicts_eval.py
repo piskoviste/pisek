@@ -40,5 +40,7 @@ def evaluate_verdicts(
                 break
         elif mode == any:
             definitive &= ok
+            if not ok and len(verdicts) == 1:
+                breaker = 0
 
     return result, definitive, breaker
