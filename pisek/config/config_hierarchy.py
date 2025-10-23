@@ -47,7 +47,7 @@ def new_config_parser() -> ConfigParser:
     return config
 
 
-@dataclass
+@dataclass(frozen=True)
 class ConfigValue:
     value: str
     config: str
@@ -76,6 +76,11 @@ class ConfigValue:
             ConfigValue(part, self.config, self.section, self.key, self.internal)
             for part in self.value.split(sep=sep)
         ]
+
+    def change_value(self, new_value: str) -> "ConfigValue":
+        return ConfigValue(
+            new_value, self.config, self.section, self.key, self.internal
+        )
 
 
 class ConfigHierarchy:

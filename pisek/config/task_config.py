@@ -545,7 +545,7 @@ class SolutionSection(BaseEnv):
         }
 
         if args["run"].value == "@auto":
-            args["run"].value = name.value
+            args["run"] = args["run"].change_value(name.value)
 
         sol_type = (
             ProgramRole.primary_solution
@@ -674,7 +674,7 @@ class RunSection(BaseEnv):
             if key not in ("name", "program_role", "env")
         }
         if args["build"].value == "@auto":
-            args["build"].value = (
+            args["build"] = args["build"].change_value(
                 f"{program_role.build_name}:{os.path.join(args['subdir'].value, name.value)}"
             )
 
@@ -835,9 +835,13 @@ class CMSSection(BaseEnv):
             return " ".join(sorted(all_items))
 
         if args["stubs"].value == "@auto":
-            args["stubs"].value = get_strategy_union("extra_sources")
+            args["stubs"] = args["stubs"].change_value(
+                get_strategy_union("extra_sources")
+            )
         if args["headers"].value == "@auto":
-            args["headers"].value = get_strategy_union("extra_nonsources")
+            args["headers"] = args["headers"].change_value(
+                get_strategy_union("extra_nonsources")
+            )
 
         return {"_section": configs.get("cms", None), **args}
 
