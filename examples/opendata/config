@@ -1,0 +1,58 @@
+# Pisek example task
+# See https://github.com/piskoviste/pisek/blob/master/docs/config-v3-documentation for more information
+
+[task]
+version=v3
+task_type=batch
+
+[tests]
+# Generator source file
+in_gen=gen
+gen_type=opendata-v1
+
+validator=validate
+validator_type=simple-42
+
+out_check=judge
+# Judge source file
+out_judge=judge
+judge_type=opendata-v2
+judge_needs_in=1
+judge_needs_out=0
+
+
+[test01]
+points=20
+
+[test02]
+points=30
+
+[test03]
+points=50
+
+[solution_solve_last_big]
+primary=yes
+
+[solution_solve_small_k]
+tests=111T
+
+[solution_solve_all_ones]
+tests=X1WW
+
+[run_solution:solve_all_ones]
+# We need to increase process limit for Java
+process_limit=0
+
+[solution_solve_spread]
+# Opendata judges don't do partial success for unscored tests
+tests=X1PP
+
+[run_solution]
+# The timelimit for solutions is usually large
+# as the contestant needs time to submit the output
+time_limit=60
+
+[run_primary_solution]
+# The primary solution is run after contestant
+# submits the output, so we want it to be fast.
+time_limit=1
