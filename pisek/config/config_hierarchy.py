@@ -32,7 +32,8 @@ from pisek.user_errors import TaskConfigError, TaskConfigParsingError
 from .update_config import update_config
 from .config_description import ConfigKeysHelper
 
-GLOBAL_DEFAULTS = str(files("pisek").joinpath("config/global-defaults"))
+GLOBAL_DEFAULTS = "global-defaults"
+GLOBAL_DEFAULTS_FILE = str(files("pisek").joinpath("config", GLOBAL_DEFAULTS))
 V2_DEFAULTS = {
     task_type: str(files("pisek").joinpath(f"config/{task_type}-defaults"))
     for task_type in ["kasiopea", "cms"]
@@ -99,8 +100,11 @@ class ConfigHierarchy:
         self._config_paths: list[str] = []
         self._configs: list[ConfigParser] = []
 
+        # We want set that stores the order of insertions
+        self.loaded_values: dict[ConfigValue, None] = {}
+
         self._load_config(os.path.join(task_path, config_filename), info)
-        self._load_config(GLOBAL_DEFAULTS, False)
+        self._load_config(GLOBAL_DEFAULTS_FILE, False)
 
     def _load_config(self, path: str, info: bool = True) -> None:
         self._config_paths.append(path)
@@ -177,7 +181,9 @@ class ConfigHierarchy:
                     unset = True
                     break
                 elif value is not None:
-                    return ConfigValue(value, config_path, section, key)
+                    result = ConfigValue(value, config_path, section, key)
+                    self.loaded_values[result] = None
+                    return result
             if unset:
                 break
 
@@ -208,7 +214,9 @@ class ConfigHierarchy:
                     if re.fullmatch(regex_key, key) and key not in found:
                         found[key] = ConfigValue(value, config_path, section, key)
 
-        return {key: val for key, val in found.items() if val != "!unset"}
+        found = {key: val for key, val in found.items() if val != "!unset"}
+        self.loaded_values |= {val: None for val in found.values()}
+        return found
 
     def sections(self) -> list[ConfigValue]:
         sections = {
