@@ -38,7 +38,7 @@ from pisek.utils.colors import ColorSettings
 from pisek.visualize import visualize
 from pisek.init import init_task
 from pisek.config.config_hierarchy import DEFAULT_CONFIG_FILENAME
-from pisek.config.config_tools import update_and_replace_config
+from pisek.config.config_tools import export_config, update_and_replace_config
 from pisek.version import print_version
 
 from pisek.jobs.task_pipeline import TaskPipeline
@@ -243,6 +243,12 @@ def _main(argv: list[str]) -> None:
     config_subparsers.add_parser(
         "update", help="update config to newest version (replaces the config)"
     )
+    parser_export = config_subparsers.add_parser(
+        "export", help="creates an organization independent config"
+    )
+    parser_export.add_argument(
+        "filename", help="name of the exported configuration file"
+    )
 
     # ------------------------------- pisek visualize -------------------------------
 
@@ -379,6 +385,10 @@ def _main(argv: list[str]) -> None:
     elif args.subcommand == "config":
         if args.config_subcommand == "update":
             return update_and_replace_config(PATH, args.pisek_dir, args.config_filename)
+        elif args.config_subcommand == "export":
+            return export_config(
+                PATH, args.pisek_dir, args.config_filename, args.filename
+            )
         else:
             assert False, "Unknown command"
 
