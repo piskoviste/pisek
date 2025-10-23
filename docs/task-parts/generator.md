@@ -97,3 +97,11 @@ The generator should generate the input for this test to its stdout. The generat
 and respect the given seed.
 
 (Please note that the generator can generate only one input for each test.)
+
+??? example "Example `opendata-v1` generator"
+
+	For a [task](https://github.com/piskoviste/pisek/blob/master/examples/opendata) of printing *N* positive integers that sum up to *K*,
+	the generator may look like this:
+    ```py
+    --8<-- "examples/opendata/gen.py"
+    ```
