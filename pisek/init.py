@@ -169,7 +169,9 @@ def from_scratch(config_filename: str) -> None:
 
 
 def from_template(path: str, config_filename: str) -> None:
-    if os.path.exists(os.path.join(path, config_filename)):
+    if config_filename != DEFAULT_CONFIG_FILENAME and os.path.exists(
+        os.path.join(path, config_filename)
+    ):
         invalid_config_name(config_filename)
 
     for item in os.listdir(path):
