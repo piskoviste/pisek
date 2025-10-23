@@ -340,13 +340,15 @@ class TestsSection(BaseEnv):
     def load_dict(task_type: str, configs: ConfigHierarchy) -> ConfigValuesDict:
         GLOBAL_KEYS = [
             "in_gen",
-            "gen_type",
             "validator",
-            "validator_type",
             "out_check",
             "in_format",
             "out_format",
             "static_subdir",
+        ]
+        PROGRAM_TYPES = [
+            ("gen_type", "in_gen"),
+            ("validator_type", "validator"),
         ]
         OUT_CHECK_SPECIFIC_KEYS = [
             ((None, "judge"), "out_judge", ""),
@@ -363,6 +365,14 @@ class TestsSection(BaseEnv):
         args: dict[str, ConfigValue] = {
             key: configs.get("tests", key) for key in GLOBAL_KEYS
         }
+
+        for program_type, program in PROGRAM_TYPES:
+            if args[program].value:
+                args[program_type] = configs.get("tests", program_type)
+            else:
+                args[program_type] = ConfigValue.make_internal(
+                    "", "tests", program_type
+                )
 
         # Load judge specific keys
         for (task_type_cond, out_check), key, default in OUT_CHECK_SPECIFIC_KEYS:
@@ -537,7 +547,7 @@ class SolutionSection(BaseEnv):
         }
 
         if args["run"].value == "@auto":
-            args["run"].value = name.value
+            args["run"] = args["run"].change_value(name.value)
 
         sol_type = (
             ProgramRole.primary_solution
@@ -666,7 +676,7 @@ class RunSection(BaseEnv):
             if key not in ("name", "program_role", "env")
         }
         if args["build"].value == "@auto":
-            args["build"].value = (
+            args["build"] = args["build"].change_value(
                 f"{program_role.build_name}:{os.path.join(args['subdir'].value, name.value)}"
             )
 
@@ -827,9 +837,13 @@ class CMSSection(BaseEnv):
             return " ".join(sorted(all_items))
 
         if args["stubs"].value == "@auto":
-            args["stubs"].value = get_strategy_union("extra_sources")
+            args["stubs"] = args["stubs"].change_value(
+                get_strategy_union("extra_sources")
+            )
         if args["headers"].value == "@auto":
-            args["headers"].value = get_strategy_union("extra_nonsources")
+            args["headers"] = args["headers"].change_value(
+                get_strategy_union("extra_nonsources")
+            )
 
         return {"_section": configs.get("cms", None), **args}
 
