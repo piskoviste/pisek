@@ -17,28 +17,26 @@ out_check=judge
 # judge source file
 out_judge=judge
 judge_needs_in=1
-judge_needs_out=1
+judge_needs_out=0
 judge_type=cms-batch
 
-out_format=strict-text
+# CMS doesn't support normalization, so output can be anything
+out_format=binary
 
 [checks]
 solution_for_each_test=on
 all_inputs_in_last_test=on
 
 [test01]
-name=Subtask A
 points=20
 in_globs=*equal*.in
 
 [test02]
-name=Subtask B
 points=30
 in_globs=*small*.in
 predecessors=1
 
 [test03]
-name=Subtask C
 points=50
 in_globs=*.in
 predecessors=2
