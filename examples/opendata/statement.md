@@ -1,0 +1,1 @@
+../cms-batch/statement.md
