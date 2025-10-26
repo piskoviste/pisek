@@ -14,9 +14,9 @@ for better debugging and easy conversion between open data and closed data tasks
 ## Terminology
 There are two requirements for generators:
 
-- **Generators must be deterministic.** For the same arguments, it should always generate the same input(s).
-- If a generator takes a seed as an argument, the generator should **respect the seed**. For different seeds,
-  it should generate different inputs. This can be disabled in the `[checks]` section, but be careful.
+- *Generators must be deterministic.* — For the same arguments, they should always generate the same input(s).
+- *Generators must respect the seed* — If a generator takes a seed as an argument, the generator should use this seed.
+For different seeds, it should generate different inputs. This can be disabled in the `[checks]` section, but be careful.
 
 ## Pisek-v1
 ### Listing inputs
