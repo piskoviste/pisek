@@ -13,7 +13,7 @@ There are several task parts the author needs to write:
 The task statement is there for contestant to read.
 Pisek doesn't handle task statements, so you are free to write them however you want.
 
-### Tests
+### [Tests](./task-parts/tests.md)
 
 Pisek however does need to know about tests (groups of *testcases*). Those usually are
 some additional restrictions on the task statements to allow weaker solutions to get some points.
