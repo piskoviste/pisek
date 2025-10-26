@@ -57,6 +57,7 @@ nav:
   - Task overview: task-overview.md
   - Config documentation: config-docs.md
   - Task parts:
+    - Tests: task-parts/tests.md
     - Generator: task-parts/generator.md
     - Validator: task-parts/validator.md
     - Batch checker: task-parts/batch-checker.md
