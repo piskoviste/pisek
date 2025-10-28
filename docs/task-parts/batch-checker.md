@@ -5,15 +5,16 @@ It should determine whether the contestant's output is correct.
 
 There are various types of checkers you can use:
 
-- `tokens` – fast, versatile file equality checker
-- `diff` – file equality checker based on the `diff` command line tool (avoid this option, as it has a quadratic time complexity)
-- `judge` – custom checker
+- [tokens](#tokens-checker) – fast, versatile file equality checker
+- [shuffle](#shuffle-checker) – similar to tokens, but allows permutations of tokens
+- [diff](#diff-checker) – file equality checker based on the `diff` command line tool (avoid this option, as it has quadratic time complexity)
+- [judge](#custom-judge) – custom checker
 
 If there is only a single correct output (e.g. the minimum of an array), `tokens` is strongly recommended.
 Otherwise, when there are multiple correct outputs (e.g. the shortest path in a graph),
 writing a judge is necessary. Set `out_check` in the config accordingly.
 
-## Tokens judge
+## Tokens checker
 
 A fast and versatile equality checker. Ignores whitespace, but not newlines.
 (Ignores newlines only at the end of a file.)
@@ -21,13 +22,13 @@ A fast and versatile equality checker. Ignores whitespace, but not newlines.
 Tokens are separated by (possibly multiple) whitespace characters.
 For the output to be correct, the tokens need to be same as in the correct output file.
 
-You can customize the tokens judge with `tokens_ignore_newlines` or `tokens_ignore_case`.
+You can customize the tokens checker with `tokens_ignore_newlines` or `tokens_ignore_case`.
 For comparing floats, set `tokens_float_rel_error` and `tokens_float_abs_error`.
 Details can be found in [config-documentation](../config-docs.md).
 
-## Shuffle judge
+## Shuffle checker
 
-Similarly to the tokens judge, the shuffle judge compares the output with the correct output token-by-token.
+Similarly to the tokens checker, the shuffle checker compares the output with the correct output token-by-token.
 Allows permutations of tokens (permutations can be configured with `shuffle_mode`).
 Use `shuffle_ignore_case` for case insensitivity.
 
