@@ -47,7 +47,7 @@ A task-specific checker provided by the task author is called a *judge*.
 The validator is used for making sure that inputs produced by the generator
 conform to the task statement. It adds an additional degree of safety.
 
-### [Config](./config-docs.md)
+### [Config](./config-v3-documentation.md)
 
 Bringing all of these together is the task configuration file. It contains all
 the metadata about the task: How programs are built, how programs are run (including limits),

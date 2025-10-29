@@ -24,7 +24,7 @@ For the output to be correct, the tokens need to be same as in the correct outpu
 
 You can customize the tokens checker with `tokens_ignore_newlines` or `tokens_ignore_case`.
 For comparing floats, set `tokens_float_rel_error` and `tokens_float_abs_error`.
-Details can be found in [config-documentation](../config-docs.md).
+Details can be found in [config-documentation](../config-v3-documentation.md).
 
 ## Shuffle checker
 
