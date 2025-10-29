@@ -3,7 +3,7 @@
 The interactive judge gets the input and the means of communication with the contestant's solution.
 It should report whether the contestant's solution is correct.
 
-There is currently only one interactive `judge_type` supported:
+There is currently only one interactive [`judge_type`](../config-v3-documentation.md#judge_type) supported:
 
 ## CMS-communication judge
 *See [CMS documentation](https://cms.readthedocs.io/en/v1.4/Task%20types.html?highlight=Manager#communication) for more. However, only one user process is supported.*
