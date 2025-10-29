@@ -15,7 +15,7 @@ The testcases can be of three kinds:
 For interactive tasks, we only have static and generated testcases, as there are no outputs.
 
 Pisek distinguishes the kind of a testcase automatically. The static and mixed
-testcases have an input (`.in` file) in the [`static_subdir`](../config-docs.md)
+testcases have an input (`.in` file) in the [`static_subdir`](../config-v3-documentation.md#static_subdir)
 directory. If a `.out` file with matching name is also there, the testcase is
 static. Otherwise, it's mixed. The list of the generated inputs is given by the
 generator (either by the generator itself or its interface).
