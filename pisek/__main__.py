@@ -163,11 +163,11 @@ def _main(argv: list[str]) -> None:
     # ------------------------------- pisek test -------------------------------
 
     parser_test = subparsers.add_parser("test", help="test task")
-    test_subparsers = parser_test.add_subparsers(help="Testing target", dest="target")
-    test_all = test_subparsers.add_parser("all", help="Test all")
-    test_gen = test_subparsers.add_parser("generator", help="Test only generator")
+    test_subparsers = parser_test.add_subparsers(help="testing target", dest="target")
+    test_all = test_subparsers.add_parser("all", help="test all")
+    test_gen = test_subparsers.add_parser("generator", help="test only generator")
     test_sols = test_subparsers.add_parser(
-        "solutions", help="Test generator & given solutions"
+        "solutions", help="test generator & given solutions"
     )
     test_sols.add_argument(
         "solutions", type=str, help="name of the solutions to test", nargs="+"
