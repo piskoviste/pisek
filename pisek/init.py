@@ -6,7 +6,6 @@ import shutil
 from typing import Callable, NoReturn, Sequence
 
 from pisek.user_errors import InvalidArgument, InvalidOperation
-from pisek.utils.text import eprint
 from pisek.utils.colors import ColorSettings
 from pisek.utils.user_input import input_string, input_choice
 from pisek.config.config_types import (
@@ -20,7 +19,7 @@ from pisek.config.config_hierarchy import DEFAULT_CONFIG_FILENAME
 from pisek.task_jobs.program import ProgramRole
 
 EXAMPLE_TASKS_DIR = str(files("pisek").joinpath("../examples"))
-EXAMPLE_TASKS = ["cms-batch"]
+EXAMPLE_TASKS = ["cms-batch", "opendata"]
 
 OFFERED_GEN_TYPES = [GenType.pisek_v1, GenType.opendata_v1, GenType.cms_old]
 RECOMMENDED_GEN_TYPES = [GenType.pisek_v1]
@@ -170,7 +169,9 @@ def from_scratch(config_filename: str) -> None:
 
 
 def from_template(path: str, config_filename: str) -> None:
-    if os.path.exists(os.path.join(path, config_filename)):
+    if config_filename != DEFAULT_CONFIG_FILENAME and os.path.exists(
+        os.path.join(path, config_filename)
+    ):
         invalid_config_name(config_filename)
 
     for item in os.listdir(path):

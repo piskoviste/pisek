@@ -8,38 +8,27 @@ task_type=batch
 [tests]
 # Generator source file
 in_gen=gen
-gen_type=pisek-v1
+gen_type=opendata-v1
 
 validator=validate
 validator_type=simple-42
 
 out_check=judge
-# judge source file
+# Judge source file
 out_judge=judge
+judge_type=opendata-v2
 judge_needs_in=1
 judge_needs_out=0
-judge_type=cms-batch
 
-# CMS doesn't support normalization, so output can be anything
-out_format=binary
-
-[checks]
-solution_for_each_test=on
-all_inputs_in_last_test=on
 
 [test01]
 points=20
-in_globs=*equal*.in
 
 [test02]
 points=30
-in_globs=*small*.in
-predecessors=1
 
 [test03]
 points=50
-in_globs=*.in
-predecessors=2
 
 [solution_solve_last_big]
 primary=yes
@@ -55,14 +44,15 @@ tests=X1WW
 process_limit=0
 
 [solution_solve_spread]
-tests=P1PP
+# Opendata judges don't do partial success for unscored tests
+tests=X1PP
 
 [run_solution]
-time_limit=1
+# The timelimit for solutions is usually large
+# as the contestant needs time to submit the output
+time_limit=60
 
-[cms]
-name=sandcastles
-title=Building sandcastles
+[run_primary_solution]
+# The primary solution is run after contestant
+# submits the output, so we want it to be fast.
 time_limit=1
-min_submission_interval=30
-feedback_level=full
