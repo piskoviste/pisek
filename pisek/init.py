@@ -60,19 +60,22 @@ def invalid_config_name(config_filename: str) -> NoReturn:
 
 
 def input_program(
-    p_role: ProgramRole, types: Sequence[str], recommended_types: Sequence[str]
+    p_role: ProgramRole,
+    types: Sequence[str],
+    recommended_types: Sequence[str],
+    no_jumps: bool,
 ) -> tuple[str, str]:
 
     choices = [
         (t, t + (recommended() if t in recommended_types else "")) for t in types
     ]
-    type_ = input_choice(f"Choose {p_role}_type:", choices)
+    type_ = input_choice(f"Choose {p_role}_type:", choices, no_jumps)
     filename = input_string(f"Enter {p_role} filename: ")
     print()
     return type_, filename
 
 
-def init_task(config_filename: str) -> None:
+def init_task(config_filename: str, no_jumps: bool) -> None:
     if os.listdir():
         raise InvalidOperation("Current directory is not empty")
 
@@ -83,13 +86,14 @@ def init_task(config_filename: str) -> None:
         )
         for task in EXAMPLE_TASKS
     ]
+    _from_scratch: Callable[[str], None] = partial(from_scratch, no_jumps=no_jumps)
     create = input_choice(
-        "Create a task", [(from_scratch, "From scratch")] + example_tasks
+        "Create a task", [(_from_scratch, "From scratch")] + example_tasks, no_jumps
     )
     create(config_filename)
 
 
-def from_scratch(config_filename: str) -> None:
+def from_scratch(config_filename: str, no_jumps: bool) -> None:
     config = ConfigParser(interpolation=None)
     config.add_section("task")
     config.add_section("tests")
@@ -97,13 +101,13 @@ def from_scratch(config_filename: str) -> None:
 
     # --- task_type ---
     print()
-    task_type = input_choice("Choose task_type:", [(t, t) for t in TaskType])
+    task_type = input_choice("Choose task_type:", [(t, t) for t in TaskType], no_jumps)
     config["task"]["task_type"] = task_type
     print()
 
     # --- inputs ---
     gen_type, gen_name = input_program(
-        ProgramRole.gen, OFFERED_GEN_TYPES, RECOMMENDED_GEN_TYPES
+        ProgramRole.gen, OFFERED_GEN_TYPES, RECOMMENDED_GEN_TYPES, no_jumps
     )
     touch(gen_name)
     config["tests"]["in_gen"] = remove_suffix(gen_name)
@@ -114,7 +118,10 @@ def from_scratch(config_filename: str) -> None:
 
     # --- validator ---
     val_type, val_name = input_program(
-        ProgramRole.validator, OFFERED_VALIDATOR_TYPES, RECOMMENDED_VALIDATOR_TYPES
+        ProgramRole.validator,
+        OFFERED_VALIDATOR_TYPES,
+        RECOMMENDED_VALIDATOR_TYPES,
+        no_jumps,
     )
     touch(val_name)
     config["tests"]["validator"] = remove_suffix(val_name)
@@ -129,6 +136,7 @@ def from_scratch(config_filename: str) -> None:
                 (OutCheck.shuffle, "shuffle - output is unique up to order"),
                 (OutCheck.judge, "judge - output is not unique"),
             ],
+            no_jumps,
         )
         print()
     else:
@@ -141,6 +149,7 @@ def from_scratch(config_filename: str) -> None:
             ProgramRole.judge,
             OFFERED_JUDGE_TYPES[task_type],
             RECOMMENDED_JUDGE_TYPES[task_type],
+            no_jumps,
         )
         touch(judge_name)
         config["tests"]["out_judge"] = remove_suffix(judge_name)

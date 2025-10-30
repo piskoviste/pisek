@@ -355,7 +355,7 @@ def _main(argv: list[str]) -> None:
     if args.subcommand == "version":
         return print_version()
     elif args.subcommand == "init":
-        return init_task(args.config_filename)
+        return init_task(args.config_filename, args.no_jumps)
 
     # !!! Ensure this is always run before clean_directory !!!
     assert_task_dir(PATH, args.pisek_dir, args.config_filename)
