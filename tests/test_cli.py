@@ -70,5 +70,16 @@ class TestCLIVisualize(TestCLI):
         return ["testing_log.json"]
 
 
+class TestCLIExport(TestCLI):
+    def fixture_path(self):
+        return "../fixtures/guess/"
+
+    def args(self):
+        return [["config", "export", "config"], ["test"]]
+
+    def created_files(self):
+        return ["exported-config"]
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
