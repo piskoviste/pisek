@@ -12,7 +12,7 @@ There are various types of checkers you can use:
 
 If there is only a single correct output (e.g. the minimum of an array), `tokens` is strongly recommended.
 Otherwise, when there are multiple correct outputs (e.g. the shortest path in a graph),
-writing a judge is necessary. Set `out_check` in the config accordingly.
+writing a judge is necessary. Set [`out_check`](../config-v3-documentation.md#out_check) accordingly.
 
 ## Tokens checker
 
@@ -22,30 +22,34 @@ A fast and versatile equality checker. Ignores whitespace, but not newlines.
 Tokens are separated by (possibly multiple) whitespace characters.
 For the output to be correct, the tokens need to be same as in the correct output file.
 
-You can customize the tokens checker with `tokens_ignore_newlines` or `tokens_ignore_case`.
-For comparing floats, set `tokens_float_rel_error` and `tokens_float_abs_error`.
-Details can be found in [config-documentation](../config-docs.md).
+You can customize the tokens checker with [`tokens_ignore_newlines`](../config-v3-documentation.md#tokens_ignore_newlines)
+or [`tokens_ignore_case`](../config-v3-documentation.md#tokens_ignore_case).
+For comparing floats, set [`tokens_float_rel_error`](../config-v3-documentation.md#tokens_float_rel_error)
+and [`tokens_float_abs_error`](../config-v3-documentation.md#tokens_float_abs_error).
 
 ## Shuffle checker
 
 Similarly to the tokens checker, the shuffle checker compares the output with the correct output token-by-token.
-Allows permutations of tokens (permutations can be configured with `shuffle_mode`).
-Use `shuffle_ignore_case` for case insensitivity.
+Allows permutations of tokens (configure with [`shuffle_mode`](../config-v3-documentation.md#shuffle_mode)).
+Use [`shuffle_ignore_case`](../config-v3-documentation.md#shuffle_ignore_case) for case insensitivity.
 
 ## Diff checker
 
 An equality checker based on the `diff` tool. Runs `diff -Bbq` under the hood.
 Ignores whitespace and empty lines.
 
-??? danger "This `out_check` is not recommended"
+??? danger "This [`out_check`](../config-v3-documentation.md#out_check) is not recommended"
 
     In some cases, `diff` has quadratic time complexity, leading to unexpectedly slow checking of outputs.
 
 ## Custom judge
 
 If there can be multiple correct solutions, it is necessary to write a custom judge.
-Set `out_judge` to the path to the source code of your judge, `judge_type` to the judge type (see below),
-and `judge_needs_in`, `judge_needs_out` to `0`/`1`, depending on whether the judge needs the input and the correct output.
+Set [`out_judge`](../config-v3-documentation.md#out_judge) to the path to the source code of your judge,
+[`judge_type`](../config-v3-documentation.md#judge_type) to the judge type (see below),
+and [`judge_needs_in`](../config-v3-documentation.md#judge_needs_in),
+[`judge_needs_out`](../config-v3-documentation.md#judge_needs_out) to `0`/`1`,
+depending on whether the judge needs the input and the correct output.
 
 When writing a custom judge, you can choose from multiple judge types:
 
@@ -86,9 +90,10 @@ Where `test` is the testcase's test number and `seed` the testcase's generating 
 this input has (probably) been generated with.)
 If the input was not generated with a seed (static or unseeded), `seed` will be `-`.
 
-If `judge_needs_in` is set, the judge will get the input filename in the `TEST_INPUT`
-environment variable. Similarly, if `judge_needs_out` is set, the correct output
-filename will be in the `TEST_OUTPUT` environment variable.
+If [`judge_needs_in`](../config-v3-documentation.md#judge_needs_in) is set,
+the judge will get the input filename in the `TEST_INPUT` environment variable.
+Similarly, if [`judge_needs_out`](../config-v3-documentation.md#judge_needs_out)
+is set, the correct output filename will be in the `TEST_OUTPUT` environment variable.
 
 If the output is correct, the judge should exit with return code 42.
 Otherwise, the judge should exit return code 43.
@@ -117,7 +122,7 @@ Values are again limited to 255 bytes.
 The opendata-v1 judge is the same as opendata-v2, with the exception of using different
 return codes, return code 0 for a correct output and return code 1 for a wrong output.
 
-??? danger "This `judge_type` is not recommended"
+??? danger "This [`judge_type`](../config-v3-documentation.md#judge_type) is not recommended"
 
     Return with exit code 1 is very common and is for example trigger by any exception in Python.
     This can lead to internal judge bugs disguising themselves as wrong answers.

@@ -2,7 +2,7 @@
 The validator is used for validating inputs, i.e. making sure they conform to the restrictions in the task statement.
 
 ## Validator type
-There are currently 2 validator types available:
+There are currently 2 [`validator_type`](../config-v3-documentation.md#validator_type)s available:
 
 - [simple-42](#simple-42)
 - [simple-0](#simple-0)

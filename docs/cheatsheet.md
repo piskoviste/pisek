@@ -67,7 +67,7 @@ pisek visualize | less -R
 ```
 
 ## Configs
-Update config to newest version:
+Export task config to make it independent of the organization one:
 ```bash
-pisek config update
+pisek config export
 ```

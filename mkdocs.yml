@@ -49,14 +49,24 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
+  - toc:
+      permalink: ""
+      permalink_title: Permanent link
+
+extra_css:
+  - _stylesheets/extra.css
+
+hooks:
+  - docs/_hooks/shortcodes.py
 
 nav:
   - Home: index.md
   - Installation: installation.md
   - Quickstart: quickstart.md
   - Task overview: task-overview.md
-  - Config documentation: config-docs.md
+  - Config documentation: config-v3-documentation.md
   - Task parts:
+    - Tests: task-parts/tests.md
     - Generator: task-parts/generator.md
     - Validator: task-parts/validator.md
     - Batch checker: task-parts/batch-checker.md

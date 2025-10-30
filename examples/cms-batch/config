@@ -1,5 +1,5 @@
 # Pisek example task
-# See https://github.com/piskoviste/pisek/blob/master/docs/config-v3-documentation for more information
+# See https://github.com/piskoviste/pisek/blob/master/docs/config-v3-documentation.md for more information
 
 [task]
 version=v3
