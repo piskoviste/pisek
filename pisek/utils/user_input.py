@@ -56,7 +56,7 @@ def input_choice_no_jumps(message: str, choices: Sequence[tuple[T, str]]) -> T:
 
     while True:
         try:
-            selected = int(input(f"Select number from 1 to {len(choices)}: ")) - 1
+            selected = int(input(f"Enter number from 1 to {len(choices)}: ")) - 1
             if 0 <= selected < len(choices):
                 return choices[selected][0]
         except ValueError:
