@@ -40,6 +40,7 @@ classifiers = [
 [project.optional-dependencies]
 dev = [
     "black",
+    "commitizen",
     "mypy"
 ]
 
@@ -63,3 +64,6 @@ pisek = [
 
 [tool.setuptools.dynamic]
 version = {attr = "pisek.version.__version__"}
+
+[tool.commitizen]
+name = "cz_conventional_commits"

@@ -1,0 +1,29 @@
+name: Check commit messages
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  commit-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: $(( ${{ github.event_name == 'pull_request' && github.event.pull_request.commits || 0 }} + 1 ))
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Commitizen
+        run: |
+          pip install commitizen
+
+      - name: Check commit messages
+        run: |
+          git fetch origin master
+          cz check --rev-range origin/master..HEAD --allowed-prefixes 'Merge' 'Revert'
