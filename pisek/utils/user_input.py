@@ -14,7 +14,10 @@ def input_string(message: str) -> str:
     return inp
 
 
-def input_choice(message: str, choices: Sequence[tuple[T, str]]) -> T:
+def input_choice(message: str, choices: Sequence[tuple[T, str]], no_jumps: bool) -> T:
+    if no_jumps:
+        return input_choice_no_jumps(message, choices)
+
     assert choices
 
     print(message)
@@ -40,3 +43,21 @@ def input_choice(message: str, choices: Sequence[tuple[T, str]]) -> T:
             selected = (selected - 1) % len(choices)
 
         print(Cursor.UP() * len(choices), end="")
+
+
+def input_choice_no_jumps(message: str, choices: Sequence[tuple[T, str]]) -> T:
+    assert choices
+
+    print(message)
+
+    for i, (_, text) in enumerate(choices):
+        full_text = f" {i+1}. {text}"
+        print(" " + full_text)
+
+    while True:
+        try:
+            selected = int(input(f"Enter number from 1 to {len(choices)}: ")) - 1
+            if 0 <= selected < len(choices):
+                return choices[selected][0]
+        except ValueError:
+            pass
