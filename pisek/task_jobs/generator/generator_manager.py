@@ -18,17 +18,16 @@ from typing import cast, Any, Optional
 from hashlib import blake2b
 
 from pisek.env.env import Env
-from pisek.utils.paths import InputPath, OutputPath, SanitizedPath
-from pisek.config.config_types import GenType, DataFormat
+from pisek.utils.paths import InputPath, OutputPath
+from pisek.config.config_types import GenType
 from pisek.config.task_config import RunSection
 from pisek.jobs.jobs import Job, JobManager
 from pisek.task_jobs.task_manager import TaskJobManager
 from pisek.task_jobs.data.data import InputSmall, OutputSmall
-from pisek.task_jobs.tools import IsClean, Sanitize
+from pisek.task_jobs.tools import sanitize_job
 from pisek.task_jobs.validator.validator_base import ValidatorJob
 from pisek.task_jobs.validator.validators import VALIDATORS
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
-from pisek.task_jobs.checker.checker_base import RunChecker
 
 from .base_classes import (
     GeneratorListInputs,
@@ -273,7 +272,7 @@ class TestcaseInfoMixin(JobManager):
 
     def _check_input_jobs(self, input_path: InputPath) -> None:
         self._add_job(
-            self._sanitize_job(input_path, self._env.config.tests.in_format, True),
+            sanitize_job(self._env, input_path, True),
             new_last=True,
         )
 
@@ -285,23 +284,13 @@ class TestcaseInfoMixin(JobManager):
         output_path: OutputPath,
     ) -> None:
         self._add_job(
-            self._sanitize_job(output_path, self._env.config.tests.out_format, False),
+            sanitize_job(self._env, output_path, False),
             prerequisite_name="create-source",
             new_last=True,
         )
 
         if self._env.config.limits.output_max_size != 0:
             self._add_job(OutputSmall(self._env, output_path))
-
-    def _sanitize_job(
-        self, path: SanitizedPath, format: DataFormat, is_input: bool
-    ) -> Optional[Job]:
-        if format == DataFormat.binary:
-            return None
-        elif format == DataFormat.strict_text and is_input:
-            return IsClean(self._env, path.to_raw(format), path)
-        else:
-            return Sanitize(self._env, path.to_raw(format), path)
 
     def _compute_result(self) -> dict[str, Any]:
         return {

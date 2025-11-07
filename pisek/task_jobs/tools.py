@@ -21,6 +21,7 @@ from importlib.resources import files
 import os
 
 from pisek.jobs.jobs import Job, PipelineItemFailure
+from pisek.config.config_types import DataFormat
 from pisek.env.env import Env
 from pisek.utils.paths import TaskPath, RawPath, SanitizedPath
 from pisek.task_jobs.task_job import TaskJob
@@ -247,3 +248,17 @@ class IsClean(SanitizeAbstract, TextPreprocAbstract):
             raise PipelineItemFailure(
                 f"File {self.input:p} not normalized. (Check encoding, missing newline at the end or '\\r'.)"
             )
+
+
+def sanitize_job(env: Env, path: SanitizedPath, is_input: bool) -> Job | None:
+    if is_input:
+        format_ = env.config.tests.in_format
+    else:
+        format_ = env.config.tests.out_format
+
+    if format_ == DataFormat.binary:
+        return None
+    elif format_ == DataFormat.strict_text and is_input:
+        return IsClean(env, path.to_raw(format_), path)
+    else:
+        return Sanitize(env, path.to_raw(format_), path)
