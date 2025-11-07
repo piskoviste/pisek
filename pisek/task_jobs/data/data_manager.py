@@ -16,7 +16,11 @@ from pisek.utils.paths import TaskPath, InputPath, OutputPath
 from pisek.jobs.jobs import Job, PipelineItemFailure
 from pisek.config.config_types import TaskType
 from pisek.task_jobs.task_manager import TaskJobManager, GENERATOR_MAN_CODE
-from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
+from pisek.task_jobs.data.testcase_info import (
+    TestcaseInfo,
+    TestcaseGenerationMode,
+    ExportInputsList,
+)
 
 from .data import LinkData
 
@@ -112,6 +116,8 @@ class DataManager(TaskJobManager):
                         output_target_path.to_raw(self._env.config.tests.out_format),
                     )
                 )
+
+        jobs.append(ExportInputsList(self._env, list(sorted(used_inputs))))
 
         if self._env.config.tests.validator is None:
             not_skipped_test = any(

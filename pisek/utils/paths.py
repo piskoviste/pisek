@@ -16,7 +16,7 @@
 
 from dataclasses import dataclass
 import os
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 from pisek.config.config_types import DataFormat
 
 if TYPE_CHECKING:
@@ -29,6 +29,8 @@ INTERNALS_DIR = ".pisek/"
 GENERATED_SUBDIR = "_generated/"
 INPUTS_SUBDIR = "_inputs/"
 FUZZING_OUTPUTS_SUBDIR = "_fuzzing/"
+
+INPUTS_LIST = "_inputs_list"
 
 
 @dataclass(frozen=True)

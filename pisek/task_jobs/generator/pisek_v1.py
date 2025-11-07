@@ -45,48 +45,10 @@ class PisekV1ListInputs(GeneratorListInputs):
         return testcase_infos
 
     def _get_testcase_info_from_line(self, line: str, line_index: int) -> TestcaseInfo:
-        line = line.rstrip("\n")
-        if not line:
-            self._line_invalid(line_index, line, "Line empty")
-
-        args = line.split(" ")
-        input_name = args[0]
-        info_args: dict[str, Any] = {}
-
-        for arg in args[1:]:
-            if "=" not in arg:
-                self._line_invalid(line_index, line, "Missing '='")
-            parts = arg.split("=")
-            if len(parts) != 2:
-                self._line_invalid(line_index, line, "Too many '='")
-            arg_name, arg_value = parts
-            if arg_name in info_args:
-                self._line_invalid(line_index, line, f"Repeated key '{arg_name}'")
-            elif arg_name == "repeat":
-                try:
-                    repeat_times = int(arg_value)
-                    assert repeat_times > 0
-                except (ValueError, AssertionError):
-                    self._line_invalid(
-                        line_index, line, "'repeat' should be a positive number"
-                    )
-
-                info_args[arg_name] = repeat_times
-            elif arg_name == "seeded":
-                if arg_value not in ("true", "false"):
-                    self._line_invalid(
-                        line_index, line, "'seeded' should be 'true' or 'false'"
-                    )
-                info_args[arg_name] = arg_value == "true"
-            else:
-                self._line_invalid(line_index, line, f"Unknown argument: '{arg_name}'")
-
-        if not info_args.get("seeded", True) and info_args.get("repeat", 1) > 1:
-            self._line_invalid(
-                line_index, line, "For unseeded input 'repeat' must be '1'"
-            )
-
-        return TestcaseInfo.generated(input_name, **info_args)
+        try:
+            return TestcaseInfo.from_str("generated " + line)
+        except ValueError as err:
+            self._line_invalid(line_index, line, str(err))
 
     def _line_invalid(self, line_index: int, contents: str, reason: str) -> NoReturn:
         contents = contents.rstrip("\n")
@@ -118,7 +80,7 @@ class PisekV1ListInputs(GeneratorListInputs):
             return f.readlines()
 
     def _get_inputs_list_path(self):
-        return TaskPath.data_path("inputs_list")
+        return TaskPath.data_path("_generated_inputs_list")
 
 
 class PisekV1GeneratorJob(ProgramsJob):
