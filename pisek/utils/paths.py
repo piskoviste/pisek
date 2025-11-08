@@ -128,11 +128,12 @@ class SanitizedPath(TaskPath):
 
 
 class InputPath(SanitizedPath):
-    def __init__(self, *path, solution: str | None = None) -> None:
+    @staticmethod
+    def new(*path, solution: str | None = None) -> "InputPath":
         if solution is None:
-            super().__init__(TESTS_DIR, INPUTS_SUBDIR, *path)
+            return InputPath(TESTS_DIR, INPUTS_SUBDIR, *path)
         else:
-            super().__init__(TESTS_DIR, solution, *path)
+            return InputPath(TESTS_DIR, solution, *path)
 
     def to_second(self) -> "InputPath":
         return InputPath(self.replace_suffix(".in2").path)

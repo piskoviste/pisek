@@ -53,7 +53,7 @@ class TestcaseInfo:
             filename += f"_{seed:016x}"
         filename += ".in"
 
-        return InputPath(filename, solution=solution)
+        return InputPath.new(filename, solution=solution)
 
     def reference_output(
         self, env: Env, seed: int | None = None, solution: str | None = None

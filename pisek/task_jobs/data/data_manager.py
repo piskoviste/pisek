@@ -96,7 +96,7 @@ class DataManager(TaskJobManager):
             mode = testcase.generation_mode
 
             if mode in (TestcaseGenerationMode.static, TestcaseGenerationMode.mixed):
-                input_target_path = InputPath(f"{name}.in")
+                input_target_path = InputPath.new(f"{name}.in")
                 jobs.append(
                     LinkData(
                         self._env,
