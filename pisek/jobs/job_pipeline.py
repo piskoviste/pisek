@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from abc import ABC, abstractmethod
-from concurrent.futures import ThreadPoolExecutor, Future, wait, thread
+from concurrent.futures import ThreadPoolExecutor, Future, wait
 
 from pisek.env.env import Env
 from pisek.jobs.jobs import State, Job, JobManager
