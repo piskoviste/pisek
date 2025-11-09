@@ -17,7 +17,7 @@ from pisek.utils.text import tab, pad
 from pisek.utils.terminal import MSG_LEN, TARGET_LINE_WIDTH
 from pisek.jobs.jobs import State, PipelineItem, JobManager
 
-TARGET_BAR_WIDTH = TARGET_LINE_WIDTH - MSG_LEN - 11
+TARGET_BAR_WIDTH = TARGET_LINE_WIDTH - 11
 
 
 class StatusJobManager(JobManager):
@@ -25,13 +25,20 @@ class StatusJobManager(JobManager):
 
     def _bar(self, msg: str, part: int, full: int, color: str = "cyan") -> str:
         """Return progress bar with given parameters."""
-        msg = pad(msg, MSG_LEN - 1)
+        msg = pad(msg, MSG_LEN - 1) + " "
         progress_msg = f"  ({part}/{full})"
 
-        bar_len = min(TARGET_BAR_WIDTH, TARGET_LINE_WIDTH - MSG_LEN - len(progress_msg))
+        bar_len = min(TARGET_BAR_WIDTH, TARGET_LINE_WIDTH - len(progress_msg)) - len(
+            msg
+        )
         filled = bar_len * part // full
 
-        return f"{msg} {self._colored(filled*'━', color)}{self._colored((bar_len-filled)*'━', 'white')}{progress_msg}"
+        if filled in (0, bar_len):
+            bar = "━" * filled
+        else:
+            bar = (filled - 1) * "━" + "╸"
+
+        return f"{msg}{self._colored(bar, color)}{self._colored((bar_len-filled)*'━', 'white')}{progress_msg}"
 
     def _job_bar(self, msg: str) -> str:
         """Returns progress bar according to status of this manager's jobs."""
