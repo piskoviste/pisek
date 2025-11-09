@@ -83,15 +83,28 @@ def list_inputs_job(env: Env, generator: RunSection) -> GeneratorListInputs:
 
 
 def generate_input(
-    env: Env, generator: RunSection, testcase_info: TestcaseInfo, seed: Optional[int]
+    env: Env, testcase_info: TestcaseInfo, seed: Optional[int]
 ) -> GenerateInput:
+    return generate_input_direct(
+        env, testcase_info, seed, testcase_info.input_path(seed)
+    )
+
+
+def generate_input_direct(
+    env: Env, testcase_info: TestcaseInfo, seed: Optional[int], input_path: InputPath
+) -> GenerateInput:
+    assert env.config.tests.in_gen is not None
     assert env.config.tests.gen_type is not None
     return {
         GenType.opendata_v1: OpendataV1Generate,
         GenType.cms_old: CmsOldGenerate,
         GenType.pisek_v1: PisekV1Generate,
     }[env.config.tests.gen_type](
-        env=env, generator=generator, testcase_info=testcase_info, seed=seed
+        env=env,
+        generator=env.config.tests.in_gen,
+        testcase_info=testcase_info,
+        seed=seed,
+        input_path=input_path,
     )
 
 
@@ -240,7 +253,7 @@ class TestcaseInfoMixin(JobManager):
     ) -> GenerateInput:
         assert self._env.config.tests.in_gen is not None
         self._gen_inputs_job[seed] = gen_inp = generate_input(
-            self._env, self._env.config.tests.in_gen, testcase_info, seed
+            self._env, testcase_info, seed
         )
         return gen_inp
 

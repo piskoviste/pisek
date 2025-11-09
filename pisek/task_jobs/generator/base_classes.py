@@ -45,6 +45,7 @@ class GenerateInput(ProgramsJob):
         generator: RunSection,
         testcase_info: TestcaseInfo,
         seed: Optional[int],
+        input_path: InputPath,
         *,
         name: str = "",
         **kwargs,
@@ -54,7 +55,7 @@ class GenerateInput(ProgramsJob):
         self.generator = generator
         self.seed = seed
         self.testcase_info = testcase_info
-        self.input_path = testcase_info.input_path(seed)
+        self.input_path = input_path
         super().__init__(
             env=env, name=name or f"Generate {self.input_path.name}", **kwargs
         )
