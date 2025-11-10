@@ -68,11 +68,19 @@ class RunDiffChecker(RunBatchChecker):
         )
         if diff.returncode == 0:
             return RelativeSolutionResult(
-                Verdict.ok, None, self._solution_run_res, rr, Decimal(1)
+                verdict=Verdict.ok,
+                message=None,
+                solution_rr=self._solution_run_res,
+                checker_rr=rr,
+                relative_points=Decimal(1),
             )
         elif diff.returncode == 1:
             return RelativeSolutionResult(
-                Verdict.wrong_answer, None, self._solution_run_res, rr, Decimal(0)
+                verdict=Verdict.wrong_answer,
+                message=None,
+                solution_rr=self._solution_run_res,
+                checker_rr=rr,
+                relative_points=Decimal(0),
             )
         else:
             assert diff.stderr is not None

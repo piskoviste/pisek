@@ -67,11 +67,19 @@ class RunJudgeLibChecker(RunBatchChecker):
 
         if checker.returncode == 42:
             return RelativeSolutionResult(
-                Verdict.ok, None, self._solution_run_res, rr, Decimal(1)
+                verdict=Verdict.ok,
+                message=None,
+                solution_rr=self._solution_run_res,
+                checker_rr=rr,
+                relative_points=Decimal(1),
             )
         elif checker.returncode == 43:
             return RelativeSolutionResult(
-                Verdict.wrong_answer, None, self._solution_run_res, rr, Decimal(0)
+                verdict=Verdict.wrong_answer,
+                message=None,
+                solution_rr=self._solution_run_res,
+                checker_rr=rr,
+                relative_points=Decimal(0),
             )
         else:
             raise PipelineItemFailure(f"{self.checker_name} failed:\n{tab(stderr)}")
