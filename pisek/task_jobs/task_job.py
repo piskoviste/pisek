@@ -104,7 +104,9 @@ class TaskHelper:
     @staticmethod
     def make_filedirs(path: TaskPath, exist_ok: bool = True):
         """Make directories for given file"""
-        os.makedirs(os.path.dirname(path.path), exist_ok=exist_ok)
+        dirname = os.path.dirname(path.path)
+        if dirname:
+            os.makedirs(dirname, exist_ok=exist_ok)
 
 
 class TaskJob(Job, TaskHelper):
