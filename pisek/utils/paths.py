@@ -129,7 +129,7 @@ class SanitizedPath(TaskPath):
 
 class InputPath(SanitizedPath):
     @staticmethod
-    def new(*path, solution: str | None = None) -> "InputPath":
+    def new(*path: str, solution: str | None = None) -> "InputPath":
         if solution is None:
             return InputPath(TESTS_DIR, INPUTS_SUBDIR, *path)
         else:
@@ -176,3 +176,46 @@ class RawPath(TaskPath):
 
     def to_sanitization_log(self) -> LogPath:
         return LogPath(self.replace_suffix(".sanitizer.log").path)
+
+
+class OpendataPath(TaskPath):
+    def __init__(self, tmp_dir: str, *path: str):
+        self._tmp_dir = tmp_dir
+        super().__init__(*path)
+
+    def to_raw(self, format: DataFormat) -> "RawPath":
+        if format == DataFormat.binary:
+            return OpendataRawPath(self._tmp_dir, self.path)
+        return RawPath(self._tmp_dir, self.name + ".raw")
+
+
+class OpendataInputPath(OpendataPath, InputPath):
+    def to_second(self) -> "InputPath":
+        assert False
+
+    def to_output(self) -> "OutputPath":
+        assert False
+
+    def to_log(self, program: str) -> "LogPath":
+        return LogPath(
+            self._tmp_dir, self.replace_suffix(f".{os.path.basename(program)}.log").name
+        )
+
+
+class OpendataOutputPath(OpendataPath, OutputPath):
+    def to_reference_output(self) -> "OutputPath":
+        assert False
+
+    def to_fuzzing(self, seed: int) -> "OutputPath":
+        assert False
+
+
+class OpendataRawPath(OpendataPath, RawPath):
+    def to_sanitized_output(self) -> OutputPath:
+        assert False
+
+    def to_sanitized_input(self) -> InputPath:
+        assert False
+
+    def to_sanitization_log(self):
+        return LogPath(self._tmp_dir, self.replace_suffix(".sanitizer.log").name)
