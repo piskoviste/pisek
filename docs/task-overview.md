@@ -67,7 +67,8 @@ graph TD;
     G[Generator] -->|Input| V[Validator];
     G -->|Input| S[Solution];
     G -->|Input| CS[Correct solution];
-    S -->|Output| C[Checker];
+    G -->|Input| C[Checker];
+    S -->|Output| C;
     CS -->|Correct output| C;
 ```
 
