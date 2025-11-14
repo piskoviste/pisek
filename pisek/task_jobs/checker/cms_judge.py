@@ -79,7 +79,11 @@ class RunCMSJudge(RunChecker):
                 message = f.readline().removesuffix("\n")
 
             return RelativeSolutionResult(
-                verdict, message, self._solution_run_res, judge_run_result, points
+                verdict=verdict,
+                message=message,
+                solution_rr=self._solution_run_res,
+                checker_rr=judge_run_result,
+                relative_points=points,
             )
         else:
             raise self._create_program_failure(

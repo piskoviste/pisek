@@ -50,6 +50,9 @@ class TaskPipeline(JobPipeline):
 
     def __init__(self, env: Env):
         super().__init__()
+        self.job_managers = [job_man for job_man, _ in self._get_named_pipeline(env)]
+
+    def _get_named_pipeline(self, env: Env) -> list[tuple[JobManager, str]]:
         named_pipeline: list[tuple[JobManager, str]] = [
             tools := (ToolsManager(), TOOLS_MAN_CODE),
             build := (BuildManager(), BUILD_MAN_CODE),
@@ -63,6 +66,9 @@ class TaskPipeline(JobPipeline):
         inputs[0].add_prerequisite(*build)
         if env.config.tests.in_gen is not None:
             inputs[0].add_prerequisite(*generator)
+
+        if env.target == TestingTarget.build:
+            return named_pipeline
 
         solutions = []
         self.input_generator: TestcaseInfoMixin
@@ -126,7 +132,7 @@ class TaskPipeline(JobPipeline):
             for solution in solutions:
                 completeness_check[0].add_prerequisite(*solution)
 
-        self.job_managers = [job_man for job_man, _ in named_pipeline]
+        return named_pipeline
 
     def input_dataset(self) -> list[InputPath]:
         if self.input_generator.result is None:

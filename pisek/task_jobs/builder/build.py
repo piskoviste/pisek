@@ -61,7 +61,11 @@ class BuildManager(TaskJobManager):
             if path.startswith(WORKING_DIR_BASE):
                 shutil.rmtree(os.path.join(BUILD_DIR, path))
 
-        if self._env.target in (TestingTarget.solutions, TestingTarget.all):
+        if self._env.target in (
+            TestingTarget.build,
+            TestingTarget.solutions,
+            TestingTarget.all,
+        ):
             if self._env.config.tests.out_check == OutCheck.judge:
                 jobs.append(self._build_program_job(self._env.config.tests.out_judge))
             elif self._env.config.tests.out_check == OutCheck.tokens:

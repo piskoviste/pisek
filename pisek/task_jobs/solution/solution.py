@@ -18,7 +18,7 @@ from typing import Optional
 
 from pisek.env.env import Env
 from pisek.jobs.jobs import State
-from pisek.utils.paths import InputPath
+from pisek.utils.paths import InputPath, OutputPath
 from pisek.config.config_types import ProgramRole
 from pisek.config.task_config import RunSection
 from pisek.task_jobs.program import RunResult, ProgramsJob
@@ -66,6 +66,7 @@ class RunBatchSolution(RunSolution):
         solution: RunSection,
         is_primary: bool,
         input_: InputPath,
+        output: OutputPath,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -76,7 +77,7 @@ class RunBatchSolution(RunSolution):
             **kwargs,
         )
         self.input = input_
-        self.output = input_.to_output().to_raw(env.config.tests.out_format)
+        self.output = output.to_raw(env.config.tests.out_format)
         self.log_file = input_.to_log("solution")
 
     def _run(self) -> RunResult:

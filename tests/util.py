@@ -82,9 +82,8 @@ class TestFixture(unittest.TestCase):
             .pisek_cache data/* build/*
         """
         directories = ["build", "tests", ".pisek"]
-        files = [".pisek_cache"] + self.created_files()
 
-        all_paths = set(self.original_files + directories + files)
+        all_paths = set(self.original_files + directories + self.created_files())
 
         for path in os.listdir(self.task_dir):
             self.assertIn(
@@ -135,8 +134,6 @@ class TestFixtureVariant(TestFixture):
                 return True
             except UserError:
                 return False
-
-        runner = unittest.TextTestRunner(failfast=True)
 
         self.assertEqual(run(), self.expecting_success())
 

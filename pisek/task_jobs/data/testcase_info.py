@@ -12,10 +12,11 @@
 
 from dataclasses import dataclass
 from enum import StrEnum, auto
-from typing import Optional
+from typing import Any
 
 from pisek.env.env import Env
-from pisek.utils.paths import TESTS_DIR, InputPath, OutputPath
+from pisek.task_jobs.task_job import TaskJob
+from pisek.utils.paths import TESTS_DIR, INPUTS_LIST, InputPath, OutputPath, TaskPath
 
 
 class TestcaseGenerationMode(StrEnum):
@@ -24,27 +25,27 @@ class TestcaseGenerationMode(StrEnum):
     generated = auto()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class TestcaseInfo:
-    name: str
-    repeat: int
     generation_mode: TestcaseGenerationMode
-    seeded: bool
+    name: str
+    repeat: int = 1
+    seeded: bool = True
 
     @staticmethod
     def generated(name: str, repeat: int = 1, seeded: bool = True) -> "TestcaseInfo":
-        return TestcaseInfo(name, repeat, TestcaseGenerationMode.generated, seeded)
+        return TestcaseInfo(TestcaseGenerationMode.generated, name, repeat, seeded)
 
     @staticmethod
     def mixed(name: str) -> "TestcaseInfo":
-        return TestcaseInfo(name, 1, TestcaseGenerationMode.mixed, False)
+        return TestcaseInfo(TestcaseGenerationMode.mixed, name, 1, False)
 
     @staticmethod
     def static(name: str) -> "TestcaseInfo":
-        return TestcaseInfo(name, 1, TestcaseGenerationMode.static, False)
+        return TestcaseInfo(TestcaseGenerationMode.static, name, 1, False)
 
     def input_path(
-        self, seed: Optional[int] = None, solution: Optional[str] = None
+        self, seed: int | None = None, solution: str | None = None
     ) -> InputPath:
         filename = self.name
         if self.seeded:
@@ -52,10 +53,10 @@ class TestcaseInfo:
             filename += f"_{seed:016x}"
         filename += ".in"
 
-        return InputPath(filename, solution=solution)
+        return InputPath.new(filename, solution=solution)
 
     def reference_output(
-        self, env: Env, seed: Optional[int] = None, solution: Optional[str] = None
+        self, env: Env, seed: int | None = None, solution: str | None = None
     ) -> OutputPath:
         is_static = self.generation_mode == TestcaseGenerationMode.static
 
@@ -69,3 +70,62 @@ class TestcaseInfo:
             path = OutputPath(TESTS_DIR, solution, path.name).to_reference_output()
 
         return path
+
+    def to_str(self) -> str:
+        return f"{self.generation_mode} {self.name} repeat={self.repeat} seeded={str(self.seeded).lower()}"
+
+    @staticmethod
+    def from_str(line: str) -> "TestcaseInfo":
+        line = line.rstrip("\n")
+        if not line:
+            raise ValueError("Line empty")
+
+        args = line.split(" ")
+
+        generation_mode = TestcaseGenerationMode(args[0])
+        input_name = args[1]
+        info_args: dict[str, Any] = {}
+
+        for arg in args[2:]:
+            if not arg.strip():
+                raise ValueError("Argument empty. (Check whitespace.)")
+
+            if "=" not in arg:
+                raise ValueError("Missing '='")
+            parts = arg.split("=")
+            if len(parts) != 2:
+                raise ValueError("Too many '='")
+            arg_name, arg_value = parts
+            if arg_name in info_args:
+                raise ValueError(f"Repeated key '{arg_name}'")
+            elif arg_name == "repeat":
+                try:
+                    repeat_times = int(arg_value)
+                    assert repeat_times > 0
+                except (ValueError, AssertionError):
+                    raise ValueError("'repeat' should be a positive number")
+
+                info_args[arg_name] = repeat_times
+            elif arg_name == "seeded":
+                if arg_value not in ("true", "false"):
+                    raise ValueError("'seeded' should be 'true' or 'false'")
+                info_args[arg_name] = arg_value == "true"
+            else:
+                raise ValueError(f"Unknown argument: '{arg_name}'")
+
+        if not info_args.get("seeded", True) and info_args.get("repeat", 1) > 1:
+            raise ValueError("For an unseeded input 'repeat' must be '1'")
+
+        return TestcaseInfo(generation_mode, input_name, **info_args)
+
+
+class ExportInputsList(TaskJob):
+    def __init__(self, env: Env, testcases: list[TestcaseInfo]) -> None:
+        self._testcases = testcases
+        super().__init__(env=env, name=f"Export inputs list")
+
+    def _run(self) -> None:
+        assert list(sorted(self._testcases)) == self._testcases
+        with self._open_file(TaskPath(TESTS_DIR, INPUTS_LIST), "w") as f:
+            for testcase in self._testcases:
+                f.write(testcase.to_str() + "\n")

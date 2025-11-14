@@ -47,6 +47,7 @@ def run_pipeline(
 ) -> None:
     with ChangedCWD(path):
         env = Env.load(**env_args)
+        ColorSettings.set_state(not env.no_colors)
         cache = Cache.load()
 
         all_accessed_files: set[str] = set()

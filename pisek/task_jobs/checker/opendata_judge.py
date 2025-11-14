@@ -166,11 +166,13 @@ class RunOpendataJudge(RunBatchChecker):
         if self._result.returncode == self.return_code_ok:
             if "POINTS" not in key_values:
                 return RelativeSolutionResult(
-                    Verdict.ok,
-                    message,
-                    self._solution_run_res,
-                    self._result,
-                    Decimal(1),
+                    verdict=Verdict.ok,
+                    message=message,
+                    solution_rr=self._solution_run_res,
+                    checker_rr=self._result,
+                    log=key_values.get("LOG"),
+                    note=key_values.get("NOTE"),
+                    relative_points=Decimal(1),
                 )
 
             max_points = self._env.config.test_sections[self.test].points
@@ -183,16 +185,24 @@ class RunOpendataJudge(RunBatchChecker):
                 verdict = Verdict.superopt
 
             return AbsoluteSolutionResult(
-                verdict, message, self._solution_run_res, self._result, points
+                verdict=verdict,
+                message=message,
+                solution_rr=self._solution_run_res,
+                checker_rr=self._result,
+                log=key_values.get("LOG"),
+                note=key_values.get("NOTE"),
+                absolute_points=points,
             )
 
         else:
             return RelativeSolutionResult(
-                Verdict.wrong_answer,
-                message,
-                self._solution_run_res,
-                self._result,
-                Decimal(0),
+                verdict=Verdict.wrong_answer,
+                message=message,
+                solution_rr=self._solution_run_res,
+                checker_rr=self._result,
+                log=key_values.get("LOG"),
+                note=key_values.get("NOTE"),
+                relative_points=Decimal(0),
             )
 
 

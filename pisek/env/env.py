@@ -28,6 +28,7 @@ from pisek.config.select_solutions import expand_solutions
 
 class TestingTarget(StrEnum):
     all = auto()
+    build = auto()
     generator = auto()
     solutions = auto()
 

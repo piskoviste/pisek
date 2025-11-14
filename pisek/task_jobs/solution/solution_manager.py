@@ -184,6 +184,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
             self._solution,
             self.is_primary,
             input_path,
+            input_path.to_output(),
         )
 
         out = input_path.to_output()

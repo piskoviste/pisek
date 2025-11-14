@@ -104,7 +104,9 @@ class TaskHelper:
     @staticmethod
     def make_filedirs(path: TaskPath, exist_ok: bool = True):
         """Make directories for given file"""
-        os.makedirs(os.path.dirname(path.path), exist_ok=exist_ok)
+        dirname = os.path.dirname(path.path)
+        if dirname:
+            os.makedirs(dirname, exist_ok=exist_ok)
 
 
 class TaskJob(Job, TaskHelper):
@@ -206,7 +208,10 @@ class TaskJob(Job, TaskHelper):
         while os.path.islink(source):
             source = os.readlink(source)
 
-        return os.link(source, dst.path)
+        try:
+            os.link(source, dst.path)
+        except OSError:
+            shutil.copyfile(source, dst.path)
 
     @_file_access(2)
     def _symlink_file(

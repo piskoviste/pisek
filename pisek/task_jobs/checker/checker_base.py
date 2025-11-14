@@ -104,32 +104,40 @@ class RunChecker(ProgramsJob):
                 pass
             elif san_res.kind == SanitizationResultKind.invalid:
                 return RelativeSolutionResult(
-                    Verdict.normalization_fail,
-                    san_res.msg,
-                    self._solution_run_res,
-                    None,
-                    Decimal(0),
+                    verdict=Verdict.normalization_fail,
+                    message=san_res.msg,
+                    solution_rr=self._solution_run_res,
+                    checker_rr=None,
+                    relative_points=Decimal(0),
                 )
             elif (
                 out_form == DataFormat.strict_text
                 and san_res.kind == SanitizationResultKind.changed
             ):
                 return RelativeSolutionResult(
-                    Verdict.normalization_fail,
-                    f"Output not normalized. (Check encoding, missing newline at the end or '\\r'.)",
-                    self._solution_run_res,
-                    None,
-                    Decimal(0),
+                    verdict=Verdict.normalization_fail,
+                    message=f"Output not normalized. (Check encoding, missing newline at the end or '\\r'.)",
+                    solution_rr=self._solution_run_res,
+                    checker_rr=None,
+                    relative_points=Decimal(0),
                 )
 
             return self._check()
         elif self._solution_run_res.kind == RunResultKind.RUNTIME_ERROR:
             return RelativeSolutionResult(
-                Verdict.error, None, self._solution_run_res, None, Decimal(0)
+                verdict=Verdict.error,
+                message=None,
+                solution_rr=self._solution_run_res,
+                checker_rr=None,
+                relative_points=Decimal(0),
             )
         elif self._solution_run_res.kind == RunResultKind.TIMEOUT:
             return RelativeSolutionResult(
-                Verdict.timeout, None, self._solution_run_res, None, Decimal(0)
+                verdict=Verdict.timeout,
+                message=None,
+                solution_rr=self._solution_run_res,
+                checker_rr=None,
+                relative_points=Decimal(0),
             )
 
         raise ValueError(

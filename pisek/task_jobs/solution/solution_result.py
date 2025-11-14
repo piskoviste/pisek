@@ -68,9 +68,11 @@ class SolutionResult(ABC):
     """Class representing result of a solution on given input."""
 
     verdict: Verdict
-    message: Optional[str]
+    message: str | None
     solution_rr: RunResult
-    checker_rr: Optional[RunResult]
+    checker_rr: RunResult | None
+    log: str | None = None
+    note: str | None = None
 
     def points(self, env: "Env", test_points: TestPoints) -> Decimal:
         if test_points == "unscored":
@@ -86,12 +88,14 @@ class SolutionResult(ABC):
         return self.verdict.mark()
 
 
-@dataclass
+@dataclass(kw_only=True)
 class RelativeSolutionResult(SolutionResult):
     verdict: Verdict
     message: Optional[str]
     solution_rr: RunResult
     checker_rr: Optional[RunResult]
+    log: str | None = None
+    note: str | None = None
     relative_points: Decimal
 
     def _points(self, env: "Env", test_points: int) -> Decimal:
@@ -105,12 +109,14 @@ class RelativeSolutionResult(SolutionResult):
         return super().mark()
 
 
-@dataclass
+@dataclass(kw_only=True)
 class AbsoluteSolutionResult(SolutionResult):
     verdict: Verdict
     message: Optional[str]
     solution_rr: RunResult
     checker_rr: Optional[RunResult]
+    log: str | None = None
+    note: str | None = None
     absolute_points: Decimal
 
     def _points(self, env: "Env", test_points: int) -> Decimal:
