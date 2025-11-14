@@ -208,7 +208,10 @@ class TaskJob(Job, TaskHelper):
         while os.path.islink(source):
             source = os.readlink(source)
 
-        return os.link(source, dst.path)
+        try:
+            os.link(source, dst.path)
+        except OSError:
+            shutil.copyfile(source, dst.path)
 
     @_file_access(2)
     def _symlink_file(
