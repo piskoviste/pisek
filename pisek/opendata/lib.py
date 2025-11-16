@@ -44,7 +44,6 @@ ENV_ARGS = {
     "target": TestingTarget.build,
     "no_colors": True,
     "no_jumps": True,
-    "strict": True,
 }
 
 
