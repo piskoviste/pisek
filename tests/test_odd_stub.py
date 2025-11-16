@@ -4,15 +4,16 @@ from util import TestFixtureVariant, modify_config
 
 
 class TestOddStub(TestFixtureVariant):
-    def fixture_path(self):
+    @property
+    def fixture_path(self) -> str:
         return "../fixtures/odd_stub/"
 
 
 class TestBigInput(TestOddStub):
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return False
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         def modification_fn(raw_config):
             raw_config.add_section("limits")
             raw_config["limits"]["input_max_size"] = "1"
@@ -21,10 +22,10 @@ class TestBigInput(TestOddStub):
 
 
 class TestBigOutput(TestOddStub):
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return False
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         def modification_fn(raw_config):
             raw_config.add_section("limits")
             raw_config["limits"]["output_max_size"] = "1"

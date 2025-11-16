@@ -21,11 +21,11 @@ from pisek.opendata.lib import Task, BuiltTask
 
 
 class TestFixtureOpendata(TestFixture):
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return True
 
-    def runTest(self):
-        if not self.fixture_path():
+    def runTest(self) -> None:
+        if not self.fixture_path:
             return
 
         self.log_files()
@@ -49,8 +49,8 @@ class TestFixtureOpendata(TestFixture):
         self.check_end_state()
         self.check_files()
 
-    def tearDown(self):
-        if not self.fixture_path():
+    def tearDown(self) -> None:
+        if not self.fixture_path:
             return
 
         assert self._build_task_dir.startswith(
@@ -68,7 +68,8 @@ class TestFixtureOpendata(TestFixture):
 
 
 class TestSumKasiopeaOpendataBuild(TestFixtureOpendata):
-    def fixture_path(self):
+    @property
+    def fixture_path(self) -> str:
         return "../fixtures/sum_kasiopea/"
 
 

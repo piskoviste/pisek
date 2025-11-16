@@ -4,7 +4,8 @@ from util import TestFixtureVariant
 
 
 class TestGuess(TestFixtureVariant):
-    def fixture_path(self):
+    @property
+    def fixture_path(self) -> str:
         return "../fixtures/guess/"
 
 

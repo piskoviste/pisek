@@ -14,14 +14,15 @@ from pisek.__main__ import main
 
 
 class TestCLI(TestFixture):
-    def fixture_path(self):
+    @property
+    def fixture_path(self) -> str:
         return "../fixtures/sum_cms/"
 
-    def args(self):
+    def args(self) -> list[list[str]]:
         return [["test", "--time-limit", "0.2"]]
 
-    def runTest(self):
-        if not self.fixture_path():
+    def runTest(self) -> None:
+        if not self.fixture_path:
             return
 
         self.log_files()
@@ -40,44 +41,45 @@ class TestCLI(TestFixture):
 
 
 class TestCLITestSolution(TestCLI):
-    def args(self):
+    def args(self) -> list[list[str]]:
         return [["test", "solutions", "solve"]]
 
 
 class TestCLITestGenerator(TestCLI):
-    def args(self):
+    def args(self) -> list[list[str]]:
         return [["test", "generator"]]
 
 
 class TestCLIClean(TestCLI):
-    def args(self):
+    def args(self) -> list[list[str]]:
         return [["clean"]]
 
 
 class TestCLITestingLog(TestCLI):
-    def args(self):
+    def args(self) -> list[list[str]]:
         return [["test", "--testing-log"]]
 
-    def created_files(self):
+    def created_files(self) -> list[str]:
         return ["testing_log.json"]
 
 
 class TestCLIVisualize(TestCLI):
-    def args(self):
+    def args(self) -> list[list[str]]:
         return [["test", "--testing-log"], ["visualize"]]
 
-    def created_files(self):
+    def created_files(self) -> list[str]:
         return ["testing_log.json"]
 
 
 class TestCLIExport(TestCLI):
-    def fixture_path(self):
+    @property
+    def fixture_path(self) -> str:
         return "../fixtures/guess/"
 
-    def args(self):
+    def args(self) -> list[list[str]]:
         return [["config", "export", "config"], ["test"]]
 
-    def created_files(self):
+    def created_files(self) -> list[str]:
         return ["exported-config"]
 
 
