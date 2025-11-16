@@ -17,7 +17,7 @@ import shutil
 import tempfile
 from typing import cast
 
-from pisek.user_errors import InvalidArgument, InvalidOperation
+from pisek.user_errors import InvalidArgument, InvalidOperation, TestingFailed
 from pisek.utils.paths import (
     BUILD_DIR,
     TESTS_DIR,
@@ -41,10 +41,8 @@ from pisek.opendata.managers import OpendataPipeline
 
 
 ENV_ARGS = {
-    "target": TestingTarget.build,
     "no_colors": True,
     "no_jumps": True,
-    "strict": True,
 }
 
 
@@ -61,6 +59,13 @@ class Task:
             "config_filename": config_filename,
         }
 
+    def test(self, strict: bool = True) -> bool:
+        try:
+            run_pipeline(self._path, TaskPipeline, strict=strict, **self._env_args)
+        except TestingFailed:
+            return False
+        return True
+
     def build(self, path: str) -> "BuiltTask":
         if os.path.exists(path):
             if not os.path.isdir(path):
@@ -69,7 +74,9 @@ class Task:
                 raise InvalidOperation(f"{path} should be an empty directory")
 
         os.makedirs(path, exist_ok=True)
-        run_pipeline(self._path, TaskPipeline, **self._env_args)
+        run_pipeline(
+            self._path, TaskPipeline, target=TestingTarget.build, **self._env_args
+        )
 
         COPIED_PATHS = [
             BUILD_DIR,
