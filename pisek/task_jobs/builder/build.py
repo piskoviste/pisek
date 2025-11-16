@@ -162,6 +162,10 @@ class Build(TaskJob):
         for path in sources | extras:
             # Intentionally avoiding caching results
             dst = os.path.join(workdir, path.name)
+            if os.path.exists(dst):
+                raise PipelineItemFailure(
+                    f"Duplicate filename / dirname: '{path.name}'"
+                )
             if self._is_dir(path):
                 shutil.copytree(path.path, dst)
                 self._access_dir(path)
