@@ -1,7 +1,9 @@
+import configparser
 import io
 import os
 import shutil
 import tempfile
+from typing import Callable
 import unittest
 from unittest import mock
 
@@ -13,22 +15,23 @@ from pisek.utils.pipeline_tools import assert_task_dir
 
 
 class TestFixture(unittest.TestCase):
-    def fixture_path(self):
+    @property
+    def fixture_path(self) -> str | None:
         return None
 
-    def setUp(self):
+    def setUp(self) -> None:
         os.environ["PISEK_DIRECTORY"] = "../pisek"
         os.environ["LOG_LEVEL"] = "debug"
 
-        if not self.fixture_path():
+        if not self.fixture_path:
             return
 
         self.task_dir_orig = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), self.fixture_path())
+            os.path.join(os.path.dirname(__file__), self.fixture_path)
         )
         self.fixtures_dir = tempfile.mkdtemp(prefix="pisek-test_")
         self.task_dir = os.path.join(
-            self.fixtures_dir, os.path.relpath(self.fixture_path(), "../fixtures")
+            self.fixtures_dir, os.path.relpath(self.fixture_path, "../fixtures")
         )
 
         # shutil.copytree() requires that the destination directory does not exist,
@@ -52,12 +55,12 @@ class TestFixture(unittest.TestCase):
         self.cwd_orig = os.getcwd()
         os.chdir(self.task_dir)
 
-    def runTest(self):
+    def runTest(self) -> None:
         # Implement this!
         pass
 
-    def tearDown(self):
-        if not self.fixture_path():
+    def tearDown(self) -> None:
+        if not self.fixture_path:
             return
 
         os.chdir(self.cwd_orig)
@@ -67,15 +70,15 @@ class TestFixture(unittest.TestCase):
         )
         shutil.rmtree(self.fixtures_dir)
 
-    def log_files(self):
+    def log_files(self) -> None:
         """Log all files for checking whether new ones have been created."""
         self.original_files = os.listdir(self.task_dir)
 
-    def created_files(self):
+    def created_files(self) -> list[str]:
         """Additional files that are expected to be created."""
         return []
 
-    def check_files(self):
+    def check_files(self) -> None:
         """
         Check whether there are no new unexpected files.
         Ignored:
@@ -94,13 +97,13 @@ class TestFixture(unittest.TestCase):
 
 
 class TestFixtureVariant(TestFixture):
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return True
 
-    def catch_exceptions(self):
+    def catch_exceptions(self) -> bool:
         return False
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         """
         Code which modifies the task before running the tests should go here.
         For example, if we want to check that the presence of `sample.in` is
@@ -108,8 +111,8 @@ class TestFixtureVariant(TestFixture):
         """
         pass
 
-    def runTest(self):
-        if not self.fixture_path():
+    def runTest(self) -> None:
+        if not self.fixture_path:
             return
 
         self.modify_task()
@@ -146,7 +149,9 @@ class TestFixtureVariant(TestFixture):
         pass
 
 
-def overwrite_file(task_dir, old_file, new_file, new_file_name=None):
+def overwrite_file(
+    task_dir: str, old_file: str, new_file: str, new_file_name: str | None = None
+) -> None:
     os.remove(os.path.join(task_dir, old_file))
     shutil.copy(
         os.path.join(task_dir, new_file),
@@ -154,7 +159,9 @@ def overwrite_file(task_dir, old_file, new_file, new_file_name=None):
     )
 
 
-def modify_config(task_dir: str, modification_fn):
+def modify_config(
+    task_dir: str, modification_fn: Callable[[configparser.ConfigParser], None]
+) -> None:
     """
     `modification_fn` accepts the config (in "raw" ConfigParser format) and may
     modify it. The modified version is then saved.

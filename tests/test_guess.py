@@ -3,10 +3,10 @@ import unittest
 from util import TestFixtureVariant
 
 
-class TestMax(TestFixtureVariant):
+class TestGuess(TestFixtureVariant):
     @property
     def fixture_path(self) -> str:
-        return "../fixtures/max/"
+        return "../fixtures/guess/"
 
 
 if __name__ == "__main__":

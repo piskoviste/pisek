@@ -5,55 +5,55 @@ pisek catches the problem.
 """
 
 import unittest
-import shutil
 import os
 
 from util import TestFixtureVariant, overwrite_file, modify_config
 
 
 class TestSumKasiopea(TestFixtureVariant):
-    def fixture_path(self):
+    @property
+    def fixture_path(self) -> str:
         return "../fixtures/sum_kasiopea/"
 
 
 class TestMissingSampleIn(TestSumKasiopea):
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return False
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         os.remove(os.path.join(self.task_dir, "sample.in"))
 
 
 class TestMissingSampleOut(TestSumKasiopea):
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return False
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         os.remove(os.path.join(self.task_dir, "sample.out"))
 
 
 class TestWrongSampleOut(TestSumKasiopea):
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return False
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         with open(os.path.join(self.task_dir, "sample.out"), "a") as f:
             f.write("0\n")
 
 
 class TestMissingGenerator(TestSumKasiopea):
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return False
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         os.remove(os.path.join(self.task_dir, "gen.cpp"))
 
 
 class TestBadGenerator(TestSumKasiopea):
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return False
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         generator_filename = os.path.join(self.task_dir, "gen.cpp")
         os.remove(generator_filename)
 
@@ -62,18 +62,18 @@ class TestBadGenerator(TestSumKasiopea):
 
 
 class TestPythonGenerator(TestSumKasiopea):
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return True
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         overwrite_file(self.task_dir, "gen.cpp", "gen_2.py", new_file_name="gen.py")
 
 
 class TestNonHexaPythonGenerator(TestSumKasiopea):
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return False
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         os.remove(os.path.join(self.task_dir, "gen.cpp"))
 
         new_program = [
@@ -87,10 +87,10 @@ class TestNonHexaPythonGenerator(TestSumKasiopea):
 
 
 class TestNonHexaGenerator(TestSumKasiopea):
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return False
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         os.remove(os.path.join(self.task_dir, "gen.cpp"))
 
         new_program = [
@@ -107,20 +107,20 @@ class TestNonHexaGenerator(TestSumKasiopea):
 
 
 class TestDifferentlyScoringSolution(TestSumKasiopea):
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return False
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         overwrite_file(
             self.task_dir, "solve_0b.py", "solve_4b.cpp", new_file_name="solve_0b.cpp"
         )
 
 
 class TestJudge(TestSumKasiopea):
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return True
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         def modification_fn(raw_config):
             raw_config["tests"]["out_check"] = "judge"
             raw_config["tests"]["out_judge"] = "judge"
@@ -130,10 +130,10 @@ class TestJudge(TestSumKasiopea):
 
 
 class TestJudgeWithNoInput(TestSumKasiopea):
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return False
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         def modification_fn(raw_config):
             raw_config["tests"]["judge_needs_in"] = "0"
             raw_config["tests"]["out_check"] = "judge"
@@ -144,10 +144,10 @@ class TestJudgeWithNoInput(TestSumKasiopea):
 
 
 class TestJudgeWithNoOutput(TestSumKasiopea):
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return False
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         def modification_fn(raw_config):
             raw_config["tests"]["judge_needs_out"] = "0"
             raw_config["tests"]["out_check"] = "judge"
@@ -158,10 +158,10 @@ class TestJudgeWithNoOutput(TestSumKasiopea):
 
 
 class TestPythonJudge(TestSumKasiopea):
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return True
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         def modification_fn(raw_config):
             raw_config["tests"]["out_check"] = "judge"
             raw_config["tests"]["out_judge"] = "judge_py"
@@ -171,10 +171,10 @@ class TestPythonJudge(TestSumKasiopea):
 
 
 class TestBadJudge(TestSumKasiopea):
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return False
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         def modification_fn(raw_config):
             raw_config["tests"]["out_check"] = "judge"
             raw_config["tests"]["out_judge"] = "judge_bad"
@@ -184,10 +184,10 @@ class TestBadJudge(TestSumKasiopea):
 
 
 class TestPythonCRLF(TestSumKasiopea):
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return False
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         os.remove(os.path.join(self.task_dir, "solve.py"))
 
         new_program = [
@@ -205,33 +205,33 @@ class TestPythonCRLF(TestSumKasiopea):
 class TestStrictValidator(TestSumKasiopea):
     """A validator whose bounds are stricter than what the generator creates."""
 
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return False
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         overwrite_file(self.task_dir, "validate.py", "validate_strict.py")
 
 
 class TestDirtySample(TestSumKasiopea):
     """Sample without newline at the end."""
 
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return False
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         sample = ["3", "1 2", "-8 5", "0 0"]
         with open(os.path.join(self.task_dir, "sample.in"), "w") as f:
             f.write("\n".join(sample))
 
 
 class TestExtraConfigKeys(TestSumKasiopea):
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return False
 
-    def catch_exceptions(self):
+    def catch_exceptions(self) -> bool:
         return True
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         def modification_fn(raw_config):
             raw_config["task"]["foo"] = "bar"
 
@@ -239,13 +239,13 @@ class TestExtraConfigKeys(TestSumKasiopea):
 
 
 class TestExtraConfigKeysInTest(TestSumKasiopea):
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return False
 
-    def catch_exceptions(self):
+    def catch_exceptions(self) -> bool:
         return True
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         def modification_fn(raw_config):
             raw_config["test01"]["foo"] = "bar"
 
@@ -253,13 +253,13 @@ class TestExtraConfigKeysInTest(TestSumKasiopea):
 
 
 class TestExtraConfigSection(TestSumKasiopea):
-    def expecting_success(self):
+    def expecting_success(self) -> bool:
         return False
 
-    def catch_exceptions(self):
+    def catch_exceptions(self) -> bool:
         return True
 
-    def modify_task(self):
+    def modify_task(self) -> None:
         def modification_fn(raw_config):
             raw_config.add_section("baz")
             raw_config["baz"]["foo"] = "bar"
