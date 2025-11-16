@@ -472,7 +472,7 @@ class TestSection(BaseEnv):
                 glob = f"{info.data['num']:02}*.in"
             if not glob.endswith(".in"):
                 raise PydanticCustomError(
-                    "in_globs_end_in", "In_globs must end with '*.in'"
+                    "in_globs_end_in", "In_globs must end with '.in'"
                 )
             globs.append(glob)
 
