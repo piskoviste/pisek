@@ -13,7 +13,7 @@
 from abc import abstractmethod
 
 from pisek.env.env import Env
-from pisek.utils.paths import InputPath
+from pisek.utils.paths import IInputPath
 from pisek.config.task_config import ProgramRole, RunSection
 from pisek.task_jobs.run_result import RunResult
 from pisek.task_jobs.program import ProgramsJob
@@ -26,7 +26,7 @@ class ValidatorJob(ProgramsJob):
         self,
         env: Env,
         validator: RunSection,
-        input_: InputPath,
+        input_: IInputPath,
         test: int,
         **kwargs,
     ):

@@ -15,7 +15,7 @@ from decimal import Decimal
 import logging
 from typing import Any
 
-from pisek.utils.paths import InputPath, OutputPath
+from pisek.utils.paths import IInputPath, IOutputPath
 from pisek.env.env import Env
 from pisek.config.config_types import ProgramRole
 from pisek.config.task_config import RunSection
@@ -52,9 +52,9 @@ class RunOpendataJudge(RunBatchChecker):
         env: Env,
         judge: RunSection,
         test: int,
-        input_: InputPath,
-        output: OutputPath,
-        correct_output: OutputPath,
+        input_: IInputPath,
+        output: IOutputPath,
+        correct_output: IOutputPath,
         seed: int | None,
         expected_verdict: Verdict | None,
         **kwargs,

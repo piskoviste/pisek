@@ -16,7 +16,7 @@ from typing import Optional
 from pisek.env.env import Env
 from pisek.jobs.jobs import PipelineItemFailure
 from pisek.config.task_config import RunSection
-from pisek.utils.paths import InputPath
+from pisek.utils.paths import IInputPath
 from pisek.task_jobs.task_job import TaskJob
 from pisek.task_jobs.program import ProgramsJob
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
@@ -45,7 +45,7 @@ class GenerateInput(ProgramsJob):
         generator: RunSection,
         testcase_info: TestcaseInfo,
         seed: Optional[int],
-        input_path: InputPath,
+        input_path: IInputPath,
         *,
         name: str = "",
         **kwargs,

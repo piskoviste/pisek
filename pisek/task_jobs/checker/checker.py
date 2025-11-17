@@ -13,7 +13,7 @@
 from typing import Optional
 
 from pisek.env.env import Env
-from pisek.utils.paths import InputPath, OutputPath
+from pisek.utils.paths import IInputPath, IOutputPath
 from pisek.config.config_types import OutCheck, JudgeType
 from pisek.task_jobs.solution.solution_result import Verdict
 
@@ -28,9 +28,9 @@ from pisek.task_jobs.checker.opendata_judge import (
 
 
 def checker_job(
-    input_: InputPath,
-    output: OutputPath,
-    correct_output: OutputPath,
+    input_: IInputPath,
+    output: IOutputPath,
+    correct_output: IOutputPath,
     test: int,
     seed: Optional[int],
     expected_verdict: Optional[Verdict],

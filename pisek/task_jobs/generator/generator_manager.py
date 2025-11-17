@@ -18,7 +18,7 @@ from typing import cast, Any, Optional
 from hashlib import blake2b
 
 from pisek.env.env import Env
-from pisek.utils.paths import InputPath, OutputPath
+from pisek.utils.paths import IInputPath, IOutputPath
 from pisek.config.config_types import GenType
 from pisek.config.task_config import RunSection
 from pisek.jobs.jobs import Job, JobManager
@@ -91,7 +91,7 @@ def generate_input(
 
 
 def generate_input_direct(
-    env: Env, testcase_info: TestcaseInfo, seed: Optional[int], input_path: InputPath
+    env: Env, testcase_info: TestcaseInfo, seed: Optional[int], input_path: IInputPath
 ) -> GenerateInput:
     assert env.config.tests.in_gen is not None
     assert env.config.tests.gen_type is not None
@@ -126,7 +126,7 @@ def generator_test_determinism(
 class TestcaseInfoMixin(JobManager):
     def __init__(self, name: str, **kwargs) -> None:
         self.inputs: dict[str, tuple[set[int], int | None]] = {}
-        self.input_dataset: set[InputPath] = set()
+        self.input_dataset: set[IInputPath] = set()
         self._gen_inputs_job: dict[Optional[int], GenerateInput] = {}
 
         self._jobs: list[Job] = []
@@ -240,7 +240,7 @@ class TestcaseInfoMixin(JobManager):
                     )
                 )
 
-    def _validate(self, input_path: InputPath, test_num: int) -> ValidatorJob:
+    def _validate(self, input_path: IInputPath, test_num: int) -> ValidatorJob:
         assert self._env.config.tests.validator is not None
         assert self._env.config.tests.validator_type is not None
 
@@ -283,7 +283,7 @@ class TestcaseInfoMixin(JobManager):
         for i in range(2):
             check_seeded.add_prerequisite(self._gen_inputs_job[seeds[i]])
 
-    def _check_input_jobs(self, input_path: InputPath) -> None:
+    def _check_input_jobs(self, input_path: IInputPath) -> None:
         self._add_job(
             sanitize_job(self._env, input_path, True),
             new_last=True,
@@ -294,7 +294,7 @@ class TestcaseInfoMixin(JobManager):
 
     def _add_check_output_jobs(
         self,
-        output_path: OutputPath,
+        output_path: IOutputPath,
     ) -> None:
         self._add_job(
             sanitize_job(self._env, output_path, False),

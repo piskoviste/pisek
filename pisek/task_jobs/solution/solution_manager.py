@@ -20,7 +20,7 @@ from typing import Any, Optional
 
 from pisek.jobs.jobs import State, Job, PipelineItemFailure
 from pisek.env.env import Env
-from pisek.utils.paths import InputPath
+from pisek.utils.paths import IInputPath
 from pisek.config.config_types import TaskType
 from pisek.utils.text import pad, pad_left, tab
 from pisek.utils.terminal import MSG_LEN, right_aligned_text
@@ -57,9 +57,9 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         self.is_primary: bool = self._env.config.solutions[self.solution_label].primary
         self._solution = self._env.config.solutions[self.solution_label].run
 
-        self._sols: dict[InputPath, RunSolution] = {}
-        self._checkers: dict[InputPath, RunChecker] = {}
-        self._static_out_checkers: dict[InputPath, RunChecker] = {}
+        self._sols: dict[IInputPath, RunSolution] = {}
+        self._checkers: dict[IInputPath, RunChecker] = {}
+        self._static_out_checkers: dict[IInputPath, RunChecker] = {}
 
         for sub_num, inputs in self._all_testcases().items():
             self.tests.append(TestJobGroup(self._env, sub_num))
@@ -209,7 +209,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
 
         return (run_solution, run_checker)
 
-    def _create_interactive_jobs(self, inp: InputPath, test: int) -> RunInteractive:
+    def _create_interactive_jobs(self, inp: IInputPath, test: int) -> RunInteractive:
         """Create RunInteractive job for interactive task type."""
         if self._env.config.tests.out_judge is None:
             raise RuntimeError("Unset judge for interactive.")
