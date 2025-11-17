@@ -23,15 +23,15 @@ from pisek.utils.paths import (
     TESTS_DIR,
     INPUTS_LIST,
     INPUTS_SUBDIR,
+    OpendataRawPath,
     OpendataInputPath,
     OpendataOutputPath,
 )
 from pisek.utils.pipeline_tools import run_pipeline
 from pisek.config.config_hierarchy import DEFAULT_CONFIG_FILENAME
-from pisek.config.task_config import load_config, TaskConfig
+from pisek.config.task_config import load_config
 from pisek.config.config_tools import export_config
 from pisek.env.env import TestingTarget
-from pisek.jobs.jobs import JobManager
 from pisek.jobs.task_pipeline import TaskPipeline
 from pisek.task_jobs.data.testcase_info import TestcaseInfo
 from pisek.task_jobs.data.data_manager import TEST_SEED
@@ -218,6 +218,14 @@ class Testcase:
 
         if input_needed or output_needed or check:
             self._make_tmp_dir()
+            assert self.tmp_dir is not None
+
+            contestant_output_path: OpendataRawPath | None = None
+            if contestant_output is not None:
+                contestant_output_path = OpendataRawPath(
+                    self.tmp_dir, contestant_output
+                )
+
             pipeline = OpendataPipeline(
                 input_needed,
                 output_needed,
@@ -227,7 +235,7 @@ class Testcase:
                 self._test,
                 self._seed,
                 self._output_path(),
-                contestant_output,
+                contestant_output_path,
             )
             run_pipeline(self._built_task._path, lambda _: pipeline, **ENV_ARGS)
             if clear:

@@ -1,9 +1,9 @@
 from pisek.jobs.jobs import Job
 from pisek.jobs.status import StatusJobManager
 from pisek.jobs.job_pipeline import JobPipeline
-from pisek.utils.paths import InputPath, OutputPath
+from pisek.utils.paths import InputPath, OutputPath, RawPath
 
-from pisek.task_jobs.tools import sanitize_job
+from pisek.task_jobs.tools import sanitize_job, sanitize_job_direct
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
 from pisek.task_jobs.generator.generator_manager import generate_input_direct
 from pisek.task_jobs.solution.solution import RunBatchSolution
@@ -22,7 +22,7 @@ class OpendataPipeline(JobPipeline):
         test: int,
         seed: int | None,
         correct_output: OutputPath,
-        contestant_output: str | None,
+        contestant_output: RawPath | None,
     ):
         super().__init__()
         self.job_managers = []
@@ -37,7 +37,7 @@ class OpendataPipeline(JobPipeline):
         if check:
             assert contestant_output is not None
             self._checker_man = CheckerManager(
-                input_, test, seed, correct_output, OutputPath(contestant_output)
+                input_, test, seed, correct_output, contestant_output
             )
             self.job_managers.append(self._checker_man)
 
@@ -111,7 +111,7 @@ class CheckerManager(StatusJobManager):
         test: int,
         seed: int | None,
         correct_output: OutputPath,
-        contestant_output: OutputPath,
+        contestant_output: RawPath,
     ):
         self._input = input_
         self._test = test
@@ -121,17 +121,30 @@ class CheckerManager(StatusJobManager):
         super().__init__(f"Check {contestant_output:n}")
 
     def _get_jobs(self) -> list[Job]:
+        jobs: list[Job] = []
+
+        sanitize = sanitize_job_direct(
+            self._env,
+            self._contestant_output,
+            self._contestant_output.to_sanitized_output(),
+            False,
+        )
         self._check = checker_job(
             self._input,
             self._correct_output,
-            self._contestant_output,
+            self._contestant_output.to_sanitized_output(),
             self._test,
             self._seed,
             None,
             self._env,
         )
 
-        return [self._check]
+        if sanitize is not None:
+            jobs.append(sanitize)
+            self._check.add_prerequisite(sanitize, name="sanitize")
+        jobs.append(self._check)
+
+        return jobs
 
     @property
     def judging_result(self) -> OpendataVerdict:

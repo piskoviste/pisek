@@ -250,15 +250,27 @@ class IsClean(SanitizeAbstract, TextPreprocAbstract):
             )
 
 
-def sanitize_job(env: Env, path: SanitizedPath, is_input: bool) -> Job | None:
+def _sanitize_get_format(env: Env, is_input: bool) -> DataFormat:
     if is_input:
-        format_ = env.config.tests.in_format
+        return env.config.tests.in_format
     else:
-        format_ = env.config.tests.out_format
+        return env.config.tests.out_format
+
+
+def sanitize_job(env: Env, path: SanitizedPath, is_input: bool) -> Job | None:
+    return sanitize_job_direct(
+        env, path.to_raw(_sanitize_get_format(env, is_input)), path, is_input
+    )
+
+
+def sanitize_job_direct(
+    env: Env, path_from: RawPath, path_to: SanitizedPath, is_input: bool
+) -> Job | None:
+    format_ = _sanitize_get_format(env, is_input)
 
     if format_ == DataFormat.binary:
         return None
     elif format_ == DataFormat.strict_text and is_input:
-        return IsClean(env, path.to_raw(format_), path)
+        return IsClean(env, path_from, path_to)
     else:
-        return Sanitize(env, path.to_raw(format_), path)
+        return Sanitize(env, path_from, path_to)
