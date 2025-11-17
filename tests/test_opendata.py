@@ -137,5 +137,33 @@ class TestSumKasiopeaOpendataJudgeRightaway(TestSumKasiopeaOpendataBuild):
         self.assertTrue(os.path.exists(output_path))
 
 
+class TestSumKasiopeaOpendataJudgeBinary(TestSumKasiopeaOpendataBuild):
+    def created_files(self):
+        return ["02.in", "02.out", "02.ok"]
+
+    def run_opendata_test(self):
+        input_path = os.path.join(self.task_dir, "02.in")
+        output_path = os.path.join(self.task_dir, "02.ok")
+        contestant_path = os.path.join(self.task_dir, "02.out")
+        with open(contestant_path, "xb") as f:
+            f.write(b"\x07\n")
+
+        testcase = self.built_task.get_testcase(
+            "02", 2, int("deadbeef", 16), input_path, output_path
+        )
+        self.assertEqual(
+            testcase.judge(os.path.join(self.task_dir, contestant_path)),
+            OpendataVerdict(
+                Verdict.normalization_fail,
+                "File contains non-printable character (code 7 at position 0)",
+                Decimal(0),
+                None,
+                None,
+            ),
+        )
+        self.assertTrue(os.path.exists(input_path))
+        self.assertTrue(os.path.exists(output_path))
+
+
 if __name__ == "__main__":
     unittest.main()

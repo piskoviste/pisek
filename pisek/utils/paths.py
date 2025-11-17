@@ -212,7 +212,7 @@ class OpendataOutputPath(OpendataPath, OutputPath):
 
 class OpendataRawPath(OpendataPath, RawPath):
     def to_sanitized_output(self) -> OutputPath:
-        assert False
+        return OutputPath(self._tmp_dir, self.name.removesuffix(".raw"))
 
     def to_sanitized_input(self) -> InputPath:
         assert False
