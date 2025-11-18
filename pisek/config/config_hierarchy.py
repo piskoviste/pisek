@@ -68,7 +68,7 @@ class ConfigValue:
         if self.internal:
             text += " (internal pisek value)"
         else:
-            text += f" (in config file {os.path.abspath(self.config)})"
+            text += f" (in config file {os.path.basename(self.config)})"
 
         return text
 
@@ -226,9 +226,9 @@ class ConfigHierarchy:
         }  # We need to use dictionary here because order matters
         return list(sections.values())
 
-    def check_unused_keys(self) -> None:
+    def check_unused(self) -> None:
         """
-        Check whether lowest config contains unused section or keys.
+        Check for unused sections or keys.
 
         Raises
         ------
@@ -236,27 +236,33 @@ class ConfigHierarchy:
             If unused sections or keys are present.
         """
         self._config_helper = ConfigKeysHelper()
-        for section in self._configs[0].sections():
-            dist, r_section = self._config_helper.find_section(section)
-            if dist != 0:
-                raise TaskConfigError(
-                    f"Unexpected section [{section}] in config. "
-                    f"(Did you mean [{r_section}]?)"
-                )
-            for key in self._configs[0][section].keys():
-                dist, r_section, r_key = self._config_helper.find_key(
-                    section, key, self
-                )
-                if dist != 0:
+        for config_i, config in enumerate(self._configs):
+            config_basename = os.path.basename(self._config_paths[config_i])
+            for section in config.sections():
+                dist, r_section = self._config_helper.find_section(section)
+                if dist < 1.0:
                     raise TaskConfigError(
-                        f"Unexpected key '{key}' in section [{section}] of config. "
-                        f"(Did you mean '{r_key}'"
-                        + (f" in section [{r_section}]" if section != r_section else "")
-                        + "?)"
+                        f"Unexpected section [{section}] in {config_basename}. "
+                        f"(Did you mean [{r_section}]?)"
                     )
+                for key in config[section].keys():
+                    dist, r_section, r_key = self._config_helper.find_key(
+                        section, key, self, config_i > 0
+                    )
+                    if dist < 1.0:
+                        raise TaskConfigError(
+                            f"Unexpected key '{key}' in section [{section}] in {config_basename}. "
+                            f"(Did you mean '{r_key}'"
+                            + (
+                                f" in section [{r_section}]"
+                                if section != r_section
+                                else ""
+                            )
+                            + "?)"
+                        )
 
     def check_all(self) -> None:
-        self.check_unused_keys()
+        self.check_unused()
 
     def check_todos(self) -> bool:
         """Check whether lowest config contains TODO in comments."""

@@ -49,8 +49,8 @@ predecessors=
 checks.validate=
 checks.different_outputs=
 
-[test\d{2}]
-#!regex
+[test{num}]
+#!regex test\d{2}
 #!default tests
 name=
 points=
@@ -59,20 +59,20 @@ predecessors=
 checks.validate=
 checks.different_outputs=
 
-[solution_(.*)]
-#!regex
+[solution_{solution}]
+#!regex solution_(.*)
 #!default solutions
 
 run=
 primary=
 
 points=
-#!if solution_(.*) points_min==X
-#!if solution_(.*) points_max==X
+#!if solution_{solution} points_min==X
+#!if solution_{solution} points_max==X
 points_min=
-#!if solution_(.*) points==X
+#!if solution_{solution} points==X
 points_max=
-#!if solution_(.*) points==X
+#!if solution_{solution} points==X
 
 tests=
 
@@ -99,8 +99,8 @@ mem_limit=
 process_limit=
 args=
 subdir=
-env_(.*)=
-#!regex
+env_{KEY}=
+#!regex env_(.*)
 
 [run_gen]
 #!default run
@@ -113,11 +113,11 @@ mem_limit=
 process_limit=
 args=
 subdir=
-env_(.*)=
-#!regex
+env_{KEY}=
+#!regex env_(.*)
 
-[run_gen:(.*)]
-#!regex
+[run_gen:{program}]
+#!regex run_gen:(.*)
 #!default run_gen
 build=
 exec=
@@ -128,8 +128,8 @@ mem_limit=
 process_limit=
 args=
 subdir=
-env_(.*)=
-#!regex
+env_{KEY}=
+#!regex env_(.*)
 
 [run_validator]
 #!default run
@@ -142,11 +142,11 @@ mem_limit=
 process_limit=
 args=
 subdir=
-env_(.*)=
-#!regex
+env_{KEY}=
+#!regex env_(.*)
 
-[run_validator:(.*)]
-#!regex
+[run_validator:{program}]
+#!regex run_validator:(.*)
 #!default run_validator
 build=
 exec=
@@ -157,8 +157,8 @@ mem_limit=
 process_limit=
 args=
 subdir=
-env_(.*)=
-#!regex
+env_{KEY}=
+#!regex env_(.*)
 
 [run_solution]
 #!default run
@@ -171,8 +171,8 @@ mem_limit=
 process_limit=
 args=
 subdir=
-env_(.*)=
-#!regex
+env_{KEY}=
+#!regex env_(.*)
 
 [run_primary_solution]
 #!default run_solution
@@ -185,8 +185,8 @@ mem_limit=
 process_limit=
 args=
 subdir=
-env_(.*)=
-#!regex
+env_{KEY}=
+#!regex env_(.*)
 
 [run_secondary_solution]
 #!default run_solution
@@ -199,11 +199,11 @@ mem_limit=
 process_limit=
 args=
 subdir=
-env_(.*)=
-#!regex
+env_{KEY}=
+#!regex env_(.*)
 
-[run_solution:(.*)]
-#!regex
+[run_solution:{program}]
+#!regex run_solution:(.*)
 #!dynamic_default
 build=
 exec=
@@ -214,8 +214,8 @@ mem_limit=
 process_limit=
 args=
 subdir=
-env_(.*)=
-#!regex
+env_{KEY}=
+#!regex env_(.*)
 
 [run_judge]
 #!default run
@@ -228,11 +228,11 @@ mem_limit=
 process_limit=
 args=
 subdir=
-env_(.*)=
-#!regex
+env_{KEY}=
+#!regex env_(.*)
 
-[run_judge:(.*)]
-#!regex
+[run_judge:{program}]
+#!regex run_judge:(.*)
 #!default run_judge
 build=
 exec=
@@ -243,8 +243,8 @@ mem_limit=
 process_limit=
 args=
 subdir=
-env_(.*)=
-#!regex
+env_{KEY}=
+#!regex env_(.*)
 
 # -------------- builds--------------
 [build]
@@ -261,8 +261,8 @@ extra_sources_cpp=
 extra_sources_py=
 extra_sources_java=
 
-[build:(.*)]
-#!regex
+[build:{program}]
+#!regex build:(.*)
 #!default build
 sources=
 comp_args=
@@ -292,8 +292,8 @@ extra_sources_cpp=
 extra_sources_py=
 extra_sources_java=
 
-[build_gen:(.*)]
-#!regex
+[build_gen:{program}]
+#!regex build_gen:(.*)
 #!default build_gen
 sources=
 comp_args=
@@ -323,8 +323,8 @@ extra_sources_cpp=
 extra_sources_py=
 extra_sources_java=
 
-[build_validator:(.*)]
-#!regex
+[build_validator:{program}]
+#!regex build_validator:(.*)
 #!default build_validator
 sources=
 comp_args=
@@ -354,8 +354,8 @@ extra_sources_cpp=
 extra_sources_py=
 extra_sources_java=
 
-[build_solution:(.*)]
-#!regex
+[build_solution:{program}]
+#!regex build_solution:(.*)
 #!default build_solution
 sources=
 comp_args=
@@ -385,8 +385,8 @@ extra_sources_cpp=
 extra_sources_py=
 extra_sources_java=
 
-[build_judge:(.*)]
-#!regex
+[build_judge:{program}]
+#!regex build_judge:(.*)
 #!default build_judge
 sources=
 comp_args=
