@@ -240,11 +240,11 @@ class ConfigKeysHelper:
         return recommendation
 
     def find_key(
-        self, section: str, key: str, config: "ConfigHierarchy"
+        self, section: str, key: str, config: "ConfigHierarchy", allow_unapplicable: bool
     ) -> tuple[int, str, str]:
         for candidate in self.keys.values():
             if candidate.score(section, key) == 0:
-                if text := candidate.applicable(section, key, config):
+                if not allow_unapplicable and (text := candidate.applicable(section, key, config)):
                     raise TaskConfigError(
                         f"Key '{key}' not allowed in this context:\n{tab(text).rstrip()}"
                     )
