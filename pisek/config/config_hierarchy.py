@@ -240,7 +240,7 @@ class ConfigHierarchy:
             config_basename = os.path.basename(self._config_paths[config_i])
             for section in config.sections():
                 dist, r_section = self._config_helper.find_section(section)
-                if dist != 0:
+                if dist < 1.0:
                     raise TaskConfigError(
                         f"Unexpected section [{section}] in {config_basename}. "
                         f"(Did you mean [{r_section}]?)"
@@ -249,11 +249,15 @@ class ConfigHierarchy:
                     dist, r_section, r_key = self._config_helper.find_key(
                         section, key, self, config_i > 0
                     )
-                    if dist != 0:
+                    if dist < 1.0:
                         raise TaskConfigError(
                             f"Unexpected key '{key}' in section [{section}] in {config_basename}. "
                             f"(Did you mean '{r_key}'"
-                            + (f" in section [{r_section}]" if section != r_section else "")
+                            + (
+                                f" in section [{r_section}]"
+                                if section != r_section
+                                else ""
+                            )
                             + "?)"
                         )
 

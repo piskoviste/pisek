@@ -42,5 +42,4 @@ jobs:
         pip install mypy
         pip install types-setuptools
         pip install types-colorama
-        pip install types-editdistance
         mypy pisek tests

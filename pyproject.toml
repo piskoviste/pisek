@@ -10,7 +10,6 @@ dependencies = [
     "argcomplete",
     "colorama",
     "pydantic",
-    "editdistance",
     "readchar",
 ]
 requires-python = ">=3.11"

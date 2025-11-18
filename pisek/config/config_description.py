@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-import editdistance
+from difflib import SequenceMatcher
+from functools import partial
 from importlib.resources import files
 import re
 from typing import TYPE_CHECKING, Callable, Optional
@@ -13,11 +14,17 @@ if TYPE_CHECKING:
 CONFIG_DESCRIPTION = str(files("pisek").joinpath("config/config-description"))
 
 
-def regex_score(regex: str, name: str) -> int:
+def basic_similarity(a: str, b: str) -> float:
+    return SequenceMatcher(a=a, b=b).ratio()
+
+
+def regex_score(regex: str, name: str) -> float:
     if re.match(regex, name):
-        return 0
+        return 1.0
     else:
-        return 5
+        # XXX: Very incomplete and fragile, but it works
+        regex_str = regex.replace(r"(.*)", "\x00").replace(r"\d{2}", "\x00")
+        return basic_similarity(regex_str, name)
 
 
 class ApplicabilityCondition(ABC):
@@ -66,16 +73,16 @@ class ConfigSectionDescription:
         self.section = section
         self.defaults_to: list[str] = []
         self.dynamic_default: bool = False
-        self.similarity_function: Optional[Callable[[str, str], int]] = None
+        self.similarity_function: Optional[Callable[[str], float]] = None
 
-    def similarity(self, section: str) -> int:
+    def similarity(self, section: str) -> float:
         if self.similarity_function is None:
-            return 5 if self.section != section else 0
+            return basic_similarity(self.section, section)
         else:
-            return self.similarity_function(self.section, section)
+            return self.similarity_function(section)
 
     def transform_name(self, name: str) -> str:
-        return name if self.similarity(name) == 0 else self.section
+        return name if self.similarity(name) == 1.0 else self.section
 
 
 class ConfigKeyDescription:
@@ -85,7 +92,7 @@ class ConfigKeyDescription:
         self.defaults_to: list[tuple[str, str]] = []
         self.dynamic_default: bool = False
         self.applicability_conditions: list[ApplicabilityCondition] = []
-        self.similarity_function: Optional[Callable[[str, str], int]] = None
+        self.similarity_function: Optional[Callable[[str], float]] = None
 
     def get(self, section: str, key: str, config: "ConfigHierarchy") -> str:
         return config.get_from_candidates(
@@ -98,14 +105,14 @@ class ConfigKeyDescription:
             raise NotImplementedError("Dynamic defaulting not implemented")
         return self.defaults_to + [(d, self.key) for d in self.section.defaults_to]
 
-    def similarity(self, key: str) -> int:
+    def similarity(self, key: str) -> float:
         if self.similarity_function is None:
-            return editdistance.distance(self.key, key)
+            return basic_similarity(self.key, key)
         else:
-            return self.similarity_function(self.key, key)
+            return self.similarity_function(key)
 
-    def score(self, section: str, key: str) -> int:
-        return self.section.similarity(section) + self.similarity(key)
+    def score(self, section: str, key: str) -> float:
+        return (9 * self.section.similarity(section) + self.similarity(key)) / 10
 
     def applicable(self, section: str, key: str, config: "ConfigHierarchy") -> str:
         text = ""
@@ -114,7 +121,7 @@ class ConfigKeyDescription:
         return text
 
     def transform_name(self, name: str) -> str:
-        return name if self.similarity(name) == 0 else self.key
+        return name if self.similarity(name) == 1.0 else self.key
 
 
 class ConfigKeysHelper:
@@ -138,9 +145,9 @@ class ConfigKeysHelper:
                     [fun, *args] = line.removeprefix("#!").split()
                     if fun == "regex":
                         if last_key is None:
-                            section.similarity_function = regex_score
+                            section.similarity_function = partial(regex_score, args[0])
                         else:
-                            last_key.similarity_function = regex_score
+                            last_key.similarity_function = partial(regex_score, args[0])
                     elif fun == "if":
                         assert section is not None
                         assert last_key is not None
@@ -227,31 +234,28 @@ class ConfigKeysHelper:
             f"invalid config-description function {fun_name} arguments: '{' '.join(args)}'"
         )
 
-    def find_section(self, section: str) -> tuple[int, str]:
-        for candidate in self.sections.values():
-            if candidate.similarity(section) == 0:
-                return (0, candidate.section)
-
-        recommendation = min(
-            (editdistance.distance(section, s.section), s.section)
-            for s in self.sections.values()
-        )
-        assert recommendation[0] > 0
-        return recommendation
+    def find_section(self, section: str) -> tuple[float, str]:
+        return max((s.similarity(section), s.section) for s in self.sections.values())
 
     def find_key(
-        self, section: str, key: str, config: "ConfigHierarchy", allow_unapplicable: bool
-    ) -> tuple[int, str, str]:
+        self,
+        section: str,
+        key: str,
+        config: "ConfigHierarchy",
+        allow_unapplicable: bool,
+    ) -> tuple[float, str, str]:
         for candidate in self.keys.values():
-            if candidate.score(section, key) == 0:
-                if not allow_unapplicable and (text := candidate.applicable(section, key, config)):
+            if candidate.score(section, key) == 1.0:
+                if not allow_unapplicable and (
+                    text := candidate.applicable(section, key, config)
+                ):
                     raise TaskConfigError(
                         f"Key '{key}' not allowed in this context:\n{tab(text).rstrip()}"
                     )
                 else:
-                    return (0, section, candidate.key)
+                    return (1.0, section, candidate.key)
 
-        recommendation = min(
+        recommendation = max(
             (
                 k.score(section, key),
                 k.section.transform_name(section),
@@ -259,5 +263,5 @@ class ConfigKeysHelper:
             )
             for k in self.keys.values()
         )
-        assert recommendation[0] > 0
+        assert 0.0 <= recommendation[0] < 1.0
         return recommendation
