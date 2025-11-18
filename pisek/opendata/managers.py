@@ -131,8 +131,8 @@ class CheckerManager(StatusJobManager):
         )
         self._check = checker_job(
             self._input,
-            self._correct_output,
             self._contestant_output.to_sanitized_output(),
+            self._correct_output,
             self._test,
             self._seed,
             None,
