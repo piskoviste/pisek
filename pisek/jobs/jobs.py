@@ -300,12 +300,16 @@ class Job(PipelineItem, CaptureInitParams):
             self._logs,
         )
 
-    def prepare(self, cache: Cache) -> None:
+    def prepare(self, cache: Cache | None) -> None:
         if self.state == State.cancelled:
             return None
         self._check_prerequisites()
 
-        if self.name in cache and (entry := self._find_entry(cache)):
+        if (
+            cache is not None
+            and self.name in cache
+            and (entry := self._find_entry(cache))
+        ):
             logger.info(f"Loading cached '{self.name}'")
             cache.move_to_top(entry)
             self.terminal_output = entry.output
@@ -331,9 +335,10 @@ class Job(PipelineItem, CaptureInitParams):
         except PipelineItemFailure as failure:
             self._fail(failure)
 
-    def finalize(self, cache: Cache):
+    def finalize(self, cache: Cache | None):
         if self.state == State.running:
-            cache.add(self._export(self.result, cache))
+            if cache is not None:
+                cache.add(self._export(self.result, cache))
             self.state = State.succeeded
         return self.finish()
 

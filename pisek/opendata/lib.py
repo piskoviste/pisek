@@ -59,9 +59,15 @@ class Task:
             "config_filename": config_filename,
         }
 
-    def test(self, strict: bool = True) -> bool:
+    def test(self, strict: bool = True, disable_cache: bool = False) -> bool:
         try:
-            run_pipeline(self._path, TaskPipeline, strict=strict, **self._env_args)
+            run_pipeline(
+                self._path,
+                TaskPipeline,
+                disable_cache=disable_cache,
+                strict=strict,
+                **self._env_args,
+            )
         except TestingFailed:
             return False
         return True
@@ -75,7 +81,11 @@ class Task:
 
         os.makedirs(path, exist_ok=True)
         run_pipeline(
-            self._path, TaskPipeline, target=TestingTarget.build, **self._env_args
+            self._path,
+            TaskPipeline,
+            target=TestingTarget.build,
+            disable_cache=True,
+            **self._env_args,
         )
 
         COPIED_PATHS = [
@@ -237,7 +247,12 @@ class Testcase:
                 self._output_path(),
                 contestant_output_path,
             )
-            run_pipeline(self._built_task._path, lambda _: pipeline, **ENV_ARGS)
+            run_pipeline(
+                self._built_task._path,
+                lambda _: pipeline,
+                disable_cache=True,
+                **ENV_ARGS,
+            )
             if clear:
                 self._clear_tmp_dir()
 

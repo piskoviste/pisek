@@ -32,7 +32,7 @@ class JobPipeline(ABC):
         self._tmp_lines: int = 0
         self.all_accessed_files: set[str] = set()
 
-    def run_jobs(self, cache: Cache, env: Env) -> bool:
+    def run_jobs(self, cache: Cache | None, env: Env) -> bool:
         self._reporter: Reporter = CommandLineReporter(env, self.job_managers)
 
         self._futures: dict[Future, Job] = {}
@@ -72,10 +72,12 @@ class JobPipeline(ABC):
                     job.cancel()
             self._reporter.refresh([])
 
-        cache.export()  # Save last version of cache
+        if cache is not None:
+            cache.export()  # Save last version of cache
+
         return any(man.state == State.failed for man in self.job_managers)
 
-    def _update(self, cache: Cache, env: Env) -> bool:
+    def _update(self, cache: Cache | None, env: Env) -> bool:
         """Updates currently running JobManagers and Jobs, runs new ones
         and returns if we should continue in testing."""
 
@@ -128,7 +130,7 @@ class JobPipeline(ABC):
 
         return True
 
-    def _finalize_job(self, job: Job, cache: Cache) -> None:
+    def _finalize_job(self, job: Job, cache: Cache | None) -> None:
         job.finalize(cache)
         self.all_accessed_files |= job.accessed_files
         self._report(job)

@@ -43,12 +43,18 @@ LOCK_FILE = os.path.join(INTERNALS_DIR, "lock")
 
 
 def run_pipeline(
-    path: str, pipeline_class: Callable[[Env], JobPipeline], **env_args
+    path: str,
+    pipeline_class: Callable[[Env], JobPipeline],
+    disable_cache: bool = False,
+    **env_args,
 ) -> None:
     with ChangedCWD(path):
         env = Env.load(**env_args)
         ColorSettings.set_state(not env.no_colors)
-        cache = Cache.load()
+
+        cache = None
+        if not disable_cache:
+            cache = Cache.load()
 
         all_accessed_files: set[str] = set()
         for i in range(env.repeat):
