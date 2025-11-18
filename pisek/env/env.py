@@ -97,6 +97,10 @@ class Env(BaseEnv):
 
         config = load_config(".", pisek_dir, config_filename, strict)
 
+        if target == TestingTarget.build:
+            assert solutions is None
+            solutions = [config.primary_solution]
+
         expanded_solutions = expand_solutions(config, solutions)
 
         if expanded_solutions and config.tests.judge_needs_out:
