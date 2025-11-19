@@ -33,6 +33,13 @@ class Invalidate(TaskJob):
         self.from_file = from_file
         self.to_file = to_file
 
+    def _select_line_index(self, rand_gen: random.Random, lines_len: int) -> int:
+        assert lines_len > 0
+        if lines_len <= 2 or rand_gen.randint(1, 10) == 1:
+            return random.randint(0, 1)
+        else:
+            return random.randint(2, lines_len - 1)
+
 
 class Incomplete(Invalidate):
     """Makes an incomplete output."""
@@ -53,8 +60,34 @@ class Incomplete(Invalidate):
             lines = f.readlines()
 
         rand_gen = random.Random(self.seed)
-        if len(lines):
+        if lines:
             lines = lines[: rand_gen.randint(0, len(lines) - 1)]
+
+        with self._open_file(self.to_file, "w") as f:
+            f.write("".join(lines))
+
+
+class BlankLine(Invalidate):
+    """Makes a line in the output blank."""
+
+    def __init__(
+        self, env: Env, from_file: TaskPath, to_file: TaskPath, seed: int
+    ) -> None:
+        super().__init__(
+            env,
+            f"Blank lines {from_file:n} -> {to_file:n} (seed {seed:x})",
+            from_file,
+            to_file,
+            seed,
+        )
+
+    def _run(self):
+        with self._open_file(self.from_file) as f:
+            lines = f.readlines()
+
+        rand_gen = random.Random(self.seed)
+        if lines:
+            lines[self._select_line_index(rand_gen, len(lines))] = "\n"
 
         with self._open_file(self.to_file, "w") as f:
             f.write("".join(lines))
@@ -109,10 +142,7 @@ class ChaosMonkey(Invalidate):
         if len(lines) == 0:
             lines = [[str(rand_gen.choice(CREATE_MODIFIERS)(""))]]
         else:
-            if len(lines) <= 2 or rand_gen.randint(1, 10) == 1:
-                line = random.randint(0, len(lines) - 1)
-            else:
-                line = random.randint(2, len(lines) - 1)
+            line = self._select_line_index(rand_gen, len(lines))
             token = random.randint(0, len(lines[line]) - 1)
 
             modifiers = CREATE_MODIFIERS + CHANGE_MODIFIERS

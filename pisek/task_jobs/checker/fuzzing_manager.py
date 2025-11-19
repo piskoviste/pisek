@@ -16,7 +16,7 @@ from typing import Any
 from pisek.utils.paths import InputPath, OutputPath
 from pisek.jobs.jobs import Job
 from pisek.task_jobs.task_manager import TaskJobManager, SOLUTION_MAN_CODE
-from pisek.task_jobs.checker.chaos_monkey import Incomplete, ChaosMonkey
+from pisek.task_jobs.checker.chaos_monkey import Incomplete, BlankLine, ChaosMonkey
 
 from pisek.task_jobs.checker.checker_base import RunChecker
 from pisek.task_jobs.checker.cms_judge import RunCMSJudge
@@ -42,7 +42,11 @@ class FuzzingManager(TaskJobManager):
             testcases.append((inp, res.solution_rr.stdout_file.to_sanitized_output()))
 
         jt = self._env.config.checks.fuzzing_thoroughness
-        JOBS = [(Incomplete, jt // 5), (ChaosMonkey, 4 * jt // 5)]
+        JOBS = [
+            (Incomplete, jt // 10),
+            (BlankLine, jt // 10),
+            (ChaosMonkey, 4 * jt // 5),
+        ]
 
         total_times = sum(map(lambda x: x[1], JOBS))
         rand_gen = random.Random(4)  # Reproducibility!
