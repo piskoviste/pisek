@@ -32,6 +32,7 @@ class RunResult:
     returncode: int
     time: float
     wall_time: float
-    stdout_file: Optional[Union[TaskPath, int]] = None
+    stdin_file: TaskPath | int | None = None
+    stdout_file: TaskPath | int | None = None
     stderr_file: Optional[TaskPath] = None
     status: str = ""
