@@ -387,7 +387,10 @@ def _main(argv: list[str]) -> None:
             return update_and_replace_config(PATH, args.pisek_dir, args.config_filename)
         elif args.config_subcommand == "export":
             return export_config(
-                PATH, args.pisek_dir, args.config_filename, args.filename
+                PATH,
+                args.pisek_dir,
+                args.config_filename,
+                os.path.join(PATH, args.filename),
             )
         else:
             assert False, "Unknown command"
