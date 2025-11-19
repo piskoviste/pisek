@@ -29,7 +29,7 @@ def export_config(
     task_path: str,
     pisek_directory: str | None,
     config_filename: str,
-    exported_config_filename: str,
+    exported_config_path: str,
 ) -> None:
     config_hierarchy = ConfigHierarchy(
         task_path, False, pisek_directory, config_filename
@@ -47,5 +47,5 @@ def export_config(
             if config_val.key is not None:
                 config[config_val.section][config_val.key] = config_val.value
 
-    with open(os.path.join(task_path, exported_config_filename), "w") as f:
+    with open(exported_config_path, "w") as f:
         config.write(f, space_around_delimiters=False)
