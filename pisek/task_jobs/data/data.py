@@ -16,7 +16,7 @@
 
 from pisek.jobs.jobs import PipelineItemFailure
 from pisek.env.env import Env
-from pisek.utils.paths import TaskPath, InputPath, OutputPath
+from pisek.utils.paths import TaskPath, IInputPath, IOutputPath
 from pisek.task_jobs.task_job import TaskJob
 
 
@@ -62,7 +62,7 @@ MB = 1024 * 1024
 class InputSmall(DataJob):
     """Checks that input is small enough to download."""
 
-    def __init__(self, env: Env, input_: InputPath, **kwargs) -> None:
+    def __init__(self, env: Env, input_: IInputPath, **kwargs) -> None:
         super().__init__(
             env=env,
             name=f"Input {input_:p} is smaller than {env.config.limits.input_max_size}MB",
@@ -81,7 +81,7 @@ class InputSmall(DataJob):
 class OutputSmall(DataJob):
     """Checks that output is small enough to upload."""
 
-    def __init__(self, env: Env, output: OutputPath, **kwargs) -> None:
+    def __init__(self, env: Env, output: IOutputPath, **kwargs) -> None:
         super().__init__(
             env=env,
             name=f"Output {output:p} is smaller than {env.config.limits.output_max_size}MB",

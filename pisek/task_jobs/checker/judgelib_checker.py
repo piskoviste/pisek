@@ -16,7 +16,7 @@ import subprocess
 from typing import Optional
 
 from pisek.env.env import Env
-from pisek.utils.paths import TaskPath, InputPath, OutputPath
+from pisek.utils.paths import TaskPath, IInputPath, IOutputPath
 from pisek.jobs.jobs import PipelineItemFailure
 from pisek.utils.text import tab
 from pisek.task_jobs.run_result import RunResult, RunResultKind
@@ -92,9 +92,9 @@ class RunTokenChecker(RunJudgeLibChecker):
         self,
         env: Env,
         test: int,
-        input_: InputPath,
-        output: OutputPath,
-        correct_output: OutputPath,
+        input_: IInputPath,
+        output: IOutputPath,
+        correct_output: IOutputPath,
         expected_verdict: Optional[Verdict],
     ) -> None:
         super().__init__(
@@ -133,9 +133,9 @@ class RunShuffleChecker(RunJudgeLibChecker):
         self,
         env: Env,
         test: int,
-        input_: InputPath,
-        output: OutputPath,
-        correct_output: OutputPath,
+        input_: IInputPath,
+        output: IOutputPath,
+        correct_output: IOutputPath,
         expected_verdict: Optional[Verdict],
     ) -> None:
         super().__init__(

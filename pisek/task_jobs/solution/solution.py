@@ -18,7 +18,7 @@ from typing import Optional
 
 from pisek.env.env import Env
 from pisek.jobs.jobs import State
-from pisek.utils.paths import InputPath, OutputPath
+from pisek.utils.paths import IInputPath, IOutputPath
 from pisek.config.config_types import ProgramRole
 from pisek.config.task_config import RunSection
 from pisek.task_jobs.program import RunResult, ProgramsJob
@@ -65,8 +65,8 @@ class RunBatchSolution(RunSolution):
         env: Env,
         solution: RunSection,
         is_primary: bool,
-        input_: InputPath,
-        output: OutputPath,
+        input_: IInputPath,
+        output: IOutputPath,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -98,7 +98,7 @@ class RunInteractive(RunCMSJudge, RunSolution):
         is_primary: bool,
         judge: RunSection,
         test: int,
-        input_: InputPath,
+        input_: IInputPath,
         expected_verdict: Optional[Verdict] = None,
         **kwargs,
     ):

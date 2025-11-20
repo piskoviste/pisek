@@ -16,7 +16,7 @@ from typing import Optional
 from functools import cache
 
 from pisek.utils.text import tab
-from pisek.utils.paths import InputPath, OutputPath, LogPath
+from pisek.utils.paths import IInputPath, IOutputPath, LogPath
 from pisek.env.env import Env
 from pisek.config.config_types import DataFormat
 from pisek.task_jobs.tools import SanitizationResultKind
@@ -40,7 +40,7 @@ class RunChecker(ProgramsJob):
         name: str,
         test: int,
         checker_name: str,
-        input_: InputPath,
+        input_: IInputPath,
         checker_log_file: LogPath,
         expected_verdict: Optional[Verdict],
         **kwargs,
@@ -216,9 +216,9 @@ class RunBatchChecker(RunChecker):
         env: Env,
         checker_name: str,
         test: int,
-        input_: InputPath,
-        output: OutputPath,
-        correct_output: OutputPath,
+        input_: IInputPath,
+        output: IOutputPath,
+        correct_output: IOutputPath,
         expected_verdict: Optional[Verdict],
         **kwargs,
     ) -> None:

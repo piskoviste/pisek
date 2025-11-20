@@ -16,7 +16,7 @@ from typing import Optional
 from tempfile import gettempdir
 from uuid import uuid4
 
-from pisek.utils.paths import InputPath, OutputPath
+from pisek.utils.paths import IInputPath, IOutputPath
 from pisek.env.env import Env
 from pisek.config.task_config import RunSection
 from pisek.config.config_types import ProgramRole
@@ -101,9 +101,9 @@ class RunCMSBatchJudge(RunCMSJudge, RunBatchChecker):
         env: Env,
         judge: RunSection,
         test: int,
-        input_: InputPath,
-        output: OutputPath,
-        correct_output: OutputPath,
+        input_: IInputPath,
+        output: IOutputPath,
+        correct_output: IOutputPath,
         expected_verdict: Optional[Verdict],
         **kwargs,
     ) -> None:

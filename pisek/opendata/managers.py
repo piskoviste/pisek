@@ -1,7 +1,7 @@
 from pisek.jobs.jobs import Job
 from pisek.jobs.status import StatusJobManager
 from pisek.jobs.job_pipeline import JobPipeline
-from pisek.utils.paths import InputPath, OutputPath, RawPath
+from pisek.utils.paths import IInputPath, IOutputPath, IRawPath
 
 from pisek.task_jobs.tools import sanitize_job, sanitize_job_direct
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
@@ -17,12 +17,12 @@ class OpendataPipeline(JobPipeline):
         gen_input: bool,
         gen_output: bool,
         check: bool,
-        input_: InputPath,
+        input_: IInputPath,
         info: TestcaseInfo,
         test: int,
         seed: int | None,
-        correct_output: OutputPath,
-        contestant_output: RawPath | None,
+        correct_output: IOutputPath,
+        contestant_output: IRawPath | None,
     ):
         super().__init__()
         self.job_managers = []
@@ -51,7 +51,7 @@ class OpendataPipeline(JobPipeline):
 
 
 class InputManager(StatusJobManager):
-    def __init__(self, input_: InputPath, info: TestcaseInfo, seed: int | None):
+    def __init__(self, input_: IInputPath, info: TestcaseInfo, seed: int | None):
         super().__init__(f"Generate input {input_:n}")
         self._input = input_
         self._info = info
@@ -76,7 +76,7 @@ class InputManager(StatusJobManager):
 
 
 class OutputManager(StatusJobManager):
-    def __init__(self, input_: InputPath, info: TestcaseInfo, output: OutputPath):
+    def __init__(self, input_: IInputPath, info: TestcaseInfo, output: IOutputPath):
         self._input = input_
         self._info = info
         self._output = output
@@ -107,11 +107,11 @@ class OutputManager(StatusJobManager):
 class CheckerManager(StatusJobManager):
     def __init__(
         self,
-        input_: InputPath,
+        input_: IInputPath,
         test: int,
         seed: int | None,
-        correct_output: OutputPath,
-        contestant_output: RawPath,
+        correct_output: IOutputPath,
+        contestant_output: IRawPath,
     ):
         self._input = input_
         self._test = test

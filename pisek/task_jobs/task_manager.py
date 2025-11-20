@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from pisek.utils.paths import InputPath, OutputPath
+from pisek.utils.paths import IInputPath, IOutputPath
 from pisek.config.task_config import TestSection
 from pisek.jobs.status import StatusJobManager
 from pisek.task_jobs.task_job import TaskHelper
@@ -29,7 +29,7 @@ FUZZ_MAN_CODE = "fuzz"
 class TaskJobManager(StatusJobManager, TaskHelper):
     """JobManager class that implements useful methods"""
 
-    def _get_samples(self) -> list[tuple[InputPath, OutputPath]]:
+    def _get_samples(self) -> list[tuple[IInputPath, IOutputPath]]:
         """Returns the list [(sample1.in, sample1.out), …]."""
         return [
             (

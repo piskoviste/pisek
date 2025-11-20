@@ -16,7 +16,15 @@ from typing import Any
 
 from pisek.env.env import Env
 from pisek.task_jobs.task_job import TaskJob
-from pisek.utils.paths import TESTS_DIR, INPUTS_LIST, InputPath, OutputPath, TaskPath
+from pisek.utils.paths import (
+    TESTS_DIR,
+    INPUTS_LIST,
+    InputPath,
+    IInputPath,
+    IOutputPath,
+    OutputPath,
+    TaskPath,
+)
 
 
 class TestcaseGenerationMode(StrEnum):
@@ -46,7 +54,7 @@ class TestcaseInfo:
 
     def input_path(
         self, seed: int | None = None, solution: str | None = None
-    ) -> InputPath:
+    ) -> IInputPath:
         filename = self.name
         if self.seeded:
             assert seed is not None
@@ -57,10 +65,11 @@ class TestcaseInfo:
 
     def reference_output(
         self, env: Env, seed: int | None = None, solution: str | None = None
-    ) -> OutputPath:
+    ) -> IOutputPath:
         is_static = self.generation_mode == TestcaseGenerationMode.static
 
         input_path = self.input_path(seed, solution=env.config.primary_solution)
+        path: IOutputPath
         if is_static:
             path = OutputPath.static(input_path.replace_suffix(".out").name)
         else:

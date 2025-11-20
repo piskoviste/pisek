@@ -17,7 +17,7 @@ from pisek.utils.text import tab
 from pisek.env.env import Env
 from pisek.config.config_types import ProgramRole
 from pisek.config.task_config import RunSection
-from pisek.utils.paths import TaskPath, InputPath, LogPath
+from pisek.utils.paths import TaskPath, IInputPath, LogPath
 from pisek.task_jobs.program import ProgramsJob, RunResultKind
 from pisek.task_jobs.data.testcase_info import TestcaseInfo
 
@@ -89,7 +89,7 @@ class PisekV1GeneratorJob(ProgramsJob):
     generator: RunSection
     seed: Optional[int]
     testcase_info: TestcaseInfo
-    input_path: InputPath
+    input_path: IInputPath
 
     def __init__(self, env: Env, *, name: str = "", **kwargs) -> None:
         super().__init__(env=env, name=name, **kwargs)

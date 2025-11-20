@@ -23,7 +23,7 @@ import os
 from pisek.jobs.jobs import Job, PipelineItemFailure
 from pisek.config.config_types import DataFormat
 from pisek.env.env import Env
-from pisek.utils.paths import TaskPath, RawPath, SanitizedPath
+from pisek.utils.paths import TaskPath, IRawPath, ISanitizedPath
 from pisek.task_jobs.task_job import TaskJob
 from pisek.task_jobs.task_manager import TaskJobManager
 from pisek.task_jobs.program import ProgramsJob
@@ -174,7 +174,7 @@ class TextPreprocAbstract(ProgramsJob):
     """Abstract job that has method for file sanitization."""
 
     def _run_text_preproc(
-        self, input_: RawPath, output: SanitizedPath
+        self, input_: IRawPath, output: ISanitizedPath
     ) -> SanitizationResult:
         try:
             os.remove(output.path)
@@ -222,7 +222,7 @@ class Sanitize(SanitizeAbstract, TextPreprocAbstract):
     """Sanitize text file using Text Preprocessor."""
 
     def __init__(
-        self, env: Env, input_: RawPath, output: SanitizedPath, **kwargs
+        self, env: Env, input_: IRawPath, output: ISanitizedPath, **kwargs
     ) -> None:
         super().__init__(
             env, input_, output, name=f"Sanitize {input_:p} -> {output:p}", **kwargs
@@ -236,7 +236,7 @@ class IsClean(SanitizeAbstract, TextPreprocAbstract):
     """Check that file is same after sanitizing with Text Preprocessor."""
 
     def __init__(
-        self, env: Env, input_: RawPath, output: SanitizedPath, **kwargs
+        self, env: Env, input_: IRawPath, output: ISanitizedPath, **kwargs
     ) -> None:
         super().__init__(
             env, input_, output, name=f"Check {input_:p} is clean", **kwargs
@@ -257,14 +257,14 @@ def _sanitize_get_format(env: Env, is_input: bool) -> DataFormat:
         return env.config.tests.out_format
 
 
-def sanitize_job(env: Env, path: SanitizedPath, is_input: bool) -> Job | None:
+def sanitize_job(env: Env, path: ISanitizedPath, is_input: bool) -> Job | None:
     return sanitize_job_direct(
         env, path.to_raw(_sanitize_get_format(env, is_input)), path, is_input
     )
 
 
 def sanitize_job_direct(
-    env: Env, path_from: RawPath, path_to: SanitizedPath, is_input: bool
+    env: Env, path_from: IRawPath, path_to: ISanitizedPath, is_input: bool
 ) -> Job | None:
     format_ = _sanitize_get_format(env, is_input)
 

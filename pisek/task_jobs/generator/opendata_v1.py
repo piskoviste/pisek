@@ -15,7 +15,7 @@ from typing import Optional
 from pisek.env.env import Env
 from pisek.config.config_types import ProgramRole
 from pisek.config.task_config import RunSection
-from pisek.utils.paths import InputPath
+from pisek.utils.paths import IInputPath
 from pisek.task_jobs.program import ProgramsJob, RunResultKind
 from pisek.task_jobs.data.testcase_info import TestcaseInfo
 
@@ -45,7 +45,7 @@ class OpendataV1GeneratorJob(ProgramsJob):
     generator: RunSection
     seed: Optional[int]
     testcase_info: TestcaseInfo
-    input_path: InputPath
+    input_path: IInputPath
 
     def __init__(self, env: Env, *, name: str = "", **kwargs) -> None:
         super().__init__(env=env, name=name, **kwargs)

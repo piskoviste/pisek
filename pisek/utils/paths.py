@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import os
 from typing import TYPE_CHECKING
@@ -115,19 +116,75 @@ class TaskPath:
         return TaskPath.data_path(GENERATED_SUBDIR, *path)
 
 
-class JudgeablePath(TaskPath):
+# ----- interfaces -----
+
+
+class IJudgeablePath(TaskPath, ABC):
+    @abstractmethod
+    def to_checker_log(self, judge: str) -> "LogPath":
+        pass
+
+
+class ISanitizedPath(TaskPath, ABC):
+    @abstractmethod
+    def to_raw(self, format: DataFormat) -> "IRawPath":
+        pass
+
+
+class IInputPath(ISanitizedPath):
+    @abstractmethod
+    def to_second(self) -> "IInputPath":
+        pass
+
+    @abstractmethod
+    def to_output(self) -> "IOutputPath":
+        pass
+
+    @abstractmethod
+    def to_log(self, program: str) -> "LogPath":
+        pass
+
+
+class IOutputPath(IJudgeablePath, ISanitizedPath):
+    @abstractmethod
+    def to_reference_output(self) -> "IOutputPath":
+        pass
+
+    @abstractmethod
+    def to_fuzzing(self, seed: int) -> "IOutputPath":
+        pass
+
+
+class IRawPath(TaskPath, ABC):
+    @abstractmethod
+    def to_sanitized_input(self) -> IInputPath:
+        pass
+
+    @abstractmethod
+    def to_sanitized_output(self) -> IOutputPath:
+        pass
+
+    @abstractmethod
+    def to_sanitization_log(self) -> "LogPath":
+        pass
+
+
+# ----- paths inside task -----
+
+
+class JudgeablePath(IJudgeablePath):
     def to_checker_log(self, judge: str) -> "LogPath":
         return LogPath(self.replace_suffix(f".{os.path.basename(judge)}.log").path)
 
 
-class SanitizedPath(TaskPath):
+class SanitizedPath(ISanitizedPath):
     def to_raw(self, format: DataFormat) -> "RawPath":
         if format == DataFormat.binary:
             return RawPath(self.path)
         return RawPath(self.path + ".raw")
 
 
-class InputPath(SanitizedPath):
+class InputPath(SanitizedPath, IInputPath):
     @staticmethod
     def new(*path: str, solution: str | None = None) -> "InputPath":
         if solution is None:
@@ -135,25 +192,25 @@ class InputPath(SanitizedPath):
         else:
             return InputPath(TESTS_DIR, solution, *path)
 
-    def to_second(self) -> "InputPath":
+    def to_second(self) -> IInputPath:
         return InputPath(self.replace_suffix(".in2").path)
 
-    def to_output(self) -> "OutputPath":
+    def to_output(self) -> IOutputPath:
         return OutputPath(self.replace_suffix(f".out").path)
 
     def to_log(self, program: str) -> "LogPath":
         return LogPath(self.replace_suffix(f".{os.path.basename(program)}.log").path)
 
 
-class OutputPath(JudgeablePath, SanitizedPath):
+class OutputPath(JudgeablePath, SanitizedPath, IOutputPath):
     @staticmethod
     def static(*path) -> "OutputPath":
         return OutputPath(TESTS_DIR, INPUTS_SUBDIR, *path)
 
-    def to_reference_output(self) -> "OutputPath":
+    def to_reference_output(self) -> IOutputPath:
         return OutputPath(self.replace_suffix(f".ok").path)
 
-    def to_fuzzing(self, seed: int) -> "OutputPath":
+    def to_fuzzing(self, seed: int) -> IOutputPath:
         return OutputPath(
             TESTS_DIR,
             FUZZING_OUTPUTS_SUBDIR,
@@ -167,34 +224,46 @@ class LogPath(JudgeablePath):
         return LogPath(TESTS_DIR, INPUTS_SUBDIR, f"{os.path.basename(generator)}.log")
 
 
-class RawPath(TaskPath):
-    def to_sanitized_output(self) -> OutputPath:
-        return OutputPath(self.path.removesuffix(".raw"))
-
-    def to_sanitized_input(self) -> InputPath:
+class RawPath(IRawPath):
+    def to_sanitized_input(self) -> IInputPath:
         return InputPath(self.path.removesuffix(".raw"))
+
+    def to_sanitized_output(self) -> IOutputPath:
+        return OutputPath(self.path.removesuffix(".raw"))
 
     def to_sanitization_log(self) -> LogPath:
         return LogPath(self.replace_suffix(".sanitizer.log").path)
 
 
-class OpendataPath(TaskPath):
+# ----- opendata paths = paths outside task -----
+
+
+class OpendatadPath(TaskPath):
     def __init__(self, tmp_dir: str, *path: str):
         self._tmp_dir = tmp_dir
         super().__init__(*path)
 
-    def to_raw(self, format: DataFormat) -> "RawPath":
+
+class OpendataJudgeablePath(OpendatadPath, IJudgeablePath):
+    def to_checker_log(self, judge: str) -> "LogPath":
+        return LogPath(
+            self._tmp_dir, self.replace_suffix(f".{os.path.basename(judge)}.log").name
+        )
+
+
+class OpendataSanitizedPath(OpendatadPath, ISanitizedPath):
+    def to_raw(self, format: DataFormat) -> IRawPath:
         if format == DataFormat.binary:
             return OpendataRawPath(self._tmp_dir, self.path)
         return RawPath(self._tmp_dir, self.name + ".raw")
 
 
-class OpendataInputPath(OpendataPath, InputPath):
-    def to_second(self) -> "InputPath":
-        assert False
+class OpendataInputPath(OpendataSanitizedPath, IInputPath):
+    def to_second(self) -> IInputPath:
+        return InputPath(self._tmp_dir, self.replace_suffix(".in2").name)
 
-    def to_output(self) -> "OutputPath":
-        assert False
+    def to_output(self) -> IOutputPath:
+        return OutputPath(self._tmp_dir, self.replace_suffix(f".out").name)
 
     def to_log(self, program: str) -> "LogPath":
         return LogPath(
@@ -202,20 +271,23 @@ class OpendataInputPath(OpendataPath, InputPath):
         )
 
 
-class OpendataOutputPath(OpendataPath, OutputPath):
-    def to_reference_output(self) -> "OutputPath":
-        assert False
+class OpendataOutputPath(OpendataSanitizedPath, OpendataJudgeablePath, IOutputPath):
+    def to_reference_output(self) -> IOutputPath:
+        return OutputPath(self._tmp_dir, self.replace_suffix(f".ok").name)
 
-    def to_fuzzing(self, seed: int) -> "OutputPath":
-        assert False
+    def to_fuzzing(self, seed: int) -> IOutputPath:
+        return OutputPath(
+            self._tmp_dir,
+            self.replace_suffix(f".{seed:x}.out").name,
+        )
 
 
-class OpendataRawPath(OpendataPath, RawPath):
-    def to_sanitized_output(self) -> OutputPath:
+class OpendataRawPath(OpendataSanitizedPath, IRawPath):
+    def to_sanitized_input(self) -> IInputPath:
+        return InputPath(self._tmp_dir, self.name.removesuffix(".raw"))
+
+    def to_sanitized_output(self) -> IOutputPath:
         return OutputPath(self._tmp_dir, self.name.removesuffix(".raw"))
 
-    def to_sanitized_input(self) -> InputPath:
-        assert False
-
-    def to_sanitization_log(self):
+    def to_sanitization_log(self) -> LogPath:
         return LogPath(self._tmp_dir, self.replace_suffix(".sanitizer.log").name)
