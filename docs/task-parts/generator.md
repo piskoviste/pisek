@@ -2,7 +2,7 @@
 The generator is used for generating inputs. Solutions are then run and judged on those.
 
 ## Generator type
-There are currently 3 generator types available:
+There are currently 3 [`gen_type`](../config-v3-documentation.md#gen_type)s available:
 
 - [pisek-v1](#pisek-v1)
 - [cms-old](#cms-old)
@@ -14,9 +14,9 @@ for better debugging and easy conversion between open data and closed data tasks
 ## Terminology
 There are two requirements for generators:
 
-- **Generators must be deterministic.** For the same arguments, it should always generate the same input(s).
-- If a generator takes a seed as an argument, the generator should **respect the seed**. For different seeds,
-  it should generate different inputs. This can be disabled in the `[checks]` section, but be careful.
+- *Generators must be deterministic.* — For the same arguments, they should always generate the same input(s).
+- *Generators must respect the seed* — If a generator takes a seed as an argument, the generator should generate different inputs for different seeds. This can be disabled in the with
+[`generator_respects_seed`](../config-v3-documentation.md#generator_respects_seed), but be careful.
 
 ## Pisek-v1
 ### Listing inputs

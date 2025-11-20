@@ -1,5 +1,5 @@
 # Pisek fixture
-# Source: $(pisek)/docs/config-v3-documentation for more information
+# Source: $(pisek)/docs/config-v3-documentation.md for more information
 
 [task]
 version=v3
