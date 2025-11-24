@@ -412,6 +412,8 @@ all_inputs_in_last_test=
 generator_respects_seed=
 one_input_in_each_nonsample_test=
 fuzzing_thoroughness=
+judge_rejects_trailing_string=
+#!if tests out_check==judge
 
 [cms]
 name=

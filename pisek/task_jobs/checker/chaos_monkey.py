@@ -22,6 +22,11 @@ from pisek.utils.paths import TaskPath
 from pisek.task_jobs.task_job import TaskJob
 
 
+def randword(length: int, rand_gen: Random):
+    letters = string.ascii_lowercase
+    return "".join(rand_gen.choice(letters) for _ in range(length))
+
+
 class Invalidate(TaskJob):
     """Abstract Job for invalidating an output."""
 
@@ -108,10 +113,6 @@ class ChaosMonkey(Invalidate):
     def _run(self):
         rand_gen = Random(self.seed)
 
-        def randword(length: int):
-            letters = string.ascii_lowercase
-            return "".join(rand_gen.choice(letters) for _ in range(length))
-
         NUMBER_MODIFIERS = [
             lambda _: 0,
             lambda x: int(x) + 1,
@@ -124,14 +125,14 @@ class ChaosMonkey(Invalidate):
             lambda _: rand_gen.randint(-int(1e5), -1),
             lambda _: rand_gen.randint(0, int(1e18)),
             lambda _: rand_gen.randint(-int(1e18), -1),
-            lambda _: randword(rand_gen.randint(1, 10)),
+            lambda _: randword(rand_gen.randint(1, 10), rand_gen),
         ]
         CHANGE_MODIFIERS = [
             lambda x: f"{x} {x}",
             lambda _: "",
-            lambda x: randword(len(x)),
-            lambda x: randword(len(x) + 1),
-            lambda x: randword(len(x) - 1),
+            lambda x: randword(len(x), rand_gen),
+            lambda x: randword(len(x) + 1, rand_gen),
+            lambda x: randword(len(x) - 1, rand_gen),
         ]
 
         lines = []
@@ -143,7 +144,7 @@ class ChaosMonkey(Invalidate):
             lines = [[str(rand_gen.choice(CREATE_MODIFIERS)(""))]]
         else:
             line = self._select_line_index(rand_gen, len(lines))
-            token = random.randint(0, len(lines[line]) - 1)
+            token = rand_gen.randint(0, len(lines[line]) - 1)
 
             modifiers = CREATE_MODIFIERS + CHANGE_MODIFIERS
             try:
@@ -156,3 +157,26 @@ class ChaosMonkey(Invalidate):
         with self._open_file(self.to_file, "w") as f:
             for line in lines:
                 f.write(" ".join(line) + "\n")
+
+
+class TrailingString(Invalidate):
+    def __init__(
+        self, env: Env, from_file: TaskPath, to_file: TaskPath, seed: int
+    ) -> None:
+        super().__init__(
+            env,
+            f"Trailing string {from_file:n} -> {to_file:n} (seed {seed:x})",
+            from_file,
+            to_file,
+            seed,
+        )
+
+    def _run(self):
+        with self._open_file(self.from_file) as f:
+            lines = f.readlines()
+
+        rand_gen = Random(self.seed)
+        lines.append(randword(60, rand_gen) + "\n")
+
+        with self._open_file(self.to_file, "w") as f:
+            f.write("".join(lines))
