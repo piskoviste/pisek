@@ -245,4 +245,6 @@ class RunBatchChecker(RunChecker):
             return RunResult(RunResultKind.OK, 0, 0.0, 0.0)
 
     def _checking_message(self) -> str:
-        return f"output {self.output:p} for input {self.input:p}"
+        return (
+            f"output {self.output.col(self._env)} for input {self.input.col(self._env)}"
+        )
