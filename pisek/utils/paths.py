@@ -151,7 +151,7 @@ class IOutputPath(IJudgeablePath, ISanitizedPath):
         pass
 
     @abstractmethod
-    def to_fuzzing(self, seed: int) -> "IOutputPath":
+    def to_fuzzing(self, note: str, seed: int) -> "IOutputPath":
         pass
 
 
@@ -210,11 +210,11 @@ class OutputPath(JudgeablePath, SanitizedPath, IOutputPath):
     def to_reference_output(self) -> IOutputPath:
         return OutputPath(self.replace_suffix(f".ok").path)
 
-    def to_fuzzing(self, seed: int) -> IOutputPath:
+    def to_fuzzing(self, note: str, seed: int) -> IOutputPath:
         return OutputPath(
             TESTS_DIR,
             FUZZING_OUTPUTS_SUBDIR,
-            self.replace_suffix(f".{seed:x}.out").name,
+            self.replace_suffix(f".{note}.{seed:x}.out").name,
         )
 
 
@@ -275,10 +275,10 @@ class OpendataOutputPath(OpendataSanitizedPath, OpendataJudgeablePath, IOutputPa
     def to_reference_output(self) -> IOutputPath:
         return OutputPath(self._tmp_dir, self.replace_suffix(f".ok").name)
 
-    def to_fuzzing(self, seed: int) -> IOutputPath:
+    def to_fuzzing(self, note: str, seed: int) -> IOutputPath:
         return OutputPath(
             self._tmp_dir,
-            self.replace_suffix(f".{seed:x}.out").name,
+            self.replace_suffix(f".{note}.{seed:x}.out").name,
         )
 
 

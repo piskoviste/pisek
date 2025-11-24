@@ -886,6 +886,7 @@ class ChecksSection(BaseEnv):
     generator_respects_seed: bool
     one_input_in_each_nonsample_test: bool
     fuzzing_thoroughness: int
+    judge_rejects_trailing_string: bool
 
     @classmethod
     def load_dict(cls, configs: ConfigHierarchy) -> ConfigValuesDict:
