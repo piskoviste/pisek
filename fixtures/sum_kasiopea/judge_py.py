@@ -55,6 +55,12 @@ def main():
                 if c != contestant:
                     fail("Wrong answer")
 
+    try:
+        input()
+        fail("Trailing output")
+    except EOFError:
+        pass
+
     print("Correct answer", file=sys.stderr)
     exit(42)
 

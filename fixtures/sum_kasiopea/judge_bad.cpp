@@ -5,10 +5,9 @@
 
 using namespace std;
 
-void verdict(float pts, string msg){
-	cout << pts << endl;
-	cerr << msg << endl;
-	exit(0);
+void verdict(bool ok, const char *msg){
+    fprintf(stderr, msg);
+	exit(ok ? 42 : 43);
 }
 
 int main(int argc, char** argv) {
@@ -26,19 +25,18 @@ int main(int argc, char** argv) {
         fscanf(fin, "%lld%lld", &a, &b);
         fscanf(fcorrect, "%lld", &c);
 
-        if (scanf("%lld", &contestant) < 1) {
-            fprintf(stderr, "Invalid format");
-            return 43;
-        }
+        if (scanf("%lld", &contestant) < 1)
+            verdict(false, "Invalid format");
 
         assert(a + b == c);
         // Note the "+ 1"
-        if (c != contestant + 1) {
-            fprintf(stderr, "Wrong answer");
-            return 43;
-        }
+        if (c != contestant + 1)
+            verdict(false, "Wrong answer");
 	}
 
-    fprintf(stderr, "Correct answer");
-	return 42;
+	char trailing;
+	if (scanf(" %c", &trailing) == 1)
+        verdict(false, "Wrong answer");
+
+    verdict(true, "Correct answer");
 }

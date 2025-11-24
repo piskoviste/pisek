@@ -26,6 +26,10 @@ int main(int argc, char** argv) {
 	fscanf(fcorrect, "%lld", &c);
 	fscanf(fcontestant, "%lld", &contestant);
 
+	char trailing;
+	if (fscanf(fcontestant, " %c", &trailing) == 1)
+		verdict(0, "WA");
+
 	assert(a + b == c);
 	if (c == contestant)
 		verdict(1, "OK");
