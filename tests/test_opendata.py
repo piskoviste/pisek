@@ -93,7 +93,7 @@ class TestFixtureOpendata(TestFixture):
 class TestSumKasiopeaOpendataBuild(TestFixtureOpendata):
     @property
     def fixture_path(self) -> str:
-        return "../fixtures/sum_kasiopea/"
+        return "fixtures/sum_kasiopea/"
 
     def init_testcase(self, name: str) -> None:
         self.input_path = os.path.join(self.task_dir, f"{name}.opendata.in")

@@ -6,7 +6,7 @@ from util import TestFixtureVariant, modify_config
 class TestOddStub(TestFixtureVariant):
     @property
     def fixture_path(self) -> str:
-        return "../fixtures/odd_stub/"
+        return "fixtures/odd_stub/"
 
 
 class TestBigInput(TestOddStub):

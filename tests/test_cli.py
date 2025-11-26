@@ -16,7 +16,7 @@ from pisek.__main__ import main
 class TestCLI(TestFixture):
     @property
     def fixture_path(self) -> str:
-        return "../fixtures/sum_cms/"
+        return "fixtures/sum_cms/"
 
     def args(self) -> list[list[str]]:
         return [["test", "--time-limit", "0.2"]]
@@ -74,7 +74,7 @@ class TestCLIVisualize(TestCLI):
 class TestCLIExport(TestCLI):
     @property
     def fixture_path(self) -> str:
-        return "../fixtures/guess/"
+        return "fixtures/guess/"
 
     def args(self) -> list[list[str]]:
         return [["config", "export", "config"], ["test"]]
