@@ -6,7 +6,7 @@ from util import TestFixtureVariant
 class TestGuess(TestFixtureVariant):
     @property
     def fixture_path(self) -> str:
-        return "../fixtures/guess/"
+        return "fixtures/guess/"
 
 
 if __name__ == "__main__":

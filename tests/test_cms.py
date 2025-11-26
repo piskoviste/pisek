@@ -9,7 +9,7 @@ from util import TestFixtureVariant, overwrite_file, modify_config
 class TestSumCMS(TestFixtureVariant):
     @property
     def fixture_path(self) -> str:
-        return "../fixtures/sum_cms/"
+        return "fixtures/sum_cms/"
 
 
 class TestMissingGenerator(TestSumCMS):

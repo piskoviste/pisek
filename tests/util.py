@@ -20,34 +20,38 @@ class TestFixture(unittest.TestCase):
         return None
 
     def setUp(self) -> None:
-        os.environ["PISEK_DIRECTORY"] = "../pisek"
         os.environ["LOG_LEVEL"] = "debug"
 
         if not self.fixture_path:
             return
+        assert self.fixture_path[-1] == "/"
 
         self.task_dir_orig = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), self.fixture_path)
+            os.path.join(os.path.dirname(__file__), "..", self.fixture_path)
         )
         self.fixtures_dir = tempfile.mkdtemp(prefix="pisek-test_")
         self.task_dir = os.path.join(
-            self.fixtures_dir, os.path.relpath(self.fixture_path, "../fixtures")
+            self.fixtures_dir, os.path.basename(os.path.dirname(self.fixture_path))
         )
 
         # shutil.copytree() requires that the destination directory does not exist,
         os.rmdir(self.fixtures_dir)
         shutil.copytree(
             self.task_dir_orig,
-            os.path.join(self.fixtures_dir, os.path.basename(self.task_dir_orig)),
+            self.task_dir,
         )
-        shutil.copytree(
-            os.path.join(self.task_dir_orig, "../pisek"),
-            os.path.join(self.fixtures_dir, "pisek"),
-        )
+
+        pisek_dir = os.path.join(self.task_dir_orig, "../pisek")
+        if os.path.exists(pisek_dir):
+            os.environ["PISEK_DIRECTORY"] = "../pisek"
+            shutil.copytree(
+                pisek_dir,
+                os.path.join(self.fixtures_dir, "pisek"),
+            )
 
         assert_task_dir(
             self.task_dir,
-            os.environ["PISEK_DIRECTORY"],
+            os.environ.get("PISEK_DIRECTORY"),
             config_hierarchy.DEFAULT_CONFIG_FILENAME,
         )
         clean_task_dir(self.task_dir)
@@ -111,6 +115,10 @@ class TestFixtureVariant(TestFixture):
         """
         pass
 
+    @property
+    def time_limit(self) -> float | None:
+        return None
+
     def runTest(self) -> None:
         if not self.fixture_path:
             return
@@ -130,9 +138,9 @@ class TestFixtureVariant(TestFixture):
                     inputs=1,
                     strict=False,
                     full=False,
-                    time_limit=0.2,
+                    time_limit=self.time_limit,
                     plain=False,
-                    pisek_dir=os.environ["PISEK_DIRECTORY"],
+                    pisek_dir=os.environ.get("PISEK_DIRECTORY"),
                 )
                 return True
             except UserError:
