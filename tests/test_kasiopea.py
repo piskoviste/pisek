@@ -13,7 +13,7 @@ from util import TestFixtureVariant, overwrite_file, modify_config
 class TestSumKasiopea(TestFixtureVariant):
     @property
     def fixture_path(self) -> str:
-        return "../fixtures/sum_kasiopea/"
+        return "fixtures/sum_kasiopea/"
 
 
 class TestMissingSampleIn(TestSumKasiopea):
