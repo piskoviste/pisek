@@ -19,6 +19,9 @@ class TestFixture(unittest.TestCase):
     def fixture_path(self) -> str | None:
         return None
 
+    def set_env(self) -> None:
+        pass
+
     def setUp(self) -> None:
         os.environ["LOG_LEVEL"] = "debug"
 
@@ -48,6 +51,8 @@ class TestFixture(unittest.TestCase):
                 pisek_dir,
                 os.path.join(self.fixtures_dir, "pisek"),
             )
+
+        self.set_env()
 
         assert_task_dir(
             self.task_dir,
@@ -123,6 +128,7 @@ class TestFixtureVariant(TestFixture):
         if not self.fixture_path:
             return
 
+        self.set_env()
         self.modify_task()
         self.log_files()
 
