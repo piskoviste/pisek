@@ -175,6 +175,10 @@ class TrailingString(Invalidate):
         with self._open_file(self.from_file) as f:
             lines = f.readlines()
 
+        # TODO: Find some more permanent solution (#545)
+        if lines and lines[-1].endswith("\n"):
+            lines[-1] += "\n"
+
         rand_gen = Random(self.seed)
         lines.append(randword(60, rand_gen) + "\n")
 
