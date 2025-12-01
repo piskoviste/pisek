@@ -74,6 +74,7 @@ all_inputs_in_last_test=off
 generator_respects_seed=on
 one_input_in_each_nonsample_test=off
 fuzzing_thoroughness=250
+judge_rejects_trailing_string=on
 
 [cms]
 name=

@@ -5,17 +5,16 @@
 
 using namespace std;
 
-void verdict(float pts, string msg){
-	cout << pts << endl;
-	cerr << msg << endl;
-	exit(0);
+void verdict(bool ok, const char *msg){
+    fprintf(stderr, msg);
+    exit(ok ? 42 : 43);
 }
 
 int main(int argc, char** argv) {
-	FILE* fin = fopen(getenv("TEST_INPUT"), "r");
-	FILE* fcorrect = fopen(getenv("TEST_OUTPUT"), "r");
+    FILE* fin = fopen(getenv("TEST_INPUT"), "r");
+    FILE* fcorrect = fopen(getenv("TEST_OUTPUT"), "r");
 
-	assert(fin && fcorrect);
+    assert(fin && fcorrect);
 
     int t;
     fscanf(fin, "%d", &t);
@@ -26,18 +25,17 @@ int main(int argc, char** argv) {
         fscanf(fin, "%lld%lld", &a, &b);
         fscanf(fcorrect, "%lld", &c);
 
-        if (scanf("%lld", &contestant) < 1) {
-            fprintf(stderr, "Invalid format");
-            return 43;
-        }
+        if (scanf("%lld", &contestant) < 1)
+            verdict(false, "Invalid format");
 
         assert(a + b == c);
-        if (c != contestant) {
-            fprintf(stderr, "Wrong answer", contestant);
-            return 43;
-        }
-	}
+        if (c != contestant)
+            verdict(false, "Wrong answer");
+    }
 
-    fprintf(stderr, "Correct answer");
-	return 42;
+    char trailing;
+    if (scanf(" %c", &trailing) == 1)
+        verdict(false, "Wrong answer");
+
+    verdict(true, "Correct answer");
 }

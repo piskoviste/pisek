@@ -239,6 +239,7 @@ class ProgramsJob(TaskJob):
                         0,
                         t,
                         wt,
+                        pool_item.stdin,
                         pool_item.stdout,
                         pool_item.stderr,
                         "Exited with return code 0",
@@ -259,6 +260,7 @@ class ProgramsJob(TaskJob):
                             return_code,
                             t,
                             wt,
+                            pool_item.stdin,
                             pool_item.stdout,
                             pool_item.stderr,
                             meta["message"],
@@ -276,6 +278,7 @@ class ProgramsJob(TaskJob):
                             -1,
                             t,
                             wt,
+                            pool_item.stdin,
                             pool_item.stdout,
                             pool_item.stderr,
                             f"Timeout after {time_limit}",
@@ -334,6 +337,8 @@ class ProgramsJob(TaskJob):
         self,
         res: RunResult,
         status: bool = True,
+        stdin: bool = True,
+        stdin_force_content: bool = False,
         stdout: bool = True,
         stdout_force_content: bool = False,
         stderr: bool = True,
@@ -345,6 +350,8 @@ class ProgramsJob(TaskJob):
         if status:
             program_msg += f"status: {res.status}\n"
 
+        if stdin and isinstance(res.stdin_file, TaskPath):
+            program_msg += f"stdin: {self._quote_file_with_name(res.stdin_file, force_content=stdin_force_content)}"
         if stdout and isinstance(res.stdout_file, TaskPath):
             program_msg += f"stdout: {self._quote_file_with_name(res.stdout_file, force_content=stdout_force_content)}"
         if stderr and isinstance(res.stderr_file, TaskPath):

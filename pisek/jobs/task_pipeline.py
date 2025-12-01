@@ -14,7 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from collections import deque
 from typing import Optional
 
 from pisek.jobs.job_pipeline import JobPipeline
@@ -117,9 +116,12 @@ class TaskPipeline(JobPipeline):
         if (
             env.target == TestingTarget.all
             and env.config.solutions
-            and env.config.checks.fuzzing_thoroughness > 0
             and env.config.task.task_type != TaskType.interactive
             and env.config.tests.out_check == OutCheck.judge
+            and (
+                env.config.checks.fuzzing_thoroughness > 0
+                or env.config.checks.judge_rejects_trailing_string
+            )
         ):
             named_pipeline.append(fuzz_judge := (FuzzingManager(), FUZZ_MAN_CODE))
             fuzz_judge[0].add_prerequisite(*first_solution)

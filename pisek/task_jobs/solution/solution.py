@@ -165,4 +165,4 @@ class RunInteractive(RunCMSJudge, RunSolution):
         return self._load_solution_result(self._judge_run_result)
 
     def _checking_message(self) -> str:
-        return f"solution {self.solution.name} on input {self.input:p}"
+        return f"solution {self.solution.name} on input {self.input.col(self._env)}"
