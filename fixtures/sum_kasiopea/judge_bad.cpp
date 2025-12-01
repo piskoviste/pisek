@@ -7,14 +7,14 @@ using namespace std;
 
 void verdict(bool ok, const char *msg){
     fprintf(stderr, msg);
-	exit(ok ? 42 : 43);
+    exit(ok ? 42 : 43);
 }
 
 int main(int argc, char** argv) {
-	FILE* fin = fopen(getenv("TEST_INPUT"), "r");
-	FILE* fcorrect = fopen(getenv("TEST_OUTPUT"), "r");
+    FILE* fin = fopen(getenv("TEST_INPUT"), "r");
+    FILE* fcorrect = fopen(getenv("TEST_OUTPUT"), "r");
 
-	assert(fin && fcorrect);
+    assert(fin && fcorrect);
 
     int t;
     fscanf(fin, "%d", &t);
@@ -32,10 +32,10 @@ int main(int argc, char** argv) {
         // Note the "+ 1"
         if (c != contestant + 1)
             verdict(false, "Wrong answer");
-	}
+    }
 
-	char trailing;
-	if (scanf(" %c", &trailing) == 1)
+    char trailing;
+    if (scanf(" %c", &trailing) == 1)
         verdict(false, "Wrong answer");
 
     verdict(true, "Correct answer");
