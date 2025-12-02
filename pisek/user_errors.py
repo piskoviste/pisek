@@ -38,3 +38,7 @@ class InvalidArgument(UserError):
 
 class InvalidOperation(UserError):
     pass
+
+
+class NotSupported(UserError):
+    pass

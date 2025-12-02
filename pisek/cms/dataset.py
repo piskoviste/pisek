@@ -20,6 +20,7 @@ import re
 import datetime
 from typing import Callable, TypeVar, assert_never
 
+from pisek.user_errors import NotSupported
 from pisek.cms.testcase import create_testcase
 from pisek.env.env import Env
 from pisek.config.task_config import TaskConfig
@@ -31,7 +32,7 @@ T = TypeVar("T")
 
 def check_key(name: str, value: T, condition: Callable[[T], bool]):
     if not condition(value):
-        raise RuntimeError(f"Cannot import task with {name}={value}")
+        raise NotSupported(f"Cannot import task with {name}={value}")
 
 
 def create_dataset(
@@ -112,7 +113,7 @@ def create_dataset(
         task_type = "Communication"
         task_params = (1, "stub" if config.cms.stubs else "alone", "std_io")
     else:
-        raise RuntimeError(f"Cannot upload {config.task.task_type} task to CMS")
+        assert_never(config.task.task_type)
 
     dataset = Dataset(
         description=description,

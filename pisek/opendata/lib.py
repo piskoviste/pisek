@@ -15,9 +15,13 @@
 import os
 import shutil
 import tempfile
-from typing import cast
 
-from pisek.user_errors import InvalidArgument, InvalidOperation, TestingFailed
+from pisek.user_errors import (
+    InvalidArgument,
+    InvalidOperation,
+    TestingFailed,
+    NotSupported,
+)
 from pisek.utils.paths import (
     BUILD_DIR,
     TESTS_DIR,
@@ -28,6 +32,7 @@ from pisek.utils.paths import (
     OpendataOutputPath,
 )
 from pisek.utils.pipeline_tools import run_pipeline
+from pisek.config.config_types import GenType
 from pisek.config.config_hierarchy import DEFAULT_CONFIG_FILENAME
 from pisek.config.task_config import load_config
 from pisek.config.config_tools import export_config
@@ -54,25 +59,33 @@ class Task:
         config_filename: str = DEFAULT_CONFIG_FILENAME,
     ) -> None:
         self._path = path
-        self._env_args = ENV_ARGS | {
-            "pisek_dir": pisek_dir,
-            "config_filename": config_filename,
-        }
+        self._pisek_dir = pisek_dir or os.environ.get("PISEK_DIRECTORY")
+        self._config_filename = config_filename
 
     def test(self, strict: bool = True, disable_cache: bool = False) -> bool:
         try:
             run_pipeline(
                 self._path,
                 TaskPipeline,
+                pisek_dir=self._pisek_dir,
+                config_filename=self._config_filename,
                 disable_cache=disable_cache,
                 strict=strict,
-                **self._env_args,
+                **ENV_ARGS,
             )
         except TestingFailed:
             return False
         return True
 
     def build(self, path: str) -> "BuiltTask":
+        config = load_config(
+            self._path, self._pisek_dir, self._config_filename, False, True
+        )
+        if config.tests.gen_type == GenType.cms_old:
+            raise NotSupported(
+                "For opendata tasks, the cms-old generator is not supported."
+            )
+
         if os.path.exists(path):
             if not os.path.isdir(path):
                 raise InvalidArgument(f"{path} should be a directory")
@@ -83,9 +96,11 @@ class Task:
         run_pipeline(
             self._path,
             TaskPipeline,
+            pisek_dir=self._pisek_dir,
+            config_filename=self._config_filename,
             target=TestingTarget.build,
             disable_cache=True,
-            **self._env_args,
+            **ENV_ARGS,
         )
 
         COPIED_PATHS = [
@@ -106,9 +121,8 @@ class Task:
 
         export_config(
             self._path,
-            cast(str | None, self._env_args["pisek_dir"])
-            or os.environ.get("PISEK_DIRECTORY"),
-            cast(str, self._env_args["config_filename"]),
+            self._pisek_dir,
+            self._config_filename,
             os.path.join(path, DEFAULT_CONFIG_FILENAME),
         )
 
