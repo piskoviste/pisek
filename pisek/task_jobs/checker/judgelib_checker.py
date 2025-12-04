@@ -48,8 +48,8 @@ class RunJudgeLibChecker(RunBatchChecker):
                 self.output.path,
                 self.correct_output.path,
             ],
-            stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
         )
 
         assert checker.stderr is not None
