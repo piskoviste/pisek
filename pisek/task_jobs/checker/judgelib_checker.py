@@ -39,23 +39,17 @@ class RunJudgeLibChecker(RunBatchChecker):
         self._access_file(self.output)
         self._access_file(self.correct_output)
 
-        executable = TaskPath.executable_path("_" + self.checker_name)
-
-        checker = subprocess.Popen(
-            [
-                executable.path,
+        checker = self._run_tool(
+            "_" + self.checker_name,
+            args=[
                 *self._get_flags(),
-                self.output.path,
-                self.correct_output.path,
+                self.output.abspath,
+                self.correct_output.abspath,
             ],
-            stderr=subprocess.PIPE,
-            stdout=subprocess.DEVNULL,
+            stderr=self.checker_log_file,
         )
 
-        assert checker.stderr is not None
-        stderr = checker.stderr.read().decode("utf-8")
-
-        self._wait_for_subprocess(checker)
+        stderr: str = self._read_file(self.checker_log_file)
 
         # XXX: Okay, it didn't finish in no time, but this is not meant to be used
         rr = RunResult(
