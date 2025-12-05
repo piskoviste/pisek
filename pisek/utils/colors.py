@@ -1,4 +1,11 @@
+import re
 from colorama import Fore, Back
+
+_ANSI_REGEX = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
+
+
+def remove_colors(text: str) -> str:
+    return _ANSI_REGEX.sub("", text)
 
 
 class __ColorSettings:

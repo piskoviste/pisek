@@ -21,12 +21,12 @@ from pisek.task_jobs.solution.solution_result import (
 )
 
 
-def evaluate_verdicts(
-    config: TaskConfig, verdicts: list[Verdict], expected: str
+def check_verdicts(
+    verdicts: list[Verdict], expected: str
 ) -> tuple[bool, bool, Optional[int]]:
     result = True
     definitive = True
-    breaker = None
+    guarantor = None
 
     for i, mode in enumerate((all, any)):
         oks = list(map(TEST_SPEC[expected][i], verdicts))
@@ -36,11 +36,17 @@ def evaluate_verdicts(
         if mode == all:
             definitive &= not ok or TEST_SPEC[expected][i] == verdict_always
             if not ok:
-                breaker = oks.index(False)
+                guarantor = oks.index(False)
                 break
         elif mode == any:
             definitive &= ok
             if not ok and len(verdicts) == 1:
-                breaker = 0
+                guarantor = 0
+            elif ok and TEST_SPEC[expected][i] != verdict_always:
+                guarantor = oks.index(True)
 
-    return result, definitive, breaker
+    return result, definitive, guarantor
+
+
+def compute_verdict(verdicts: list[Verdict]) -> Verdict:
+    return max(verdicts, default=Verdict.ok, key=lambda v: v.value)

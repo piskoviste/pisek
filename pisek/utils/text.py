@@ -17,7 +17,7 @@
 import sys
 from typing import NoReturn
 
-from pisek.utils.colors import ColorSettings
+from pisek.utils.colors import ColorSettings, remove_colors
 
 
 def tab(text: str, tab_str: str = "  ") -> str:
@@ -25,7 +25,7 @@ def tab(text: str, tab_str: str = "  ") -> str:
 
 
 def pad(text: str, length: int, pad_char: str = " ") -> str:
-    return text + (length - len(text)) * pad_char
+    return text + (length - len(remove_colors(text))) * pad_char
 
 
 def pad_left(text: str, length: int, pad_char: str = " ") -> str:
