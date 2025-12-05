@@ -701,6 +701,53 @@ class RunSection(BaseEnv):
     def validate_name(cls, value: str) -> str:
         return _validate_program_name("program name", value)
 
+    @field_validator("env", mode="before")
+    def interpolate_env(cls, dictionary: dict[str, str]) -> dict[str, str]:
+        def raise_err(error_type: str, message: str, key: str):
+            raise PydanticCustomError(
+                error_type, message, {"_loc": key, f"env_{key}": dictionary[key]}
+            )
+
+        def interpolate(key: str, val: str) -> str:
+            state: list[str] = [""]
+            i = 0
+            while i < len(val):
+                char = val[i]
+                if char == "\\":
+                    if i == len(val) - 1:
+                        raise_err("env_wrong_escape", "Unterminated escape", key)
+                    i += 1
+                    state[-1] += val[i]
+                elif val[i : i + 2] == "${":
+                    state.append("")
+                    i += 1
+                elif char == "}" and len(state) > 1:
+                    var_name = state.pop()
+                    if var_name not in os.environ:
+                        raise_err(
+                            "unknown_variable",
+                            f"No environment variable '{var_name}'",
+                            key,
+                        )
+                    state[-1] += os.environ[var_name]
+                elif char in "${}":
+                    raise_err("unescaped_char", f"Unescaped character '{char}'", key)
+                else:
+                    state[-1] += char
+
+                i += 1
+
+            if len(state) > 1:
+                raise_err(
+                    "env_unterminated_interpolation", "Unterminated interpolation", key
+                )
+
+            return state[0]
+
+        for key in dictionary:
+            dictionary[key] = interpolate(key, dictionary[key])
+        return dictionary
+
 
 class BuildSection(BaseEnv):
     program_names: ClassVar[dict[str, str]] = {}
@@ -903,7 +950,9 @@ def _format_message(err: ErrorDetails) -> str:
         if ctx == {}:
             return f"{err['msg']}."
         return f"{err['msg']}:\n" + tab(
-            "\n".join(f"{key}={val}" for key, val in ctx.items())
+            "\n".join(
+                f"{key}={val}" for key, val in ctx.items() if not key.startswith("_")
+            )
         )
     return f"{err['msg']}: '{inp}'"
 
@@ -915,12 +964,12 @@ def _convert_errors(e: ValidationError, config_values: ConfigValuesDict) -> list
         for loc in error["loc"]:
             value = value[loc]
 
-        if not isinstance(value, ConfigValue):
-            location = (
-                value["_section"].location() if "_section" in value else "global config"
-            )
-        else:
+        if isinstance(value, ConfigValue):
             location = value.location()
+        elif "_section" in value:
+            location = value["_section"].location()
+        else:
+            location = value[error["ctx"]["_loc"]].location()
 
         error_msgs.append(f"In {location}:\n" + tab(_format_message(error)))
     return error_msgs

@@ -659,11 +659,13 @@ upon errors is inherently unreliable.
 <!-- md:version 2.1.0 -->
 <!-- md:type string -->
 <!-- md:default-empty -->
-<!-- md:flag experimental -->
 
-Sets an environment variable when running this program.
+Sets an environment variable when running this program. You can use `${...}` interpolation for substituting environment variables.
 
-For example `env_DEBUG=true` sets `DEBUG` to have value `true`.
+??? example "`env_{KEY}` usage"
+    For example `env_DEBUG=true` sets `DEBUG` to have value `true`.
+
+    When running pisek with `TASK` set to `aplusb`, `env_DATASET=../{TASK}` produces `DATASET=../aplusb`. (However, the program will have no access to `TASK` by default.)
 
 ## [build]
 Sections describing how to build a program.
