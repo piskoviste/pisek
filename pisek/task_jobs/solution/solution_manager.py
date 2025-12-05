@@ -53,7 +53,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         self.solution_points: Optional[Decimal] = None
         self.tests: list[TestJobGroup] = []
         self._tests_results: dict[int, Verdict] = {}
-        super().__init__(f"Run {solution_label}")
+        super().__init__(f"Test {solution_label}")
 
     def _get_jobs(self) -> list[Job]:
         self._solution = self._env.config.solutions[self.solution_label]
@@ -234,7 +234,8 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
                 test.cancel()
 
     def get_status(self) -> str:
-        msg = f"Testing {self.solution_label}"
+        longest_solution_label = max(map(len, self._env.config.solutions))
+        msg = f"{self.solution_label:<{longest_solution_label}}"
         if self.state == State.cancelled:
             return self._job_bar(msg)
 
