@@ -148,7 +148,7 @@ class TestSumKasiopeaOpendataSequential(TestSumKasiopeaOpendataBuild):
         self.testcase.gen_output()
         self.assertTrue(os.path.exists(self.output_path))
         self.assertEqual(
-            self.testcase.judge(self.output_path),
+            self.testcase.check(self.output_path),
             OpendataVerdict(Verdict.ok, None, Decimal(4), None, None),
         )
 
@@ -157,7 +157,7 @@ class TestSumKasiopeaOpendataCheckRightaway(TestSumKasiopeaOpendataBuild):
     def run_opendata_test(self) -> None:
         self.init_testcase("02")
         self.assertEqual(
-            self.testcase.judge(os.path.join(self.task_dir, "sample.out")),
+            self.testcase.check(os.path.join(self.task_dir, "sample.out")),
             OpendataVerdict(Verdict.wrong_answer, None, Decimal(0), None, None),
         )
 
@@ -168,7 +168,7 @@ class TestSumKasiopeaOpendataCheckBinary(TestSumKasiopeaOpendataBuild):
         self.create_contestant_file(b"\x07\n")
 
         self.assertEqual(
-            self.testcase.judge(os.path.join(self.task_dir, self.contestant_path)),
+            self.testcase.check(os.path.join(self.task_dir, self.contestant_path)),
             OpendataVerdict(
                 Verdict.normalization_fail,
                 "File contains non-printable character (code 7 at position 0)",
@@ -193,7 +193,7 @@ class TestSumKasiopeaOpendataJudge(TestSumKasiopeaOpendataBuild):
         self.create_contestant_file("0\n")
 
         self.assertEqual(
-            self.testcase.judge(os.path.join(self.task_dir, self.contestant_path)),
+            self.testcase.check(os.path.join(self.task_dir, self.contestant_path)),
             OpendataVerdict(
                 Verdict.wrong_answer,
                 "Wrong answer",

@@ -280,7 +280,7 @@ class Testcase:
     def gen_output(self, clear: bool = True) -> None:
         self._run_pipeline(output_needed=True, clear=clear)
 
-    def judge(self, contestant_output_path: str, clear: bool = True) -> OpendataVerdict:
+    def check(self, contestant_output_path: str, clear: bool = True) -> OpendataVerdict:
         assert self._built_task._config.tests.judge_needs_in is not None
         assert self._built_task._config.tests.judge_needs_out is not None
 
