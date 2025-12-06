@@ -18,9 +18,10 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import auto, Enum
-from functools import partial, cache
+from functools import partial, cache, cached_property
 from typing import Callable, Optional, TYPE_CHECKING
 
+from pisek.utils.colors import ColorSettings
 from pisek.config.config_types import TestPoints
 from pisek.task_jobs.run_result import RunResult
 
@@ -30,8 +31,8 @@ if TYPE_CHECKING:
 
 class Verdict(Enum):
     # Higher value means more unsuccessful verdict.
-    ok = auto()
     superopt = auto()
+    ok = auto()
     partial_ok = auto()
     timeout = auto()
     wrong_answer = auto()
@@ -46,8 +47,9 @@ class Verdict(Enum):
             Verdict.normalization_fail,
         )
 
+    @cached_property
     def mark(self) -> str:
-        return {
+        mark = {
             Verdict.ok: "·",
             Verdict.superopt: "S",
             Verdict.partial_ok: "P",
@@ -55,6 +57,19 @@ class Verdict(Enum):
             Verdict.wrong_answer: "W",
             Verdict.error: "!",
             Verdict.normalization_fail: "N",
+        }[self]
+        return ColorSettings.colored(mark, self.color)
+
+    @cached_property
+    def color(self) -> str:
+        return {
+            Verdict.ok: "green",
+            Verdict.superopt: "blue",
+            Verdict.partial_ok: "yellow",
+            Verdict.timeout: "red",
+            Verdict.wrong_answer: "red",
+            Verdict.error: "red",
+            Verdict.normalization_fail: "red",
         }[self]
 
     @staticmethod
@@ -84,9 +99,6 @@ class SolutionResult(ABC):
     def _points(self, env: "Env", test_points: int) -> Decimal:
         pass
 
-    def mark(self) -> str:
-        return self.verdict.mark()
-
 
 @dataclass(kw_only=True)
 class RelativeSolutionResult(SolutionResult):
@@ -103,11 +115,6 @@ class RelativeSolutionResult(SolutionResult):
             Decimal("0.1") ** env.config.task.score_precision
         )
 
-    def mark(self) -> str:
-        if self.verdict == Verdict.partial_ok:
-            return f"[{self.relative_points:.2f}]"
-        return super().mark()
-
 
 @dataclass(kw_only=True)
 class AbsoluteSolutionResult(SolutionResult):
@@ -121,11 +128,6 @@ class AbsoluteSolutionResult(SolutionResult):
 
     def _points(self, env: "Env", test_points: int) -> Decimal:
         return self.absolute_points
-
-    def mark(self) -> str:
-        if self.verdict == Verdict.partial_ok:
-            return f"[={self.absolute_points}]"
-        return super().mark()
 
 
 def verdict_always(res: Verdict) -> bool:

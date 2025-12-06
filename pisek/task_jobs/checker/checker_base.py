@@ -195,17 +195,8 @@ class RunChecker(ProgramsJob):
             return "-"
         elif self.result is None:
             return " "
-        elif self.result.verdict == Verdict.partial_ok:
-            if isinstance(self.result, RelativeSolutionResult):
-                return f"[{self.result.relative_points:.2f}]"
-            elif isinstance(self.result, AbsoluteSolutionResult):
-                return f"[={self.result.absolute_points:.{self._env.config.task.score_precision}f}]"
-            else:
-                raise ValueError(
-                    f"Unexpected SolutionResult type: '{type(self.result)}'"
-                )
         else:
-            return self.result.verdict.mark()
+            return self.result.verdict.mark
 
 
 class RunBatchChecker(RunChecker):

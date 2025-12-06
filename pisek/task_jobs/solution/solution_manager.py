@@ -18,15 +18,17 @@
 from decimal import Decimal
 from typing import Any, Optional
 
-from pisek.jobs.jobs import State, Job, PipelineItemFailure
-from pisek.env.env import Env
-from pisek.utils.paths import IInputPath
-from pisek.config.config_types import TaskType
 from pisek.utils.text import pad, pad_left, tab
 from pisek.utils.terminal import MSG_LEN, right_aligned_text
+from pisek.utils.colors import ColorSettings
+from pisek.utils.paths import IInputPath
+
+from pisek.jobs.jobs import State, Job, PipelineItemFailure
+from pisek.env.env import Env
+from pisek.config.config_types import TaskType
 from pisek.task_jobs.tools import SanitizeAbstract
 from pisek.task_jobs.data.data import SymlinkData
-from pisek.task_jobs.solution.verdicts_eval import evaluate_verdicts
+from pisek.task_jobs.solution.verdicts_eval import check_verdicts, compute_verdict
 from pisek.task_jobs.task_job import TaskHelper
 from pisek.task_jobs.task_manager import TaskJobManager
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
@@ -51,18 +53,20 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         self.solution_points: Optional[Decimal] = None
         self.tests: list[TestJobGroup] = []
         self._tests_results: dict[int, Verdict] = {}
-        super().__init__(f"Run {solution_label}")
+        super().__init__(f"Test {solution_label}")
 
     def _get_jobs(self) -> list[Job]:
-        self.is_primary: bool = self._env.config.solutions[self.solution_label].primary
-        self._solution = self._env.config.solutions[self.solution_label].run
+        self._solution = self._env.config.solutions[self.solution_label]
+        self.is_primary: bool = self._solution.primary
 
         self._sols: dict[IInputPath, RunSolution] = {}
         self._checkers: dict[IInputPath, RunChecker] = {}
         self._static_out_checkers: dict[IInputPath, RunChecker] = {}
 
         for sub_num, inputs in self._all_testcases().items():
-            self.tests.append(TestJobGroup(self._env, sub_num))
+            self.tests.append(
+                TestJobGroup(self._env, sub_num, self._solution.tests[sub_num])
+            )
             for inp in inputs:
                 self._add_testcase_info_jobs(inp, sub_num)
 
@@ -181,7 +185,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         input_path = testcase_info.input_path(seed, solution=self.solution_label)
         run_solution = RunBatchSolution(
             self._env,
-            self._solution,
+            self._solution.run,
             self.is_primary,
             input_path,
             input_path.to_output(),
@@ -216,7 +220,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
 
         return RunInteractive(
             self._env,
-            self._solution,
+            self._solution.run,
             self.is_primary,
             self._env.config.tests.out_judge,
             test,
@@ -225,14 +229,13 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
 
     def update(self):
         """Cancel running on inputs that can't change anything."""
-        expected = self._env.config.solutions[self.solution_label].tests
-
         for test in self.tests:
-            if test.definitive(expected[test.num]):
+            if test.definitive():
                 test.cancel()
 
     def get_status(self) -> str:
-        msg = f"Testing {self.solution_label}"
+        longest_solution_label = max(map(len, self._env.config.solutions))
+        msg = f"{self.solution_label:<{longest_solution_label}}"
         if self.state == State.cancelled:
             return self._job_bar(msg)
 
@@ -244,7 +247,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         if not self.state.finished() or self._env.verbosity == 0:
             points = pad_left(points, points_places)
             header = f"{pad(msg, MSG_LEN-1)} {points}  {max_time:.2f}s  "
-            tests_text = "|".join(sub.status_verbosity0() for sub in self.tests)
+            tests_text = "".join(sub.status_verbosity0() for sub in self.tests)
         else:
             header = (
                 right_aligned_text(f"{msg}: {points}", f"slowest {max_time:.2f}s")
@@ -270,7 +273,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
 
         solution_conf = self._env.config.solutions[self.solution_label]
         for sub_job in self.tests:
-            sub_job.as_expected(solution_conf.tests[sub_job.num])
+            sub_job.assert_as_expected()
 
         points = solution_conf.points
         p_min = solution_conf.points_min
@@ -321,13 +324,16 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
 class TestJobGroup(TaskHelper):
     """Groups jobs of a single test."""
 
-    def __init__(self, env: Env, num: int) -> None:
+    def __init__(self, env: Env, num: int, expected_str: str) -> None:
         self._env = env
         self.num = num
         self.test = env.config.test_sections[num]
+        self.expected_str = expected_str
+
         self.new_run_jobs: list[RunSolution] = []
         self.previous_jobs: list[RunChecker] = []
         self.new_jobs: list[RunChecker] = []
+
         self._canceled: bool = False
 
     @property
@@ -342,9 +348,7 @@ class TestJobGroup(TaskHelper):
 
     @property
     def verdict(self) -> Verdict:
-        return max(
-            self._verdicts(self.all_jobs), default=Verdict.ok, key=lambda v: v.value
-        )
+        return compute_verdict(self._verdicts(self.all_jobs))
 
     @property
     def slowest_time(self) -> float:
@@ -368,14 +372,6 @@ class TestJobGroup(TaskHelper):
     def _verdicts(self, jobs: list[RunChecker]) -> list[Verdict]:
         return list(map(lambda r: r.verdict, self._results(jobs)))
 
-    def _jobs_points(self) -> list[Decimal]:
-        return list(
-            map(
-                lambda r: r.points(self._env, self.test.points),
-                self._results(self.new_jobs + self.previous_jobs),
-            )
-        )
-
     def status(
         self, all_tests: list["TestJobGroup"], verbosity: Optional[int] = None
     ) -> str:
@@ -390,26 +386,40 @@ class TestJobGroup(TaskHelper):
 
         raise RuntimeError(f"Unknown verbosity {verbosity}")
 
-    def _verdict_summary(self, jobs: list[RunChecker]) -> str:
-        text = ""
-        verdicts = self._verdicts(jobs)
-        for verdict in Verdict:
-            count = verdicts.count(verdict)
-            if count > 0:
-                text += f"{count}{verdict.mark()}"
-        return text
-
     def _verdict_marks(self, jobs: list[RunChecker]) -> str:
         return "".join(job.verdict_mark() for job in jobs)
 
     def _predecessor_summary(self) -> str:
-        predecessor_summary = self._verdict_summary(self.previous_jobs)
-        if predecessor_summary:
-            return f"({predecessor_summary}) "
-        return ""
+        if not self.previous_jobs:
+            return ""
+
+        verdicts = self._verdicts(self.previous_jobs)
+        if not verdicts:
+            return "p |"
+
+        _, _, guarantor = self._as_expected(self.previous_jobs)
+        if guarantor is not None:
+            assert guarantor.result is not None
+            verdict = guarantor.result.verdict
+        else:
+            verdict = compute_verdict(verdicts)
+
+        return f"p{verdict.mark}|"
 
     def status_verbosity0(self) -> str:
-        return f"{self._predecessor_summary()}{self._verdict_marks(self.new_jobs)}"
+        left_bracket = "["
+        right_bracket = "]"
+        if self.definitive():
+            color = self.verdict.color
+            left_bracket = ColorSettings.colored(left_bracket, color)
+            right_bracket = ColorSettings.colored(right_bracket, color)
+
+        return (
+            left_bracket
+            + self._predecessor_summary()
+            + self._verdict_marks(self.new_jobs)
+            + right_bracket
+        )
 
     def status_verbosity1(self) -> str:
         max_sub_name_len = max(
@@ -423,7 +433,7 @@ class TestJobGroup(TaskHelper):
         return right_aligned_text(
             f"{self.test.name:<{max_sub_name_len}}  "
             f"{self._format_points(self.points):<{max_sub_points_len}}  "
-            f"{self._predecessor_summary()}{self._verdict_marks(self.new_jobs)}",
+            f"{self.status_verbosity0()}",
             f"slowest {self.slowest_time:.2f}s",
             offset=-2,
         )
@@ -482,47 +492,41 @@ class TestJobGroup(TaskHelper):
 
         return text
 
-    def definitive(self, expected_str: str) -> bool:
+    def definitive(self) -> bool:
         """Checks whether test jobs have resulted in outcome that cannot be changed."""
+        if len(self._results(self.all_jobs)) == len(self.all_jobs):
+            return True
+
         if self._env.all_inputs:
             return False
 
-        if expected_str == "X" and not self.verdict.is_zero_point():
+        if self.expected_str == "X" and not self.verdict.is_zero_point():
             return False  # Cause X is very very special
 
-        return self._as_expected(expected_str)[1]
+        return self._as_expected(self.all_jobs)[1]
 
-    def as_expected(self, expected_str: str) -> None:
+    def assert_as_expected(self) -> None:
         """Checks this test resulted as expected. Raises PipelineItemFailure otherwise."""
-        ok, _, breaker = self._as_expected(expected_str)
+        ok, _, breaker = self._as_expected(self.all_jobs)
         if not ok:
-            msg = f"{self.test.name} did not result as expected: '{expected_str}'"
+            msg = f"{self.test.name} did not result as expected: '{self.expected_str}'"
             if breaker is not None:
                 msg += f"\n{tab(breaker.message())}"
             raise PipelineItemFailure(msg)
 
     def _as_expected(
-        self, expected_str: str
+        self, jobs: list[RunChecker]
     ) -> tuple[bool, bool, Optional[RunChecker]]:
-        """
-        Returns tuple:
-            - whether test jobs have resulted as expected
-            - whether the result is definitive (cannot be changed)
-            - a job that makes the result different than expected (if there is one particular)
-        """
-
-        jobs = self.new_jobs + self.previous_jobs
-
         finished_jobs = self._finished_jobs(jobs)
         verdicts = self._results(jobs)
 
-        result, definitive, breaker = evaluate_verdicts(
-            self._env.config, list(map(lambda r: r.verdict, verdicts)), expected_str
+        result, definitive, guarantor = check_verdicts(
+            list(map(lambda r: r.verdict, verdicts)), self.expected_str
         )
 
-        breaker_job = None if breaker is None else finished_jobs[breaker]
+        guarantor_job = None if guarantor is None else finished_jobs[guarantor]
 
-        return result, definitive, breaker_job
+        return result, definitive, guarantor_job
 
     def cancel(self):
         if self._canceled:

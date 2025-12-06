@@ -26,7 +26,7 @@ from pisek.config.config_types import TestPoints
 from pisek.config.task_config import load_config, TaskConfig
 from pisek.config.select_solutions import expand_solutions
 from pisek.task_jobs.solution.solution_result import Verdict
-from pisek.task_jobs.solution.verdicts_eval import evaluate_verdicts
+from pisek.task_jobs.solution.verdicts_eval import check_verdicts
 
 
 class MissingSolution(Exception):
@@ -86,7 +86,7 @@ class LoggedResult:
 
         return (
             f"{pad(self.test, test_pad_length)}  "
-            f"{self.original_verdict.mark()}->{self.verdict.mark()}  "
+            f"{self.original_verdict.mark}->{self.verdict.mark}  "
             f"{get_bar()}    {self.time:.2f} / {limit:.2f}s"
         )
 
@@ -140,8 +140,7 @@ class SolutionResults:
     def _evaluate_results(
         self, results: list[LoggedResult], test_num: int
     ) -> tuple[bool, bool, Optional[LoggedResult]]:
-        ok, definitive, breaker = evaluate_verdicts(
-            self._config,
+        ok, definitive, breaker = check_verdicts(
             list(map(lambda r: r.verdict, results)),
             self._solution.tests[test_num],
         )
