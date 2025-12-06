@@ -125,10 +125,7 @@ class DataManager(TaskJobManager):
                 for test_config in self._env.config.test_sections.values()
             )
             if not_skipped_test:
-                self._warn(
-                    "No validator specified in config.\n"
-                    "It is recommended to set 'validator' is section [tests]"
-                )
+                self._warn("No validator specified in config.")
 
         return jobs
 
