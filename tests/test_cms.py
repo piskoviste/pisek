@@ -184,5 +184,19 @@ class TestNoLFInBinaryOutput(TestSumCMS):
         modify_config(self.task_dir, modification_fn)
 
 
+class TestRustJudge(TestSumCMS):
+    """A judge written in Rust."""
+
+    def expecting_success(self) -> bool:
+        return True
+
+    def modify_task(self) -> None:
+        def modification_fn(raw_config):
+            raw_config["tests"]["out_judge"] = "judge_rust"
+            raw_config["tests"]["judge_needs_out"] = "no"
+
+        modify_config(self.task_dir, modification_fn)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
