@@ -517,13 +517,6 @@ class TestJobGroup(TaskHelper):
     def _as_expected(
         self, jobs: list[RunChecker]
     ) -> tuple[bool, bool, Optional[RunChecker]]:
-        """
-        Returns tuple:
-            - whether test jobs have resulted as expected
-            - whether the result is definitive (cannot be changed)
-            - a job that makes the result different than expected (if there is one particular)
-        """
-
         finished_jobs = self._finished_jobs(jobs)
         verdicts = self._results(jobs)
 

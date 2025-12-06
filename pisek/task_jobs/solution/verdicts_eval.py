@@ -24,26 +24,31 @@ from pisek.task_jobs.solution.solution_result import (
 def check_verdicts(
     verdicts: list[Verdict], expected: str
 ) -> tuple[bool, bool, Optional[int]]:
+    """
+    Returns tuple:
+        - whether verdicts are as expected
+        - whether the result is definitive (cannot be changed)
+        - a verdict that makes the result the way it is (if there is one particular)
+    """
     result = True
     definitive = True
     guarantor = None
 
-    for i, mode in enumerate((all, any)):
-        oks = list(map(TEST_SPEC[expected][i], verdicts))
-        ok = mode(oks)
-        result &= ok
+    oks = list(map(TEST_SPEC[expected][0], verdicts))
+    ok = all(oks)
+    result &= ok
+    definitive &= not ok or TEST_SPEC[expected][0] == verdict_always
+    if not ok:
+        return result, definitive, oks.index(False)
 
-        if mode == all:
-            definitive &= not ok or TEST_SPEC[expected][i] == verdict_always
-            if not ok:
-                guarantor = oks.index(False)
-                break
-        elif mode == any:
-            definitive &= ok
-            if not ok and len(verdicts) == 1:
-                guarantor = 0
-            elif ok and TEST_SPEC[expected][i] != verdict_always:
-                guarantor = oks.index(True)
+    oks = list(map(TEST_SPEC[expected][1], verdicts))
+    ok = any(oks)
+    result &= ok
+    definitive &= ok
+    if not ok and len(verdicts) == 1:
+        guarantor = 0
+    elif ok and TEST_SPEC[expected][1] != verdict_always:
+        guarantor = oks.index(True)
 
     return result, definitive, guarantor
 
