@@ -407,12 +407,18 @@ class TestJobGroup(TaskHelper):
         return f"p{verdict.mark}|"
 
     def status_verbosity0(self) -> str:
-        color = self.verdict.color
+        left_bracket = "["
+        right_bracket = "]"
+        if self.definitive():
+            color = self.verdict.color
+            left_bracket = ColorSettings.colored(left_bracket, color)
+            right_bracket = ColorSettings.colored(right_bracket, color)
+
         return (
-            ColorSettings.colored("[", color)
+            left_bracket
             + self._predecessor_summary()
             + self._verdict_marks(self.new_jobs)
-            + ColorSettings.colored("]", color)
+            + right_bracket
         )
 
     def status_verbosity1(self) -> str:
@@ -488,6 +494,9 @@ class TestJobGroup(TaskHelper):
 
     def definitive(self) -> bool:
         """Checks whether test jobs have resulted in outcome that cannot be changed."""
+        if len(self._results(self.all_jobs)) == len(self.all_jobs):
+            return True
+
         if self._env.all_inputs:
             return False
 
