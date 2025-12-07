@@ -92,22 +92,19 @@ class JobPipeline(ABC):
                 break  # We don't want to start many managers at once because that can lead to UI freeze
 
         # Process new jobs
-        started: list[Job] = []
+        new_queue: list[Job] = []
         to_run: list[tuple[Job, Env]] = []
         for job in self._queue:
-            if len(self._envs) == 0:
-                break
-
-            if job.prerequisites == 0:
+            if len(self._envs) > 0 and job.prerequisites == 0:
                 job.prepare(cache)
                 if job.state.finished():
                     self._finalize_job(job, cache)
                 elif job.state:
                     to_run.append((job, self._envs.pop()))
-                started.append(job)
+            else:
+                new_queue.append(job)
 
-        for job in started:
-            self._queue.remove(job)
+        self._queue = new_queue
 
         # Update managers
         for manager in self.job_managers:
