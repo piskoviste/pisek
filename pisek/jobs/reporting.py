@@ -34,7 +34,7 @@ class Reporter(ABC):
         self._job_managers = job_managers
 
     @abstractmethod
-    def update(self) -> None:
+    def update(self, active_jobs: list[Job]) -> None:
         pass
 
     @abstractmethod
@@ -45,22 +45,17 @@ class Reporter(ABC):
     def report_manager(self, job_manager: JobManager) -> None:
         pass
 
-    @abstractmethod
-    def refresh(self, active_jobs: list[Job]) -> None:
-        pass
-
 
 class CommandLineReporter(Reporter):
     def __init__(self, env: Env, job_managers: list[JobManager]) -> None:
         self._finished_jm = 0
         self._tmp_lines = 0
         self._dirty_lines = 0
-        self._manager_tmp_lines = 0
+        self._last_update = time.time()
         super().__init__(env, job_managers)
 
-    def update(self) -> None:
+    def update(self, active_jobs: list[Job]) -> None:
         self._reset_tmp_lines()
-        self._manager_tmp_lines = 0
         for i in range(self._finished_jm, len(self._job_managers)):
             job_man = self._job_managers[i]
 
@@ -70,26 +65,32 @@ class CommandLineReporter(Reporter):
                 if job_man.state != State.cancelled:
                     self._report_manager(job_man)
                 if job_man.state == State.failed and not self._env.full:
-                    break
+                    return
             elif job_man.state == State.running:
                 msg = job_man.get_status()
                 self._print_tmp(msg)
-                self._manager_tmp_lines = self._lines(msg)
                 break
+
+        now = time.time()
+        if terminal_height <= self._env.jobs + 5:  # Some extra safety margin
+            if active_jobs:
+                self._print_tmp(
+                    f"{len(active_jobs)} active job{'s' if len(active_jobs) >= 2 else ''}, longest running: {self._format_job(active_jobs[0], now)}"
+                )
+        else:
+            if active_jobs:
+                self._print_tmp("Active jobs:")
+
+            for job in active_jobs:
+                self._print_tmp("- " + self._format_job(job, now))
+
+            self._clear_lines(self._dirty_lines)
 
     def report_job(self, job: Job) -> None:
         pass
 
     def report_manager(self, job_manager: JobManager) -> None:
-        # If the conditions are met, we need to report it now as we won't have another chance
-        # Otherwise we'll just do it later
-        if (
-            self._finished_jm <= self._job_managers.index(job_manager)
-            and job_manager.any_failed()
-            and not self._env.full
-        ):
-            self._print(job_manager.get_status())
-            self._report_manager(job_manager)
+        pass
 
     def _report_manager(self, job_manager: JobManager) -> None:
         self._clear_lines(self._dirty_lines)
@@ -111,24 +112,6 @@ class CommandLineReporter(Reporter):
                 LINE_SEPARATOR + LINE_SEPARATOR.join(fails) + LINE_SEPARATOR, "red"
             )
             self._print(msg, end="")
-
-    def refresh(self, active_jobs: list[Job]) -> None:
-        self._reset_tmp_lines(leave=self._manager_tmp_lines)
-        now = time.time()
-
-        if terminal_height <= self._env.jobs + 5:  # Some extra safety margin
-            if active_jobs:
-                self._print_tmp(
-                    f"{len(active_jobs)} active job{'s' if len(active_jobs) >= 2 else ''}, longest running: {self._format_job(active_jobs[0], now)}"
-                )
-        else:
-            if active_jobs:
-                self._print_tmp("Active jobs:")
-
-            for job in active_jobs:
-                self._print_tmp("- " + self._format_job(job, now))
-
-            self._clear_lines(self._dirty_lines)
 
     def _format_job(self, job: Job, now: float) -> str:
         run_time: float = 0 if job.started is None else max(0, now - job.started)

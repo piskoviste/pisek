@@ -60,17 +60,16 @@ class JobPipeline(ABC):
                     self._finalize_job(job, cache)
 
                 if not self._update(cache, env):
-                    self._reporter.refresh([])
                     break
 
-                self._reporter.refresh(list(self._futures.values()))
+                self._reporter.update(list(self._futures.values()))
 
             for job in self._futures.values():
                 if job.state == State.succeeded:
                     self._finalize_job(job, cache)
                 else:
                     job.cancel()
-            self._reporter.refresh([])
+            self._reporter.update([])
 
         if cache is not None:
             cache.export()  # Save last version of cache
@@ -87,29 +86,25 @@ class JobPipeline(ABC):
                 self._queue.extend(manager.create_jobs())
                 if manager.any_failed():
                     manager.finalize()
-                    self._report(manager)
+                    self._reporter.report_manager(manager)
                     if not env.full:
                         return False
-                self._reporter.update()
                 break  # We don't want to start many managers at once because that can lead to UI freeze
 
         # Process new jobs
-        started: list[Job] = []
+        new_queue: list[Job] = []
         to_run: list[tuple[Job, Env]] = []
         for job in self._queue:
-            if len(self._envs) == 0:
-                break
-
-            if job.prerequisites == 0:
+            if len(self._envs) > 0 and job.prerequisites == 0:
                 job.prepare(cache)
                 if job.state.finished():
                     self._finalize_job(job, cache)
                 elif job.state:
                     to_run.append((job, self._envs.pop()))
-                started.append(job)
+            else:
+                new_queue.append(job)
 
-        for job in started:
-            self._queue.remove(job)
+        self._queue = new_queue
 
         # Update managers
         for manager in self.job_managers:
@@ -117,7 +112,7 @@ class JobPipeline(ABC):
                 manager.update()
                 if manager.ready() or manager.any_failed():
                     manager.finalize()
-                    self._report(manager)
+                    self._reporter.report_manager(manager)
                 if manager.any_failed() and not env.full:
                     return False
 
@@ -133,11 +128,4 @@ class JobPipeline(ABC):
     def _finalize_job(self, job: Job, cache: Cache | None) -> None:
         job.finalize(cache)
         self.all_accessed_files |= job.accessed_files
-        self._report(job)
-
-    def _report(self, pitem: Job | JobManager) -> None:
-        self._reporter.update()
-        if isinstance(pitem, Job):
-            self._reporter.report_job(pitem)
-        else:
-            self._reporter.report_manager(pitem)
+        self._reporter.report_job(job)
