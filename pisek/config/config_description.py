@@ -3,7 +3,7 @@ from difflib import SequenceMatcher
 from functools import partial
 from importlib.resources import files
 import re
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import TYPE_CHECKING, Callable, Iterable, Optional
 
 from pisek.utils.text import tab
 from pisek.user_errors import TaskConfigError
@@ -128,6 +128,7 @@ class ConfigKeysHelper:
     def __init__(self) -> None:
         self.sections: dict[str, ConfigSectionDescription] = {}
         self.keys: dict[tuple[str, str], ConfigKeyDescription] = {}
+        self.key_index: dict[str, list[ConfigKeyDescription]] = {}
         add_applicability_conditions: list[
             tuple[ConfigKeyDescription, Callable[[], ApplicabilityCondition]]
         ] = []
@@ -199,6 +200,7 @@ class ConfigKeysHelper:
                     assert section is not None
                     last_key = ConfigKeyDescription(section, line.removesuffix("="))
                     self.keys[(section.section, last_key.key)] = last_key
+                    self.key_index.setdefault(last_key.key, []).append(last_key)
 
                 elif line[0] == "[" and line[-1] == "]":
                     last_key = None
@@ -244,7 +246,16 @@ class ConfigKeysHelper:
         config: "ConfigHierarchy",
         allow_unapplicable: bool,
     ) -> tuple[float, str, str]:
-        for candidate in self.keys.values():
+        keys: Iterable[ConfigKeyDescription]
+        if (
+            key in self.key_index
+            and max(k.score(section, key) for k in self.key_index[key]) == 1.0
+        ):
+            keys = self.key_index[key]
+        else:
+            keys = self.keys.values()
+
+        for candidate in keys:
             if candidate.score(section, key) == 1.0:
                 if not allow_unapplicable and (
                     text := candidate.applicable(section, key, config)
