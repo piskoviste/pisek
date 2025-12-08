@@ -129,33 +129,42 @@ class CommandLineReporter(Reporter):
         return g
 
     @_jumps
-    def _reset_tmp_lines(self, leave: int = 0) -> None:
-        up = max(0, self._tmp_lines - leave)
-        print(Cursor.UP() * up, end="")
-        self._dirty_lines += up
-        self._tmp_lines -= up
+    def _reset_tmp_lines(self) -> None:
+        print(Cursor.UP() * self._tmp_lines, end="")
+        self._dirty_lines += self._tmp_lines
+        self._tmp_lines = 0
 
     @_jumps
-    def _print_tmp(self, msg, *args, **kwargs) -> None:
+    def _print_tmp(self, msg: str, *args, **kwargs) -> None:
         """Prints a text to be rewritten latter."""
         lines = self._lines(msg)
         self._clear_lines(lines)
         self._tmp_lines += lines
         self._dirty_lines -= lines
-        print(str(msg), *args, **kwargs)
+        print(msg, *args, **kwargs)
 
-    def _print(self, msg, *args, **kwargs) -> None:
+    def _print(self, msg: str, *args, **kwargs) -> None:
         """Prints a text."""
         self._reset_tmp_lines()
         self._clear_lines(self._lines(msg))
         self._dirty_lines -= self._lines(msg)
-        print(str(msg), *args, **kwargs)
+        print(msg, *args, **kwargs)
 
     @_jumps
     def _clear_lines(self, count: int) -> None:
         if count >= self._dirty_lines:
             self._dirty_lines = 0
-        print(f"{ansi.clear_line()}\n" * count + Cursor.UP() * count, end="")
+
+        # Clearing more than terminal height just makes empty lines
+        count = min(count, terminal_height)
+
+        # We don't want to print any newlines when count == 1, as it makes flashes
+        print(
+            "\n" * (count - 1)
+            + f"{ansi.clear_line()}{Cursor.UP()}" * (count - 1)
+            + ansi.clear_line(),
+            end="",
+        )
 
     def _lines(self, text: str) -> int:
         ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")

@@ -44,6 +44,12 @@ from pisek.task_jobs.checker.cms_judge import RunCMSJudge
 from pisek.task_jobs.checker.checker_base import RunChecker, RunBatchChecker
 
 
+def _format_time(time: float, max_possible_time: float) -> str:
+    time_str = f"{time:.2f}"
+    length = len(f"{max_possible_time:.2f}")
+    return f"{time_str:>{length}}s"
+
+
 class SolutionManager(TaskJobManager, TestcaseInfoMixin):
     """Runs a solution and checks if it works as expected."""
 
@@ -235,22 +241,26 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
 
     def get_status(self) -> str:
         longest_solution_label = max(map(len, self._env.config.solutions))
-        msg = f"{self.solution_label:<{longest_solution_label}}"
+        msg = self.solution_label
         if self.state == State.cancelled:
             return self._job_bar(msg)
 
-        points_places = len(self._format_points(self._env.config.total_points))
         points = self._format_points(self.solution_points)
+        total_points = self._format_points(self._env.config.total_points)
+        points_places = len(total_points)
 
-        max_time = max((s.slowest_time for s in self.tests), default=0)
+        max_time_f = max((s.slowest_time for s in self.tests), default=0.0)
+        max_time = _format_time(max_time_f, self._env.config.max_solution_time_limit)
 
         if not self.state.finished() or self._env.verbosity == 0:
             points = pad_left(points, points_places)
-            header = f"{pad(msg, MSG_LEN-1)} {points}  {max_time:.2f}s  "
+            header = f"{pad(msg, max(MSG_LEN-1, longest_solution_label))} {points}  {max_time}  "
             tests_text = "".join(sub.status_verbosity0() for sub in self.tests)
         else:
             header = (
-                right_aligned_text(f"{msg}: {points}", f"slowest {max_time:.2f}s")
+                right_aligned_text(
+                    f"{msg}: {points}/{total_points}", f"slowest {max_time}"
+                )
                 + "\n"
             )
             header = self._colored(header, "cyan")
@@ -356,6 +366,9 @@ class TestJobGroup(TaskHelper):
         times = map(lambda r: r.solution_rr.time, results)
         return max(times, default=0.0)
 
+    def _format_time(self, time: float) -> str:
+        return _format_time(time, self._env.config.max_solution_time_limit)
+
     def _job_results(self, jobs: list[RunChecker]) -> list[Optional[SolutionResult]]:
         return list(map(lambda j: j.result, jobs))
 
@@ -432,9 +445,9 @@ class TestJobGroup(TaskHelper):
 
         return right_aligned_text(
             f"{self.test.name:<{max_sub_name_len}}  "
-            f"{self._format_points(self.points):<{max_sub_points_len}}  "
+            f"{self._format_points(self.points):>{max_sub_points_len}}  "
             f"{self.status_verbosity0()}",
-            f"slowest {self.slowest_time:.2f}s",
+            f"slowest {self._format_time(self.slowest_time)}",
             offset=-2,
         )
 
@@ -450,7 +463,7 @@ class TestJobGroup(TaskHelper):
         test_info = (
             right_aligned_text(
                 f"{self.test.name}: {self._format_points(self.points)}/{self._format_points(self.test.max_points)}",
-                f"slowest {self.slowest_time:.2f}s",
+                f"slowest {self._format_time(self.slowest_time)}",
                 offset=-2,
             )
             + "\n"
@@ -468,7 +481,7 @@ class TestJobGroup(TaskHelper):
                     f"Predecessor {pad(test_name(pred) + ':', max_pred_name_len + 1)}  "
                     f"{pred_group.status_verbosity0()}"
                 ),
-                f"slowest {pred_group.slowest_time:.2f}s",
+                f"slowest {self._format_time(pred_group.slowest_time)}",
                 offset=-2,
             )
             text += "\n"
@@ -480,13 +493,17 @@ class TestJobGroup(TaskHelper):
 
         for job in self.new_jobs:
             if job.result is not None:
+                points = ColorSettings.colored(
+                    f"({self._format_points(job.result.points(self._env, self.test.points))})",
+                    job.result.verdict.color,
+                )
                 input_verdict = tab(
-                    f"{job.input.name:<{max_inp_name_len}} "
-                    f"({self._format_points(job.result.points(self._env, self.test.points))}): "
-                    f"{job.verdict_text()}"
+                    f"{job.input.name:<{max_inp_name_len}} {points}: {job.verdict_text()}"
                 )
                 text += right_aligned_text(
-                    input_verdict, f"{job.result.solution_rr.time:.2f}s", offset=-2
+                    input_verdict,
+                    self._format_time(job.result.solution_rr.time),
+                    offset=-2,
                 )
                 text += "\n"
 

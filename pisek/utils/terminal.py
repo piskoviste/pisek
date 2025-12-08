@@ -24,7 +24,7 @@ try:
 except OSError:
     terminal_width, terminal_height = 100, 24
 
-TARGET_LINE_WIDTH = min(terminal_width, 100)
+TARGET_LINE_WIDTH = min(terminal_width, 120)
 LINE_SEPARATOR = "—" * terminal_width + "\n"
 
 
