@@ -245,8 +245,9 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         if self.state == State.cancelled:
             return self._job_bar(msg)
 
-        points_places = len(self._format_points(self._env.config.total_points))
         points = self._format_points(self.solution_points)
+        total_points = self._format_points(self._env.config.total_points)
+        points_places = len(total_points)
 
         max_time_f = max((s.slowest_time for s in self.tests), default=0.0)
         max_time = _format_time(max_time_f, self._env.config.max_solution_time_limit)
@@ -257,7 +258,10 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
             tests_text = "".join(sub.status_verbosity0() for sub in self.tests)
         else:
             header = (
-                right_aligned_text(f"{msg}: {points}", f"slowest {max_time}") + "\n"
+                right_aligned_text(
+                    f"{msg}: {points}/{total_points}", f"slowest {max_time}"
+                )
+                + "\n"
             )
             header = self._colored(header, "cyan")
             tests_text = tab(
