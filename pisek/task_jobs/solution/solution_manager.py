@@ -241,7 +241,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
 
     def get_status(self) -> str:
         longest_solution_label = max(map(len, self._env.config.solutions))
-        msg = f"{self.solution_label:<{longest_solution_label}}"
+        msg = self.solution_label
         if self.state == State.cancelled:
             return self._job_bar(msg)
 
@@ -253,7 +253,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
 
         if not self.state.finished() or self._env.verbosity == 0:
             points = pad_left(points, points_places)
-            header = f"{pad(msg, MSG_LEN-1)} {points}  {max_time}  "
+            header = f"{pad(msg, max(MSG_LEN-1, longest_solution_label))} {points}  {max_time}  "
             tests_text = "".join(sub.status_verbosity0() for sub in self.tests)
         else:
             header = (
