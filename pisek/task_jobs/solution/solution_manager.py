@@ -441,7 +441,7 @@ class TestJobGroup(TaskHelper):
 
         return right_aligned_text(
             f"{self.test.name:<{max_sub_name_len}}  "
-            f"{self._format_points(self.points):<{max_sub_points_len}}  "
+            f"{self._format_points(self.points):>{max_sub_points_len}}  "
             f"{self.status_verbosity0()}",
             f"slowest {self._format_time(self.slowest_time)}",
             offset=-2,
