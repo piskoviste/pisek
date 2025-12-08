@@ -147,6 +147,13 @@ class TaskConfig(BaseEnv):
         else:
             return [name for name, sol in self.solutions.items() if sol.primary][0]
 
+    @computed_field  # type: ignore[misc]
+    @cached_property
+    def max_solution_time_limit(self) -> float:
+        return max(
+            (solution.run.time_limit for solution in self.solutions.values()), default=0
+        )
+
     def get_solution_by_run(self, run: str) -> Optional[str]:
         sources = (name for name, sol in self.solutions.items() if sol.run.name == run)
         return next(sources, None)
