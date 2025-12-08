@@ -489,10 +489,12 @@ class TestJobGroup(TaskHelper):
 
         for job in self.new_jobs:
             if job.result is not None:
+                points = ColorSettings.colored(
+                    f"({self._format_points(job.result.points(self._env, self.test.points))})",
+                    job.result.verdict.color,
+                )
                 input_verdict = tab(
-                    f"{job.input.name:<{max_inp_name_len}} "
-                    f"({self._format_points(job.result.points(self._env, self.test.points))}): "
-                    f"{job.verdict_text()}"
+                    f"{job.input.name:<{max_inp_name_len}} {points}: {job.verdict_text()}"
                 )
                 text += right_aligned_text(
                     input_verdict,
