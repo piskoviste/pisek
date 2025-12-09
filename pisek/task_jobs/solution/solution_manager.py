@@ -18,8 +18,8 @@
 from decimal import Decimal
 from typing import Any, Optional
 
-from pisek.utils.text import pad, pad_left, tab
-from pisek.utils.terminal import MSG_LEN, right_aligned_text
+from pisek.utils.text import pad, tab
+from pisek.utils.terminal import right_aligned_text
 from pisek.utils.colors import ColorSettings
 from pisek.utils.paths import IInputPath
 
@@ -42,12 +42,6 @@ from pisek.task_jobs.solution.solution import (
 from pisek.task_jobs.checker.checker import checker_job
 from pisek.task_jobs.checker.cms_judge import RunCMSJudge
 from pisek.task_jobs.checker.checker_base import RunChecker, RunBatchChecker
-
-
-def _format_time(time: float, max_possible_time: float) -> str:
-    time_str = f"{time:.2f}"
-    length = len(f"{max_possible_time:.2f}")
-    return f"{time_str:>{length}}s"
 
 
 class SolutionManager(TaskJobManager, TestcaseInfoMixin):
@@ -240,21 +234,20 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
                 test.cancel()
 
     def get_status(self) -> str:
-        longest_solution_label = max(map(len, self._env.config.solutions))
         msg = self.solution_label
         if self.state == State.cancelled:
             return self._job_bar(msg)
 
         points = self._format_points(self.solution_points)
         total_points = self._format_points(self._env.config.total_points)
-        points_places = len(total_points)
 
         max_time_f = max((s.slowest_time for s in self.tests), default=0.0)
-        max_time = _format_time(max_time_f, self._env.config.max_solution_time_limit)
+        max_time = self._format_time(max_time_f)
 
         if not self.state.finished() or self._env.verbosity == 0:
-            points = pad_left(points, points_places)
-            header = f"{pad(msg, max(MSG_LEN-1, longest_solution_label))} {points}  {max_time}  "
+            header = self._solution_header_verbosity0(
+                msg, self.solution_points, max_time_f
+            )
             tests_text = "".join(sub.status_verbosity0() for sub in self.tests)
         else:
             header = (
@@ -365,9 +358,6 @@ class TestJobGroup(TaskHelper):
         results = self._results(self.all_jobs)
         times = map(lambda r: r.solution_rr.time, results)
         return max(times, default=0.0)
-
-    def _format_time(self, time: float) -> str:
-        return _format_time(time, self._env.config.max_solution_time_limit)
 
     def _job_results(self, jobs: list[RunChecker]) -> list[Optional[SolutionResult]]:
         return list(map(lambda j: j.result, jobs))

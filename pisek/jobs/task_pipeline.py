@@ -39,6 +39,7 @@ from pisek.task_jobs.generator.generator_manager import (
 )
 from pisek.task_jobs.checker.fuzzing_manager import FuzzingManager
 from pisek.task_jobs.builder.build import BuildManager
+from pisek.task_jobs.solution.ui_managers import EmptyLineManager, TestsHeaderManager
 from pisek.task_jobs.solution.solution_manager import SolutionManager
 from pisek.task_jobs.testing_log import CreateTestingLog
 from pisek.task_jobs.completeness_check import CompletenessCheck
@@ -84,6 +85,11 @@ class TaskPipeline(JobPipeline):
                 or env.solutions[0] == env.config.primary_solution
             )
 
+            named_pipeline.append((EmptyLineManager(), ""))
+            if env.verbosity == 0:
+                named_pipeline.append(th := (TestsHeaderManager(), ""))
+                th[0].add_prerequisite(*inputs)
+
             named_pipeline.append(
                 first_solution := (
                     SolutionManager(env.solutions[0], True),
@@ -106,6 +112,9 @@ class TaskPipeline(JobPipeline):
 
             for solution in solutions:
                 solution[0].add_prerequisite(*inputs)
+
+            if env.verbosity == 0:
+                named_pipeline.append((EmptyLineManager(), ""))
 
         if env.testing_log:
             named_pipeline.append(testing_log := (CreateTestingLog(), ""))
