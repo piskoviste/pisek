@@ -30,6 +30,8 @@ from typing import (
 )
 
 import subprocess
+from pisek.utils.text import pad, pad_left
+from pisek.utils.terminal import MSG_LEN
 from pisek.env.env import Env
 from pisek.utils.paths import TaskPath
 from pisek.utils.text import tab
@@ -62,6 +64,28 @@ class TaskHelper:
             text = f"{points:.{precision}f}"
 
         return text + "p"
+
+    def _format_time(self, time: float) -> str:
+        time_str = f"{time:.2f}"
+        if self._env.time_limit is not None:
+            tl = self._env.time_limit
+        else:
+            tl = self._env.config.max_solution_time_limit
+
+        length = len(f"{tl:.2f}")
+        return f"{time_str:>{length}}s"
+
+    def _solution_header_verbosity0(
+        self, msg: str, points: Decimal | int | None, time: float
+    ):
+        max_label_len = max(map(len, self._env.config.solutions))
+        points_str = pad_left(
+            self._format_points(points),
+            len(self._format_points(self._env.config.total_points)),
+        )
+        time_str = self._format_time(time)
+
+        return f"{pad(msg, max(MSG_LEN-1, max_label_len))} {points_str}  {time_str}  "
 
     def _path_list(self, paths: list[TaskPath]) -> str:
         return "\n".join(path.col(self._env) for path in paths)
