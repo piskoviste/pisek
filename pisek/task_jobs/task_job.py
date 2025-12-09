@@ -67,7 +67,12 @@ class TaskHelper:
 
     def _format_time(self, time: float) -> str:
         time_str = f"{time:.2f}"
-        length = len(f"{self._env.config.max_solution_time_limit:.2f}")
+        if self._env.time_limit is not None:
+            tl = self._env.time_limit
+        else:
+            tl = self._env.config.max_solution_time_limit
+
+        length = len(f"{tl:.2f}")
         return f"{time_str:>{length}}s"
 
     def _solution_header_verbosity0(
