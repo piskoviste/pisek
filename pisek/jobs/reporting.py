@@ -56,20 +56,27 @@ class CommandLineReporter(Reporter):
 
     def update(self, active_jobs: list[Job]) -> None:
         self._reset_tmp_lines()
+        fast_fail = (
+            any(job_man.state == State.failed for job_man in self._job_managers)
+            and not self._env.full
+        )
         for i in range(self._finished_jm, len(self._job_managers)):
             job_man = self._job_managers[i]
 
-            if i == self._finished_jm and job_man.state.finished():
+            if (i == self._finished_jm or fast_fail) and job_man.state.finished():
                 self._finished_jm += 1
                 self._print(job_man.get_status())
                 if job_man.state != State.cancelled:
                     self._report_manager(job_man)
-                if job_man.state == State.failed and not self._env.full:
+                if fast_fail:
                     return
             elif job_man.state == State.running:
                 msg = job_man.get_status()
-                self._print_tmp(msg)
-                break
+                if fast_fail:
+                    self._print(msg)
+                else:
+                    self._print_tmp(msg)
+                    break
 
         now = time.time()
         if terminal_height <= self._env.jobs + 5:  # Some extra safety margin
