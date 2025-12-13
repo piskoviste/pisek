@@ -68,7 +68,7 @@ class CommandLineReporter(Reporter):
                 self._print(job_man.get_status())
                 if job_man.state != State.cancelled:
                     self._report_manager(job_man)
-                if fast_fail:
+                if job_man.state == State.failed and fast_fail:
                     return
             elif job_man.state == State.running:
                 msg = job_man.get_status()
