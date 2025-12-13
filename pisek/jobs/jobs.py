@@ -135,12 +135,12 @@ class PipelineItem(ABC):
         """End this job in failure."""
         if self.fail_msg != "":
             raise RuntimeError("PipelineItem cannot fail twice.")
-        self.state = State.failed
         self.fail_msg = str(failure)
+        self.state = State.failed
 
     def cancel(self) -> None:
         """Cancels job and all that require it."""
-        if self.state in (State.succeeded, State.cancelled):
+        if self.state.finished():
             return  # No need to cancel
         self.state = State.cancelled
         for item, _, _ in self.required_by:
