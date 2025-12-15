@@ -265,6 +265,7 @@ class Testcase:
                 self._built_task._path,
                 lambda _: pipeline,
                 disable_cache=True,
+                clean_non_accessed_files=False,
                 **ENV_ARGS,
             )
             if clear:
