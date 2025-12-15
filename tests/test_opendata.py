@@ -95,11 +95,13 @@ class TestSumKasiopeaOpendataBuild(TestFixtureOpendata):
     def fixture_path(self) -> str:
         return "fixtures/sum_kasiopea/"
 
-    def init_testcase(self, name: str) -> None:
+    def init_testcase(
+        self, name: str, test: int, seed: int | None = 0xDEADBEEF
+    ) -> None:
         self.input_path = os.path.join(self.task_dir, f"{name}.opendata.in")
         self.output_path = os.path.join(self.task_dir, f"{name}.opendata.out")
         self.testcase = self.built_task.get_testcase(
-            name, int(name), int("deadbeef", 16), self.input_path, self.output_path
+            name, test, seed, self.input_path, self.output_path
         )
 
     def create_contestant_file(self, content: str | bytes) -> None:
@@ -139,7 +141,7 @@ class TestSumKasiopeaOpendataListInputs(TestSumKasiopeaOpendataBuild):
 
 class TestSumKasiopeaOpendataSequential(TestSumKasiopeaOpendataBuild):
     def run_opendata_test(self) -> None:
-        self.init_testcase("01")
+        self.init_testcase("01", 1)
         assert self.input_path is not None
         assert self.output_path is not None
 
@@ -155,7 +157,7 @@ class TestSumKasiopeaOpendataSequential(TestSumKasiopeaOpendataBuild):
 
 class TestSumKasiopeaOpendataCheckRightaway(TestSumKasiopeaOpendataBuild):
     def run_opendata_test(self) -> None:
-        self.init_testcase("02")
+        self.init_testcase("02", 2)
         self.assertEqual(
             self.testcase.check(os.path.join(self.task_dir, "sample.out")),
             OpendataVerdict(Verdict.wrong_answer, None, Decimal(0), None, None),
@@ -164,7 +166,7 @@ class TestSumKasiopeaOpendataCheckRightaway(TestSumKasiopeaOpendataBuild):
 
 class TestSumKasiopeaOpendataCheckBinary(TestSumKasiopeaOpendataBuild):
     def run_opendata_test(self):
-        self.init_testcase("02")
+        self.init_testcase("02", 2)
         self.create_contestant_file(b"\x07\n")
 
         self.assertEqual(
@@ -189,7 +191,7 @@ class TestSumKasiopeaOpendataJudge(TestSumKasiopeaOpendataBuild):
         modify_config(self.task_dir, modification_fn)
 
     def run_opendata_test(self):
-        self.init_testcase("02")
+        self.init_testcase("02", 2)
         self.create_contestant_file("0\n")
 
         self.assertEqual(
@@ -201,6 +203,22 @@ class TestSumKasiopeaOpendataJudge(TestSumKasiopeaOpendataBuild):
                 None,
                 None,
             ),
+        )
+
+
+class TestSumKasiopeaStaticTestcase(TestSumKasiopeaOpendataBuild):
+    def run_opendata_test(self):
+        self.init_testcase("sample", 0, None)
+        self.create_contestant_file("3\n-3\n0\n")
+
+        self.testcase.gen_input()
+        self.assertTrue(os.path.exists(self.input_path))
+        self.testcase.gen_output()
+        self.assertTrue(os.path.exists(self.output_path))
+
+        self.assertEqual(
+            self.testcase.check(os.path.join(self.task_dir, self.contestant_path)),
+            OpendataVerdict(Verdict.ok, None, Decimal(0), None, None),
         )
 
 
