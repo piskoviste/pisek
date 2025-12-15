@@ -113,7 +113,11 @@ class Task:
             original_path = os.path.join(self._path, task_path)
             full_path = os.path.join(path, task_path)
             if os.path.isdir(original_path):
-                shutil.copytree(original_path, full_path)
+                if task_path == os.path.join(TESTS_DIR, INPUTS_SUBDIR):
+                    ignore = shutil.ignore_patterns("*.raw", "*.log")
+                else:
+                    ignore = None
+                shutil.copytree(original_path, full_path, ignore=ignore)
             elif os.path.isfile(original_path):
                 shutil.copy(original_path, full_path)
             else:
