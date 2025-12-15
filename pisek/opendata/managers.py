@@ -5,6 +5,7 @@ from pisek.utils.paths import IInputPath, IOutputPath, IRawPath
 
 from pisek.task_jobs.tools import sanitize_job, sanitize_job_direct
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
+from pisek.task_jobs.data.data import LinkData
 from pisek.task_jobs.generator.generator_manager import generate_input_direct
 from pisek.task_jobs.solution.solution import RunBatchSolution
 from pisek.task_jobs.checker.checker import checker_job
@@ -58,19 +59,21 @@ class InputManager(StatusJobManager):
         self._seed = seed
 
     def _get_jobs(self) -> list[Job]:
+        jobs: list[Job] = []
         if self._info.generation_mode == TestcaseGenerationMode.generated:
-            jobs: list[Job] = [
+            jobs.append(
                 gen := generate_input_direct(
                     self._env, self._info, self._seed, self._input
-                ),
-            ]
+                )
+            )
+            sanitize = sanitize_job(self._env, self._input, True)
+            if sanitize is not None:
+                jobs.append(sanitize)
+                sanitize.add_prerequisite(gen)
         else:
-            raise NotImplementedError()
-
-        sanitize = sanitize_job(self._env, self._input, True)
-        if sanitize is not None:
-            jobs.append(sanitize)
-            sanitize.add_prerequisite(gen)
+            jobs.append(
+                LinkData(self._env, self._info.input_path(self._seed), self._input)
+            )
 
         return jobs
 
@@ -83,23 +86,27 @@ class OutputManager(StatusJobManager):
         super().__init__(f"Generate output {self._output:n}")
 
     def _get_jobs(self) -> list[Job]:
+        jobs: list[Job] = []
         if self._info.generation_mode == TestcaseGenerationMode.static:
-            raise NotImplementedError()
+            jobs.append(
+                LinkData(
+                    self._env, self._info.reference_output(self._env), self._output
+                )
+            )
         else:
-            jobs: list[Job] = [
+            jobs.append(
                 solve := RunBatchSolution(
                     self._env,
                     self._env.config.solutions[self._env.config.primary_solution].run,
                     True,
                     self._input,
                     self._output,
-                ),
-            ]
-
-        sanitize = sanitize_job(self._env, self._output, False)
-        if sanitize is not None:
-            jobs.append(sanitize)
-            sanitize.add_prerequisite(solve, name="create-source")
+                )
+            )
+            sanitize = sanitize_job(self._env, self._output, False)
+            if sanitize is not None:
+                jobs.append(sanitize)
+                sanitize.add_prerequisite(solve, name="create-source")
 
         return jobs
 

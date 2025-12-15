@@ -68,17 +68,20 @@ class TestcaseInfo:
     ) -> IOutputPath:
         is_static = self.generation_mode == TestcaseGenerationMode.static
 
-        input_path = self.input_path(seed, solution=env.config.primary_solution)
-        path: IOutputPath
+        output_path: IOutputPath
         if is_static:
-            path = OutputPath.static(input_path.replace_suffix(".out").name)
+            input_path = self.input_path(seed, solution=None)
+            output_path = OutputPath.static(input_path.replace_suffix(".out").name)
         else:
-            path = input_path.to_output()
+            input_path = self.input_path(seed, solution=env.config.primary_solution)
+            output_path = input_path.to_output()
 
         if solution is not None:
-            path = OutputPath(TESTS_DIR, solution, path.name).to_reference_output()
+            output_path = OutputPath(
+                TESTS_DIR, solution, output_path.name
+            ).to_reference_output()
 
-        return path
+        return output_path
 
     def to_str(self) -> str:
         return f"{self.generation_mode} {self.name} repeat={self.repeat} seeded={str(self.seeded).lower()}"
