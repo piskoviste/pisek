@@ -31,6 +31,7 @@ from pisek.task_jobs.data.data import SymlinkData
 from pisek.task_jobs.solution.verdicts_eval import check_verdicts, compute_verdict
 from pisek.task_jobs.task_job import TaskHelper
 from pisek.task_jobs.task_manager import TaskJobManager
+from pisek.task_jobs.tools import sanitize_job
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
 from pisek.task_jobs.generator.generator_manager import TestcaseInfoMixin
 from pisek.task_jobs.solution.solution_result import Verdict, SolutionResult
@@ -134,14 +135,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
                     inp, out, out, test, seed, Verdict.ok, self._env
                 )
                 self._add_check_output_jobs(out)
-                self._add_job(
-                    checker_j,
-                    prerequisite_name=(
-                        "sanitize"
-                        if isinstance(self._testcase_last, SanitizeAbstract)
-                        else None
-                    ),
-                )
+                self._add_job(checker_j)
                 self._static_out_checkers[inp] = checker_j
 
             run_batch_sol, run_checker = self._create_batch_jobs(
@@ -150,10 +144,16 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
             run_sol = run_batch_sol
             self._add_job(run_batch_sol, new_last=True)
 
-            self._add_check_output_jobs(run_batch_sol.output.to_sanitized_output())
+            output_path = run_batch_sol.output.to_sanitized_output()
+            self._add_job(
+                sanitize := sanitize_job(self._env, output_path, False),
+                prerequisite_name="create-source",
+                new_last=True,
+            )
+            self._add_check_output_jobs(output_path)
 
-            if isinstance(self._testcase_last, SanitizeAbstract):
-                run_checker.add_prerequisite(self._testcase_last, "sanitize")
+            if isinstance(sanitize, SanitizeAbstract):
+                run_checker.add_prerequisite(sanitize, "sanitize")
 
             if self._env.config.tests.judge_needs_out:
                 self._add_job(

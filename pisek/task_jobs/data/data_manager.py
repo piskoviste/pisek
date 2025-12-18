@@ -16,6 +16,7 @@ from pisek.utils.paths import TaskPath, InputPath, OutputPath
 from pisek.jobs.jobs import Job, PipelineItemFailure
 from pisek.config.config_types import TaskType
 from pisek.task_jobs.task_manager import TaskJobManager, GENERATOR_MAN_CODE
+from pisek.task_jobs.tools import sanitize_job
 from pisek.task_jobs.data.testcase_info import (
     TestcaseInfo,
     TestcaseGenerationMode,
@@ -98,24 +99,32 @@ class DataManager(TaskJobManager):
             if mode in (TestcaseGenerationMode.static, TestcaseGenerationMode.mixed):
                 input_target_path = InputPath.new(f"{name}.in")
                 jobs.append(
-                    LinkData(
+                    link := LinkData(
                         self._env,
                         TaskPath.static_path(self._env, f"{name}.in"),
                         input_target_path.to_raw(self._env.config.tests.in_format),
                     )
                 )
+                sanitize = sanitize_job(self._env, input_target_path, True)
+                if sanitize is not None:
+                    jobs.append(sanitize)
+                    sanitize.add_prerequisite(link)
             if (
                 mode == TestcaseGenerationMode.static
                 and self._env.config.task.task_type != TaskType.interactive
             ):
                 output_target_path = OutputPath.static(f"{name}.out")
                 jobs.append(
-                    LinkData(
+                    link := LinkData(
                         self._env,
                         TaskPath.static_path(self._env, f"{name}.out"),
                         output_target_path.to_raw(self._env.config.tests.out_format),
                     )
                 )
+                sanitize = sanitize_job(self._env, output_target_path, False)
+                if sanitize is not None:
+                    jobs.append(sanitize)
+                    sanitize.add_prerequisite(link)
 
         jobs.append(ExportInputsList(self._env, list(sorted(used_inputs))))
 

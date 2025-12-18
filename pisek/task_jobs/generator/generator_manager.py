@@ -224,6 +224,12 @@ class TestcaseInfoMixin(JobManager):
                 )
             )
 
+        if testcase_info.generation_mode == TestcaseGenerationMode.generated:
+            self._add_job(
+                sanitize_job(self._env, input_path, True),
+                new_last=True,
+            )
+
         self._check_input_jobs(input_path)
 
         if self._env.config.tests.validator is not None:
@@ -284,11 +290,6 @@ class TestcaseInfoMixin(JobManager):
             check_seeded.add_prerequisite(self._gen_inputs_job[seeds[i]])
 
     def _check_input_jobs(self, input_path: IInputPath) -> None:
-        self._add_job(
-            sanitize_job(self._env, input_path, True),
-            new_last=True,
-        )
-
         if self._env.config.limits.input_max_size != 0:
             self._add_job(InputSmall(self._env, input_path))
 
@@ -296,12 +297,6 @@ class TestcaseInfoMixin(JobManager):
         self,
         output_path: IOutputPath,
     ) -> None:
-        self._add_job(
-            sanitize_job(self._env, output_path, False),
-            prerequisite_name="create-source",
-            new_last=True,
-        )
-
         if self._env.config.limits.output_max_size != 0:
             self._add_job(OutputSmall(self._env, output_path))
 

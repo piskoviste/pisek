@@ -46,6 +46,7 @@ def run_pipeline(
     path: str,
     pipeline_class: Callable[[Env], JobPipeline],
     disable_cache: bool = False,
+    clean_non_accessed_files: bool = True,
     **env_args,
 ) -> None:
     with ChangedCWD(path):
@@ -75,7 +76,8 @@ def run_pipeline(
                 raise TestingFailed()
             all_accessed_files |= pipeline.all_accessed_files
 
-        clean_non_relevant_files(all_accessed_files)
+        if clean_non_accessed_files:
+            clean_non_relevant_files(all_accessed_files)
 
 
 class Lock:
