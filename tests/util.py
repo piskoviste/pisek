@@ -109,9 +109,6 @@ class TestFixtureVariant(TestFixture):
     def expecting_success(self) -> bool:
         return True
 
-    def catch_exceptions(self) -> bool:
-        return False
-
     def modify_task(self) -> None:
         """
         Code which modifies the task before running the tests should go here.

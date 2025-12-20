@@ -228,9 +228,6 @@ class TestExtraConfigKeys(TestSumKasiopea):
     def expecting_success(self) -> bool:
         return False
 
-    def catch_exceptions(self) -> bool:
-        return True
-
     def modify_task(self) -> None:
         def modification_fn(raw_config):
             raw_config["task"]["foo"] = "bar"
@@ -242,9 +239,6 @@ class TestExtraConfigKeysInTest(TestSumKasiopea):
     def expecting_success(self) -> bool:
         return False
 
-    def catch_exceptions(self) -> bool:
-        return True
-
     def modify_task(self) -> None:
         def modification_fn(raw_config):
             raw_config["test01"]["foo"] = "bar"
@@ -255,9 +249,6 @@ class TestExtraConfigKeysInTest(TestSumKasiopea):
 class TestExtraConfigSection(TestSumKasiopea):
     def expecting_success(self) -> bool:
         return False
-
-    def catch_exceptions(self) -> bool:
-        return True
 
     def modify_task(self) -> None:
         def modification_fn(raw_config):
