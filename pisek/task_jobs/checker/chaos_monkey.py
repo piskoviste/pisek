@@ -176,7 +176,7 @@ class TrailingString(Invalidate):
             lines = f.readlines()
 
         # TODO: Find some more permanent solution (#545)
-        if lines and lines[-1].endswith("\n"):
+        if lines and not lines[-1].endswith("\n"):
             lines[-1] += "\n"
 
         rand_gen = Random(self.seed)
