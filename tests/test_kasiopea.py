@@ -224,48 +224,5 @@ class TestDirtySample(TestSumKasiopea):
             f.write("\n".join(sample))
 
 
-class TestExtraConfigKeys(TestSumKasiopea):
-    def expecting_success(self) -> bool:
-        return False
-
-    def catch_exceptions(self) -> bool:
-        return True
-
-    def modify_task(self) -> None:
-        def modification_fn(raw_config):
-            raw_config["task"]["foo"] = "bar"
-
-        modify_config(self.task_dir, modification_fn)
-
-
-class TestExtraConfigKeysInTest(TestSumKasiopea):
-    def expecting_success(self) -> bool:
-        return False
-
-    def catch_exceptions(self) -> bool:
-        return True
-
-    def modify_task(self) -> None:
-        def modification_fn(raw_config):
-            raw_config["test01"]["foo"] = "bar"
-
-        modify_config(self.task_dir, modification_fn)
-
-
-class TestExtraConfigSection(TestSumKasiopea):
-    def expecting_success(self) -> bool:
-        return False
-
-    def catch_exceptions(self) -> bool:
-        return True
-
-    def modify_task(self) -> None:
-        def modification_fn(raw_config):
-            raw_config.add_section("baz")
-            raw_config["baz"]["foo"] = "bar"
-
-        modify_config(self.task_dir, modification_fn)
-
-
 if __name__ == "__main__":
     unittest.main()

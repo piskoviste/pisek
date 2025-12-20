@@ -975,8 +975,10 @@ def _convert_errors(e: ValidationError, config_values: ConfigValuesDict) -> list
             location = value.location()
         elif "_section" in value:
             location = value["_section"].location()
-        else:
+        elif "_loc" in error["ctx"]:
             location = value[error["ctx"]["_loc"]].location()
+        else:
+            location = "global config"
 
         error_msgs.append(f"In {location}:\n" + tab(_format_message(error)))
     return error_msgs
