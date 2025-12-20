@@ -10,6 +10,17 @@ from util import modify_config
 from test_cms import TestSumCMS
 
 
+class TestMissingTest(TestSumCMS):
+    def expecting_success(self) -> bool:
+        return False
+
+    def modify_task(self) -> None:
+        def modification_fn(raw_config):
+            del raw_config["test01"]
+
+        modify_config(self.task_dir, modification_fn)
+
+
 class TestExtraConfigKeys(TestSumCMS):
     def expecting_success(self) -> bool:
         return False
