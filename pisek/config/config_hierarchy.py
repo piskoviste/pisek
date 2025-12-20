@@ -68,7 +68,7 @@ class ConfigValue:
         if self.internal:
             text += " (internal pisek value)"
         else:
-            text += f" (in config file {os.path.basename(self.config)})"
+            text += f" (in config file '{os.path.basename(self.config)}')"
 
         return text
 
