@@ -25,17 +25,18 @@ import logging
 import os.path
 import time
 from typing import (
-    Optional,
     AbstractSet,
-    MutableSet,
     Any,
     Callable,
+    MutableSet,
     NamedTuple,
+    Optional,
     TYPE_CHECKING,
 )
 
-from pisek.jobs.cache import Cache, CacheEntry
+from pisek.jobs.cache import LogLevel, Cache, CacheEntry
 from pisek.utils.paths import TaskPath
+from pisek.utils.colors import remove_colors
 
 if TYPE_CHECKING:
     from pisek.env.env import Env
@@ -121,6 +122,10 @@ class PipelineItem(ABC):
     def _colored(self, msg: str, color: str) -> str:
         return self._env.colored(msg, color)
 
+    def _log(self, level: LogLevel, message: str) -> None:
+        message = remove_colors(message)
+        getattr(logger, level)(message)
+
     def _print(self, msg: str, end: str = "\n", stderr: bool = False) -> None:
         """Adds text for printing to stdout/stderr later."""
         self.terminal_output.append((msg + end, stderr))
@@ -129,6 +134,7 @@ class PipelineItem(ABC):
         if self._env.strict:
             raise PipelineItemFailure(msg)
         else:
+            self._log("warning", msg)
             self._print(self._colored(msg, "yellow"))
 
     def _fail(self, failure: PipelineItemFailure) -> None:
@@ -136,6 +142,7 @@ class PipelineItem(ABC):
         if self.fail_msg != "":
             raise RuntimeError("PipelineItem cannot fail twice.")
         self.fail_msg = str(failure)
+        self._log("error", self.fail_msg)
         self.state = State.failed
 
     def cancel(self) -> None:
@@ -191,14 +198,14 @@ class Job(PipelineItem, CaptureInitParams):
         self._accessed_envs: MutableSet[tuple[str, ...]] = set()
         self._accessed_globs: MutableSet[str] = set()
         self._accessed_files: MutableSet[str] = set()
-        self._logs: list[tuple[str, str]] = []
+        self._logs: list[tuple[LogLevel, str]] = []
         self.name = name
         self.started: float | None = None
         super().__init__(name)
 
-    def _log(self, kind: str, message: str) -> None:
-        self._logs.append((kind, message))
-        getattr(logger, kind)(message)
+    def _log(self, level: LogLevel, message: str) -> None:
+        super()._log(level, message)
+        self._logs.append((level, message))
 
     def _access_file(self, filename: TaskPath) -> None:
         """Add file this job depends on."""
