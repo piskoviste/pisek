@@ -18,6 +18,7 @@ from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor, Future, wait
 
 from pisek.env.env import Env
+from pisek.jobs.logging import json_logging
 from pisek.jobs.jobs import State, Job, JobManager
 from pisek.jobs.cache import Cache
 from pisek.jobs.reporting import Reporter, CommandLineReporter
@@ -73,6 +74,7 @@ class JobPipeline(ABC):
 
         if cache is not None:
             cache.export()  # Save last version of cache
+        json_logging.write()
 
         return any(man.state == State.failed for man in self.job_managers)
 

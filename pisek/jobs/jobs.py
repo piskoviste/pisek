@@ -34,12 +34,13 @@ from typing import (
     TYPE_CHECKING,
 )
 
-from pisek.jobs.cache import LogLevel, Cache, CacheEntry
+from pisek.jobs.logging import log, LogLevel, LogEntry
+from pisek.jobs.cache import Cache, CacheEntry
 from pisek.utils.paths import TaskPath
-from pisek.utils.colors import remove_colors
 
 if TYPE_CHECKING:
     from pisek.env.env import Env
+
 
 logger = logging.getLogger(__name__)
 
@@ -123,8 +124,7 @@ class PipelineItem(ABC):
         return self._env.colored(msg, color)
 
     def _log(self, level: LogLevel, message: str) -> None:
-        message = remove_colors(message)
-        getattr(logger, level)(message)
+        log(LogEntry(self.name, level, message))
 
     def _print(self, msg: str, end: str = "\n", stderr: bool = False) -> None:
         """Adds text for printing to stdout/stderr later."""
@@ -198,14 +198,15 @@ class Job(PipelineItem, CaptureInitParams):
         self._accessed_envs: MutableSet[tuple[str, ...]] = set()
         self._accessed_globs: MutableSet[str] = set()
         self._accessed_files: MutableSet[str] = set()
-        self._logs: list[tuple[LogLevel, str]] = []
+        self._logs: list[LogEntry] = []
         self.name = name
         self.started: float | None = None
         super().__init__(name)
 
-    def _log(self, level: LogLevel, message: str) -> None:
+    def _log(self, level: LogLevel, message: str, bypass_cache: bool = False) -> None:
         super()._log(level, message)
-        self._logs.append((level, message))
+        if not bypass_cache:
+            self._logs.append(LogEntry(self.name, level, message))
 
     def _access_file(self, filename: TaskPath) -> None:
         """Add file this job depends on."""
@@ -317,11 +318,11 @@ class Job(PipelineItem, CaptureInitParams):
             and self.name in cache
             and (entry := self._find_entry(cache))
         ):
-            logger.info(f"Loading cached '{self.name}'")
+            self._log("info", f"Loading cached '{self.name}'", bypass_cache=True)
             cache.move_to_top(entry)
             self.terminal_output = entry.output
-            for level, message in entry.logs:
-                getattr(logger, level)(message)
+            for log_entry in entry.logs:
+                log(log_entry)
             self._accessed_files = set(entry.files)
             self.result = entry.result
             self.state = State.succeeded
@@ -332,7 +333,7 @@ class Job(PipelineItem, CaptureInitParams):
             return
         self.state = State.running
         self.started = time.time()
-        logger.info(f"Running '{self.name}'")
+        self._log("info", f"Running '{self.name}'", bypass_cache=True)
 
         try:
             self._env = env

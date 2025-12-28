@@ -15,7 +15,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from dataclasses import dataclass, field
-import logging
 import os
 import tempfile
 from typing import Optional, Any, Union, Callable
@@ -29,8 +28,6 @@ from pisek.jobs.jobs import PipelineItemFailure
 from pisek.utils.text import tab
 from pisek.task_jobs.run_result import RunResultKind, RunResult
 from pisek.task_jobs.task_job import TaskJob
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -198,7 +195,11 @@ class ProgramsJob(TaskJob):
             meta_files.append(meta_file)
 
             popen = pool_item.to_popen(minibox, meta_file)
-            logger.debug("Executing '" + " ".join(popen["args"]) + "'")
+            self._log(
+                "debug",
+                "Executing '" + " ".join(popen["args"]) + "'",
+                bypass_cache=True,
+            )
 
             tmp_dir = tempfile.mkdtemp(prefix="pisek_")
             tmp_dirs.append(tmp_dir)

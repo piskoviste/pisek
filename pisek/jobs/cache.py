@@ -16,7 +16,7 @@
 
 import hashlib
 import time
-from typing import Any, Iterable, Literal
+from typing import Any, Iterable
 import os
 import pickle
 
@@ -24,15 +24,8 @@ from pisek.version import __version__
 from pisek.utils.text import eprint
 from pisek.utils.colors import ColorSettings
 from pisek.utils.paths import INTERNALS_DIR
+from pisek.jobs.logging import LogEntry
 
-
-LogLevel = (
-    Literal["critical"]
-    | Literal["error"]
-    | Literal["warning"]
-    | Literal["info"]
-    | Literal["debug"]
-)
 
 CACHE_VERSION_FILE = os.path.join(INTERNALS_DIR, "cache_version")
 CACHE_CONTENT_FILE = os.path.join(INTERNALS_DIR, "cache")
@@ -54,7 +47,7 @@ class CacheEntry:
         globs: Iterable[str],
         prerequisites_results: Iterable[str],
         output: list[tuple[str, bool]],
-        logs: list[tuple[LogLevel, str]],
+        logs: list[LogEntry],
     ) -> None:
         self.name = name
         self.signature = signature
