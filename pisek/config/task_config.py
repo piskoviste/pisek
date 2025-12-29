@@ -435,6 +435,7 @@ class TestSection(BaseEnv):
     all_globs: list[str] = []
     direct_predecessors: list[int]
     all_predecessors: list[int] = []
+    checks_generator_respects_seed: bool
     checks_validate: bool
     checks_different_outputs: bool
 
@@ -459,6 +460,7 @@ class TestSection(BaseEnv):
             "predecessors",
             "checks.validate",
             "checks.different_outputs",
+            "checks.generator_respects_seed",
         ]
         args: dict[str, Any] = {
             key.replace(".", "_"): configs.get_from_candidates(
@@ -937,7 +939,6 @@ class ChecksSection(BaseEnv):
     solution_for_each_test: bool
     no_unused_inputs: bool
     all_inputs_in_last_test: bool
-    generator_respects_seed: bool
     one_input_in_each_nonsample_test: bool
     fuzzing_thoroughness: int
     judge_rejects_trailing_string: bool

@@ -16,7 +16,7 @@ There are two requirements for generators:
 
 - *Generators must be deterministic.* — For the same arguments, they should always generate the same input(s).
 - *Generators must respect the seed* — If a generator takes a seed as an argument, the generator should generate different inputs for different seeds. This can be disabled in the with
-[`generator_respects_seed`](../config-v3-documentation.md#generator_respects_seed), but be careful.
+[`checks.generator_respects_seed`](../config-v3-documentation.md#checksgenerator_respects_seed), but be careful.
 
 ## Pisek-v1
 ### Listing inputs

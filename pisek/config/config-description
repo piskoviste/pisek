@@ -46,6 +46,7 @@ name=
 points=
 in_globs=
 predecessors=
+checks.generator_respects_seed=
 checks.validate=
 checks.different_outputs=
 
@@ -56,6 +57,7 @@ name=
 points=
 in_globs=
 predecessors=
+checks.generator_respects_seed=
 checks.validate=
 checks.different_outputs=
 
@@ -409,7 +411,6 @@ output_max_size=
 solution_for_each_test=
 no_unused_inputs=
 all_inputs_in_last_test=
-generator_respects_seed=
 one_input_in_each_nonsample_test=
 fuzzing_thoroughness=
 judge_rejects_trailing_string=

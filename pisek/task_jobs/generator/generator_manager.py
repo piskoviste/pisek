@@ -183,7 +183,7 @@ class TestcaseInfoMixin(JobManager):
             self._add_solution_jobs(testcase_info, seed, test)
 
         if (
-            self._env.config.checks.generator_respects_seed
+            self._env.config.test_sections[test].checks_generator_respects_seed
             and testcase_info.seeded
             and not skipped
         ):
