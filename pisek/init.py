@@ -6,7 +6,7 @@ import shutil
 from typing import Callable, NoReturn, Sequence
 
 from pisek.user_errors import InvalidArgument, InvalidOperation
-from pisek.utils.colors import colorSettings
+from pisek.utils.colors import color_settings
 from pisek.utils.user_input import input_string, input_choice
 from pisek.config.config_types import (
     TaskType,
@@ -52,7 +52,7 @@ def touch(path: str) -> None:
 
 
 def recommended() -> str:
-    return " (" + colorSettings.colored("recommended", "green") + ")"
+    return " (" + color_settings.colored("recommended", "green") + ")"
 
 
 def invalid_config_name(config_filename: str) -> NoReturn:

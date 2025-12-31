@@ -19,7 +19,7 @@ import os
 from pydantic import Field
 from typing import Optional
 
-from pisek.utils.colors import colorSettings
+from pisek.utils.colors import color_settings
 from pisek.env.base_env import BaseEnv
 from pisek.config.config_hierarchy import DEFAULT_CONFIG_FILENAME
 from pisek.config.task_config import load_config, TaskConfig
@@ -130,4 +130,4 @@ class Env(BaseEnv):
 
     def colored(self, msg: str, color: str) -> str:
         self.no_colors  # Caching
-        return colorSettings.colored(msg, color)
+        return color_settings.colored(msg, color)

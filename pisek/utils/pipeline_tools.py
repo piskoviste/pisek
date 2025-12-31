@@ -28,7 +28,7 @@ from pisek.utils.util import clean_non_relevant_files, ChangedCWD
 from pisek.utils.text import eprint
 from pisek.utils.terminal import separator_text
 from pisek.utils.paths import INTERNALS_DIR
-from pisek.utils.colors import colorSettings
+from pisek.utils.colors import color_settings
 from pisek.env.env import Env
 from pisek.config.task_config import load_config
 from pisek.jobs.cache import Cache
@@ -51,7 +51,7 @@ def run_pipeline(
 ) -> None:
     with ChangedCWD(path):
         env = Env.load(**env_args)
-        colorSettings.set_state(not env.no_colors)
+        color_settings.set_state(not env.no_colors)
 
         cache = None
         if not disable_cache:
@@ -64,7 +64,7 @@ def run_pipeline(
                 if i != 0:
                     print()
                 print(
-                    colorSettings.colored(
+                    color_settings.colored(
                         separator_text(f"Run {i+1}/{env.repeat}"), "cyan"
                     )
                 )

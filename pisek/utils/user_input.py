@@ -2,7 +2,7 @@ from colorama import Cursor
 from readchar import readkey, key
 from typing import Sequence, TypeVar
 
-from pisek.utils.colors import colorSettings
+from pisek.utils.colors import color_settings
 
 T = TypeVar("T")
 
@@ -27,8 +27,10 @@ def input_choice(message: str, choices: Sequence[tuple[T, str]], no_jumps: bool)
         for i, (_, text) in enumerate(choices):
             full_text = f" {i+1}. {text}"
             if selected == i:
-                selector = colorSettings.colored(">", "cyan")
-                print(colorSettings.colored_back(selector + full_text, "lightblack_ex"))
+                selector = color_settings.colored(">", "cyan")
+                print(
+                    color_settings.colored_back(selector + full_text, "lightblack_ex")
+                )
             else:
                 print(" " + full_text)
 

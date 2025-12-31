@@ -17,7 +17,7 @@
 import sys
 from typing import NoReturn
 
-from pisek.utils.colors import colorSettings, remove_colors
+from pisek.utils.colors import color_settings, remove_colors
 
 
 def tab(text: str, tab_str: str = "  ") -> str:
@@ -38,7 +38,7 @@ def eprint(msg, *args, **kwargs) -> None:
 
 
 def fatal_user_error(msg, *args, **kwargs) -> NoReturn:
-    eprint(colorSettings.colored(msg, "red"), *args, **kwargs)
+    eprint(color_settings.colored(msg, "red"), *args, **kwargs)
     exit(2)
 
 
@@ -46,4 +46,4 @@ def warn(msg: str, err: type, strict: bool = False) -> None:
     """Warn if strict is False, otherwise raise error."""
     if strict:
         raise err(msg)
-    eprint(colorSettings.colored(msg, "yellow"))
+    eprint(color_settings.colored(msg, "yellow"))

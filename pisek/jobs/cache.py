@@ -22,7 +22,7 @@ import pickle
 
 from pisek.version import __version__
 from pisek.utils.text import eprint
-from pisek.utils.colors import colorSettings
+from pisek.utils.colors import color_settings
 from pisek.utils.paths import INTERNALS_DIR
 
 
@@ -87,7 +87,7 @@ class Cache:
         if not all(cache_existence):
             if any(cache_existence):
                 eprint(
-                    colorSettings.colored(
+                    color_settings.colored(
                         "Incomplete cache found. Starting from scratch...",
                         "yellow",
                     )
@@ -99,7 +99,7 @@ class Cache:
 
         if version != __version__:
             eprint(
-                colorSettings.colored(
+                color_settings.colored(
                     "Different version of cache found. Starting from scratch...",
                     "yellow",
                 )

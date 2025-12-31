@@ -25,7 +25,7 @@ from datetime import datetime, timezone
 
 from pisek.env.env import Env
 from pisek.config.task_config import SolutionSection
-from pisek.utils.colors import colorSettings
+from pisek.utils.colors import color_settings
 from pisek.utils.paths import TaskPath
 from pisek.utils.text import eprint
 
@@ -147,7 +147,7 @@ def resolve_solution(
     sources = solution.run.build.sources
     if len(sources) != 1:
         eprint(
-            colorSettings.colored(
+            color_settings.colored(
                 "For CMS import there must be exactly one source:\n  "
                 + " ".join(map(lambda p: p.col(env), sources)),
                 "yellow",
@@ -170,7 +170,7 @@ def resolve_solution(
                 return file_path, language
 
     eprint(
-        colorSettings.colored(
+        color_settings.colored(
             f"Skipping {source}, as it isn't available in any enabled language",
             "yellow",
         )

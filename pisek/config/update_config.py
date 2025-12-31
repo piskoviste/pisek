@@ -19,7 +19,7 @@ import re
 
 from pisek.user_errors import TaskConfigError
 from pisek.utils.text import eprint
-from pisek.utils.colors import colorSettings
+from pisek.utils.colors import color_settings
 from pisek.config.config_types import ProgramRole
 
 
@@ -305,7 +305,7 @@ NEWEST_VERSION = "v3"
 def update_config(config: ConfigParser, task_path: str, infos: bool = True) -> None:
     def inform(msg: str):
         if infos:
-            eprint(colorSettings.colored(msg, "yellow"))
+            eprint(color_settings.colored(msg, "yellow"))
 
     version = config.get("task", "version", fallback="v1")
     if version == NEWEST_VERSION:
