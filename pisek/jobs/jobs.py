@@ -25,20 +25,22 @@ import logging
 import os.path
 import time
 from typing import (
-    Optional,
     AbstractSet,
-    MutableSet,
     Any,
     Callable,
+    MutableSet,
     NamedTuple,
+    Optional,
     TYPE_CHECKING,
 )
 
+from pisek.jobs.logging import log, LogLevel, LogEntry
 from pisek.jobs.cache import Cache, CacheEntry
 from pisek.utils.paths import TaskPath
 
 if TYPE_CHECKING:
     from pisek.env.env import Env
+
 
 logger = logging.getLogger(__name__)
 
@@ -121,6 +123,9 @@ class PipelineItem(ABC):
     def _colored(self, msg: str, color: str) -> str:
         return self._env.colored(msg, color)
 
+    def _log(self, level: LogLevel, message: str) -> None:
+        log(LogEntry(self.name, level, message))
+
     def _print(self, msg: str, end: str = "\n", stderr: bool = False) -> None:
         """Adds text for printing to stdout/stderr later."""
         self.terminal_output.append((msg + end, stderr))
@@ -129,6 +134,7 @@ class PipelineItem(ABC):
         if self._env.strict:
             raise PipelineItemFailure(msg)
         else:
+            self._log("warning", msg)
             self._print(self._colored(msg, "yellow"))
 
     def _fail(self, failure: PipelineItemFailure) -> None:
@@ -136,6 +142,7 @@ class PipelineItem(ABC):
         if self.fail_msg != "":
             raise RuntimeError("PipelineItem cannot fail twice.")
         self.fail_msg = str(failure)
+        self._log("error", self.fail_msg)
         self.state = State.failed
 
     def cancel(self) -> None:
@@ -191,14 +198,15 @@ class Job(PipelineItem, CaptureInitParams):
         self._accessed_envs: MutableSet[tuple[str, ...]] = set()
         self._accessed_globs: MutableSet[str] = set()
         self._accessed_files: MutableSet[str] = set()
-        self._logs: list[tuple[str, str]] = []
+        self._logs: list[LogEntry] = []
         self.name = name
         self.started: float | None = None
         super().__init__(name)
 
-    def _log(self, kind: str, message: str) -> None:
-        self._logs.append((kind, message))
-        getattr(logger, kind)(message)
+    def _log(self, level: LogLevel, message: str, bypass_cache: bool = False) -> None:
+        super()._log(level, message)
+        if not bypass_cache:
+            self._logs.append(LogEntry(self.name, level, message))
 
     def _access_file(self, filename: TaskPath) -> None:
         """Add file this job depends on."""
@@ -310,11 +318,11 @@ class Job(PipelineItem, CaptureInitParams):
             and self.name in cache
             and (entry := self._find_entry(cache))
         ):
-            logger.info(f"Loading cached '{self.name}'")
+            self._log("info", f"Loading cached '{self.name}'", bypass_cache=True)
             cache.move_to_top(entry)
             self.terminal_output = entry.output
-            for level, message in entry.logs:
-                getattr(logger, level)(message)
+            for log_entry in entry.logs:
+                log(log_entry)
             self._accessed_files = set(entry.files)
             self.result = entry.result
             self.state = State.succeeded
@@ -325,7 +333,7 @@ class Job(PipelineItem, CaptureInitParams):
             return
         self.state = State.running
         self.started = time.time()
-        logger.info(f"Running '{self.name}'")
+        self._log("info", f"Running '{self.name}'", bypass_cache=True)
 
         try:
             self._env = env

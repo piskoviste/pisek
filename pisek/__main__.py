@@ -31,7 +31,7 @@ from pisek.user_errors import (
     InvalidOperation,
 )
 
-from pisek.utils.util import clean_task_dir, log_level_mapper
+from pisek.utils.util import clean_task_dir
 from pisek.utils.text import eprint
 from pisek.utils.colors import color_settings
 
@@ -41,6 +41,7 @@ from pisek.config.config_hierarchy import DEFAULT_CONFIG_FILENAME
 from pisek.config.config_tools import export_config, update_and_replace_config
 from pisek.version import print_version
 
+from pisek.jobs.logging import map_log_level, json_logging
 from pisek.jobs.task_pipeline import TaskPipeline
 from pisek.utils.pipeline_tools import (
     run_pipeline,
@@ -368,9 +369,12 @@ def _main(argv: list[str]) -> None:
     logging.basicConfig(
         filename=LOG_FILE,
         encoding="utf-8",
-        level=log_level_mapper(os.getenv("LOG_LEVEL", "info")),
+        level=map_log_level(os.getenv("LOG_LEVEL", "info")),
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
+    root_logger = logging.getLogger()
+    json_logging.enable()
+    root_logger.addHandler(json_logging.get_handler())
 
     if args.subcommand == "test":
         if args.target == "generator":
@@ -407,7 +411,6 @@ def _main(argv: list[str]) -> None:
         from logging import StreamHandler
         from sys import stdout
 
-        root_logger = logging.getLogger()
         for handler in root_logger.handlers:
             if isinstance(handler, StreamHandler) and handler.stream is stdout:
                 root_logger.removeHandler(handler)

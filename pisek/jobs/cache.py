@@ -24,6 +24,7 @@ from pisek.version import __version__
 from pisek.utils.text import eprint
 from pisek.utils.colors import color_settings
 from pisek.utils.paths import INTERNALS_DIR
+from pisek.jobs.logging import LogEntry
 
 
 CACHE_VERSION_FILE = os.path.join(INTERNALS_DIR, "cache_version")
@@ -46,7 +47,7 @@ class CacheEntry:
         globs: Iterable[str],
         prerequisites_results: Iterable[str],
         output: list[tuple[str, bool]],
-        logs: list[tuple[str, str]],
+        logs: list[LogEntry],
     ) -> None:
         self.name = name
         self.signature = signature

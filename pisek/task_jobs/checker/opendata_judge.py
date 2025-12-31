@@ -12,7 +12,6 @@
 
 from abc import abstractmethod
 from decimal import Decimal
-import logging
 from typing import Any
 
 from pisek.utils.paths import IInputPath, IOutputPath
@@ -27,8 +26,6 @@ from pisek.task_jobs.solution.solution_result import (
 )
 
 from pisek.task_jobs.checker.checker_base import RunBatchChecker
-
-logger = logging.getLogger(__name__)
 
 
 OPENDATA_NO_SEED = "-"

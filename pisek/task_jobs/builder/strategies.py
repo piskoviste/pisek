@@ -13,7 +13,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from abc import ABC, abstractmethod
-import logging
 import inspect
 import subprocess
 import os
@@ -22,14 +21,13 @@ import shutil
 from typing import Any, IO, Optional, Protocol, TYPE_CHECKING
 
 from pisek.utils.text import tab
+from pisek.jobs.logging import LogLevel
 from pisek.jobs.jobs import PipelineItemFailure
 from pisek.config.config_types import BuildStrategyName
 
 if TYPE_CHECKING:
     from pisek.env.env import Env
     from pisek.config.task_config import BuildSection
-
-logger = logging.getLogger(__name__)
 
 ALL_STRATEGIES: dict[BuildStrategyName, type["BuildStrategy"]] = {}
 
@@ -53,6 +51,12 @@ class RunPopen(Protocol):
     ) -> subprocess.Popen: ...
 
 
+class Log(Protocol):
+    def __call__(
+        self, level: LogLevel, message: str, bypass_cache: bool = False
+    ) -> None: ...
+
+
 class BuildStrategy(ABC):
     name: BuildStrategyName
     extra_sources: Optional[str] = None
@@ -63,11 +67,13 @@ class BuildStrategy(ABC):
         build_section: "BuildSection",
         env: "Env",
         _run_subprocess: RunPopen,
+        _log: Log,
     ) -> None:
         self._build_section = build_section
         self._env = env
         self.stderr_output = ""
         self._run_popen = _run_subprocess
+        self._log = _log
 
         self.workdir = "."
 
@@ -187,7 +193,7 @@ class BuildStrategy(ABC):
     def _run_subprocess(self, args: list[str], program: str, **kwargs) -> str:
         self._check_tool(args[0])
 
-        logger.debug("Building '" + " ".join(args) + "'")
+        self._log("debug", "Building '" + " ".join(args) + "'", bypass_cache=True)
         comp = self._run_popen(
             args,
             **kwargs,

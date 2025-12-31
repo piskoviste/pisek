@@ -182,7 +182,9 @@ class Build(TaskJob):
         elif os.path.isfile(target.path):
             os.remove(target.path)
 
-        strategy = strategy_cls(self.build_section, self._env, self._run_subprocess)
+        strategy = strategy_cls(
+            self.build_section, self._env, self._run_subprocess, self._log
+        )
         executable_name = strategy.build(
             workdir,
             list(map(lambda p: p.name, sources)),
