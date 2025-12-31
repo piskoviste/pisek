@@ -831,6 +831,7 @@ Section for enabling/disabling whole-task checks that the task must satisfy.
 
 See also the `checks` keys for per-test checks:
 
+- [`checks.generator_respects_seed`](#checksgenerator_respects_seed)
 - [`checks.validate`](#checksvalidate)
 - [`checks.different_outputs`](#checksdifferent_outputs)
 
