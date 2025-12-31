@@ -34,4 +34,4 @@ class __ColorSettings:
         return self._colored(Back, msg, color)
 
 
-ColorSettings = __ColorSettings()
+color_settings = __ColorSettings()
