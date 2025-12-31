@@ -20,7 +20,7 @@ from typing import Any, Optional
 
 from pisek.utils.text import pad, tab
 from pisek.utils.terminal import right_aligned_text
-from pisek.utils.colors import ColorSettings
+from pisek.utils.colors import colorSettings
 from pisek.utils.paths import IInputPath
 
 from pisek.jobs.jobs import State, Job, PipelineItemFailure
@@ -414,8 +414,8 @@ class TestJobGroup(TaskHelper):
         right_bracket = "]"
         if self.definitive():
             color = self.verdict.color
-            left_bracket = ColorSettings.colored(left_bracket, color)
-            right_bracket = ColorSettings.colored(right_bracket, color)
+            left_bracket = colorSettings.colored(left_bracket, color)
+            right_bracket = colorSettings.colored(right_bracket, color)
 
         return (
             left_bracket
@@ -483,7 +483,7 @@ class TestJobGroup(TaskHelper):
 
         for job in self.new_jobs:
             if job.result is not None:
-                points = ColorSettings.colored(
+                points = colorSettings.colored(
                     f"({self._format_points(job.result.points(self._env, self.test.points))})",
                     job.result.verdict.color,
                 )

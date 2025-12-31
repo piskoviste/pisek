@@ -21,7 +21,7 @@ from enum import auto, Enum
 from functools import partial, cache, cached_property
 from typing import Callable, Optional, TYPE_CHECKING
 
-from pisek.utils.colors import ColorSettings
+from pisek.utils.colors import colorSettings
 from pisek.config.config_types import TestPoints
 from pisek.task_jobs.run_result import RunResult
 
@@ -58,7 +58,7 @@ class Verdict(Enum):
             Verdict.error: "!",
             Verdict.normalization_fail: "N",
         }[self]
-        return ColorSettings.colored(mark, self.color)
+        return colorSettings.colored(mark, self.color)
 
     @cached_property
     def color(self) -> str:

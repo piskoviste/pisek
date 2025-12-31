@@ -33,7 +33,7 @@ from pisek.user_errors import (
 
 from pisek.utils.util import clean_task_dir, log_level_mapper
 from pisek.utils.text import eprint
-from pisek.utils.colors import ColorSettings
+from pisek.utils.colors import colorSettings
 
 from pisek.visualize import visualize
 from pisek.init import init_task
@@ -349,7 +349,7 @@ def _main(argv: list[str]) -> None:
 
     if args.pisek_dir is None and "PISEK_DIRECTORY" in os.environ:
         args.pisek_dir = os.path.join(os.getcwd(), os.environ["PISEK_DIRECTORY"])
-    ColorSettings.set_state(not args.plain and not args.no_colors)
+    colorSettings.set_state(not args.plain and not args.no_colors)
 
     # Taskless subcommands
     if args.subcommand == "version":
@@ -441,7 +441,7 @@ def main(argv: list[str]) -> int:
     except TestingFailed:
         return 1
     except (TaskConfigError, MissingFile, InvalidArgument, InvalidOperation) as e:
-        print(ColorSettings.colored(str(e), "red"))
+        print(colorSettings.colored(str(e), "red"))
         return 2
     except UserError:
         raise NotImplementedError()
