@@ -10,6 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>
 
+from decimal import Decimal
 from enum import auto, StrEnum
 from pydantic_core import PydanticCustomError
 from pydantic import BeforeValidator
@@ -63,17 +64,36 @@ def validate_test_points(points: str):
     if points == "unscored":
         return "unscored"
     try:
-        p = int(points)
-        assert p >= 0
+        p = Decimal(points)
+        assert p >= 0 and p.is_finite()
         return p
     except (AssertionError, ValueError):
         raise PydanticCustomError(
             "test_points_parsing",
-            "Input should be non-negative integer or 'unscored'",
+            "Input should be non-negative decimal or 'unscored'",
         )
 
 
-TestPoints = Annotated[int | Literal["unscored"], BeforeValidator(validate_test_points)]
+TestPoints = Annotated[
+    Decimal | Literal["unscored"], BeforeValidator(validate_test_points)
+]
+
+
+def validate_solution_points(points: str):
+    if points == "X":
+        return None
+    try:
+        p = Decimal(points)
+        assert p >= 0 and p.is_finite()
+        return p
+    except (AssertionError, ValueError):
+        raise PydanticCustomError(
+            "solution_points_parsing",
+            "Input should be non-negative decimal or 'X'",
+        )
+
+
+SolutionPoints = Annotated[Decimal | None, BeforeValidator(validate_solution_points)]
 
 
 class ProgramRole(StrEnum):
