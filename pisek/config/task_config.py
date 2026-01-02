@@ -278,7 +278,7 @@ class TaskConfig(BaseEnv):
                 if decimal_digits(d) > self.task.score_precision:
                     raise PydanticCustomError(
                         "low_score_precision",
-                        f"Score precision exceeds the task's configured score precision.",
+                        f"Score precision exceeds the task's configured score precision",
                         {"[task] score_precision": self.task.score_precision, name: d},
                     )
 
