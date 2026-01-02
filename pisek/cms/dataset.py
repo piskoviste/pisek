@@ -97,6 +97,9 @@ def create_dataset(
             lambda t: t in (DataFormat.strict_text, DataFormat.binary),
         )
 
+    for num, test in config.test_sections.items():
+        check_key(f"[test{num:02d}] points", test.points, lambda p: p % 1 == 0)
+
     score_params = get_group_score_parameters(config)
 
     task_type: str
@@ -160,7 +163,7 @@ def get_group_score_parameters(config: TaskConfig) -> list[tuple[int, str]]:
     for subtask in config.test_sections.values():
         globs = map(strip_input_extention, subtask.all_globs)
         # CMS supports only relative points therefore we convert 'unscored' to 0
-        params.append((subtask.max_points, globs_to_regex(globs)))
+        params.append((int(subtask.max_points), globs_to_regex(globs)))
 
     return params
 

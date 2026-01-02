@@ -46,6 +46,8 @@ class LoggedResult:
     def points(self, test_points: TestPoints) -> Decimal:
         if test_points == "unscored":
             return Decimal("0")
+
+        assert isinstance(test_points, Decimal)  # To make mypy happy
         if self.relative_points is not None:
             return self.relative_points * test_points
         elif self.absolute_points is not None:

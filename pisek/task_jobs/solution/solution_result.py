@@ -93,10 +93,11 @@ class SolutionResult(ABC):
         if test_points == "unscored":
             return Decimal("0")
         else:
+            assert isinstance(test_points, Decimal)  # To make mypy happy
             return self._points(env, test_points)
 
     @abstractmethod
-    def _points(self, env: "Env", test_points: int) -> Decimal:
+    def _points(self, env: "Env", test_points: Decimal) -> Decimal:
         pass
 
 
@@ -110,7 +111,7 @@ class RelativeSolutionResult(SolutionResult):
     note: str | None = None
     relative_points: Decimal
 
-    def _points(self, env: "Env", test_points: int) -> Decimal:
+    def _points(self, env: "Env", test_points: Decimal) -> Decimal:
         return (self.relative_points * test_points).quantize(
             Decimal("0.1") ** env.config.task.score_precision
         )
@@ -126,7 +127,7 @@ class AbsoluteSolutionResult(SolutionResult):
     note: str | None = None
     absolute_points: Decimal
 
-    def _points(self, env: "Env", test_points: int) -> Decimal:
+    def _points(self, env: "Env", test_points: Decimal) -> Decimal:
         return self.absolute_points
 
 

@@ -365,7 +365,7 @@ Name of this test. Default for `name` in each [`[testXY]`](#testxy).
 
 ### points
 <!-- md:version 1.0.0 -->
-<!-- md:type int | 'unscored' -->
+<!-- md:type float | 'unscored' -->
 <!-- md:flag required -->
 
 Number of points for this test. Default for `points` in each [`[testXY]`](#testxy).
@@ -516,19 +516,19 @@ The result of a test is the result of the worst testcase.
 
 ### points
 <!-- md:version 1.0.0 -->
-<!-- md:type int -->
+<!-- md:type float | 'X' -->
 <!-- md:default X -->
 
 Points that program should get or `X` for any number of points.
 
 ### points_min
 <!-- md:version 1.7.0 -->
-<!-- md:type int | 'X' -->
+<!-- md:type float | 'X' -->
 <!-- md:default X -->
 
 ### points_max
 <!-- md:version 1.7.0 -->
-<!-- md:type int | 'X' -->
+<!-- md:type float | 'X' -->
 <!-- md:default X -->
 
 Upper and lower bounds on points.

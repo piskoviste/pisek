@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from decimal import Decimal
 import fnmatch
 from functools import cached_property
 import os
@@ -46,6 +47,7 @@ from pisek.config.config_types import (
     ShuffleMode,
     DataFormat,
     TestPoints,
+    SolutionPoints,
     ProgramRole,
     BuildStrategyName,
     CMSFeedbackLevel,
@@ -126,8 +128,10 @@ class TaskConfig(BaseEnv):
 
     @computed_field  # type: ignore[misc]
     @cached_property
-    def total_points(self) -> int:
-        return sum(sub.max_points for sub in self.test_sections.values())
+    def total_points(self) -> Decimal:
+        return sum(
+            (sub.max_points for sub in self.test_sections.values()), start=Decimal(0)
+        )
 
     @computed_field  # type: ignore[misc]
     @property
@@ -263,6 +267,28 @@ class TaskConfig(BaseEnv):
                     f"Missing section [test{i:02}]",
                     {},
                 )
+
+        def decimal_digits(d: Decimal) -> int:
+            exp = d.as_tuple().exponent
+            assert isinstance(exp, int)
+            return -exp
+
+        def check_precision(name: str, d: Decimal | T) -> None:
+            if isinstance(d, Decimal):
+                if decimal_digits(d) > self.task.score_precision:
+                    raise PydanticCustomError(
+                        "low_score_precision",
+                        f"Score precision exceeds the task's configured score precision.",
+                        {"[task] score_precision": self.task.score_precision, name: d},
+                    )
+
+        for num, test in self.test_sections.items():
+            check_precision(f"[test{num:02d}] points", test.points)
+
+        for name, sol in self.solutions.items():
+            check_precision(f"[solution_{name}] points", sol.points)
+            check_precision(f"[solution_{name}] points_min", sol.points_min)
+            check_precision(f"[solution_{name}] points_max", sol.points_max)
 
         self._compute_predecessors()
         return self
@@ -440,8 +466,12 @@ class TestSection(BaseEnv):
     checks_different_outputs: bool
 
     @property
-    def max_points(self) -> int:
-        return 0 if self.points == "unscored" else self.points
+    def max_points(self) -> Decimal:
+        if self.points == "unscored":
+            return Decimal(0)
+        else:
+            assert isinstance(self.points, Decimal)  # To make mypy happy
+            return self.points
 
     def in_test(self, filename: str) -> bool:
         return any(fnmatch.fnmatch(filename, g) for g in self.all_globs)
@@ -532,9 +562,9 @@ class SolutionSection(BaseEnv):
     name: str
     primary: bool
     run: "RunSection"
-    points: MaybeInt
-    points_min: MaybeInt
-    points_max: MaybeInt
+    points: SolutionPoints
+    points_min: SolutionPoints
+    points_max: SolutionPoints
     tests: str
 
     def __init__(self, *args, **kwargs) -> None:
