@@ -12,6 +12,7 @@
 
 from configparser import ConfigParser
 from copy import copy
+from decimal import Decimal
 import glob
 from itertools import product
 import os
@@ -52,9 +53,9 @@ def update_to_v2(config: ConfigParser, task_path: str) -> None:
         if re.fullmatch(r"test[0-9]{2}", section):
             if "points" not in config[section]:
                 raise TaskConfigError(f"Missing key 'points' in section [{section}]")
-            subtask_points.append(int(config[section]["points"]))
+            subtask_points.append(Decimal(config[section]["points"]))
     if "test00" not in config.sections():
-        subtask_points = [0] + subtask_points
+        subtask_points = [Decimal(0)] + subtask_points
 
     if "solutions" not in config["task"]:
         raise TaskConfigError("Missing key 'solutions' in section [task]")
@@ -63,7 +64,7 @@ def update_to_v2(config: ConfigParser, task_path: str) -> None:
 
     for i, solution in enumerate(solutions):
         if match := re.fullmatch(r"(.*?)_([0-9]{1,3}|X)b", solution):
-            points = None if match[2] == "X" else int(match[2])
+            points = None if match[2] == "X" else Decimal(match[2])
             if len(
                 glob.glob(
                     os.path.join(
@@ -78,7 +79,7 @@ def update_to_v2(config: ConfigParser, task_path: str) -> None:
                 source = match[1]
         else:
             source = solution
-            points = sum(subtask_points)
+            points = sum(subtask_points, start=Decimal(0))
 
         if points is None:
             subtasks = "X" * len(subtask_points)
