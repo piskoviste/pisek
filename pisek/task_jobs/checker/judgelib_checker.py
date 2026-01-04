@@ -49,35 +49,24 @@ class RunJudgeLibChecker(RunBatchChecker):
             stderr=self.checker_log_file,
         )
 
-        stderr: str = self._read_file(self.checker_log_file)
-
-        # XXX: Okay, it didn't finish in no time, but this is not meant to be used
-        rr = RunResult(
-            RunResultKind.OK,
-            checker.returncode,
-            0,
-            0,
-            status=(stderr.strip() or "Files are equivalent")
-            + f": {self.output.col(self._env)} {self.correct_output.col(self._env)}",
-        )
-
         if checker.returncode == 42:
             return RelativeSolutionResult(
                 verdict=Verdict.ok,
-                message=None,
+                message="OK",
                 solution_rr=self._solution_run_res,
-                checker_rr=rr,
+                checker_rr=checker,
                 relative_points=Decimal(1),
             )
         elif checker.returncode == 43:
             return RelativeSolutionResult(
                 verdict=Verdict.wrong_answer,
-                message=None,
+                message="Wrong answer",
                 solution_rr=self._solution_run_res,
-                checker_rr=rr,
+                checker_rr=checker,
                 relative_points=Decimal(0),
             )
         else:
+            stderr = self._read_file(self.checker_log_file)
             raise PipelineItemFailure(f"{self.checker_name} failed:\n{tab(stderr)}")
 
 
