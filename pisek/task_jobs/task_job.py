@@ -165,7 +165,7 @@ class TaskJob(Job, TaskHelper):
         return open(filename.path, mode, **kwargs)
 
     @_file_access(1)
-    def _read_file(self, filename: TaskPath):
+    def _read_file(self, filename: TaskPath) -> str:
         with self._open_file(filename) as f:
             return f.read()
 

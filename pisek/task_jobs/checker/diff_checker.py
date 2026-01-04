@@ -63,13 +63,12 @@ class RunDiffChecker(RunBatchChecker):
             diff.returncode,
             0,
             0,
-            status=("Files are the same" if diff.returncode == 0 else "Files differ")
-            + f": {self.output.col(self._env)} {self.correct_output.col(self._env)}",
+            status=f"Exited with return code {diff.returncode}",
         )
         if diff.returncode == 0:
             return RelativeSolutionResult(
                 verdict=Verdict.ok,
-                message=None,
+                message="OK",
                 solution_rr=self._solution_run_res,
                 checker_rr=rr,
                 relative_points=Decimal(1),
@@ -77,7 +76,7 @@ class RunDiffChecker(RunBatchChecker):
         elif diff.returncode == 1:
             return RelativeSolutionResult(
                 verdict=Verdict.wrong_answer,
-                message=None,
+                message="Wrong answer",
                 solution_rr=self._solution_run_res,
                 checker_rr=rr,
                 relative_points=Decimal(0),

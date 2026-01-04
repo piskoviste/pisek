@@ -156,6 +156,8 @@ class RunChecker(ProgramsJob):
         if isinstance(self, RunBatchChecker):
             text += f"correct output: {self._quote_file_with_name(self.correct_output)}"
         text += f"result: {self.result.verdict.name}\n"
+        if self.result.message is not None:
+            text += f"message: {self.result.message}\n"
 
         text += "solution:\n"
         text += tab(

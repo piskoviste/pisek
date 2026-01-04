@@ -151,7 +151,7 @@ class TestSumKasiopeaOpendataSequential(TestSumKasiopeaOpendataBuild):
         self.assertTrue(os.path.exists(self.output_path))
         self.assertEqual(
             self.testcase.check(self.output_path),
-            OpendataVerdict(Verdict.ok, None, Decimal(4), None, None),
+            OpendataVerdict(Verdict.ok, "OK", Decimal(4), None, None),
         )
 
 
@@ -160,7 +160,9 @@ class TestSumKasiopeaOpendataCheckRightaway(TestSumKasiopeaOpendataBuild):
         self.init_testcase("02", 2)
         self.assertEqual(
             self.testcase.check(os.path.join(self.task_dir, "sample.out")),
-            OpendataVerdict(Verdict.wrong_answer, None, Decimal(0), None, None),
+            OpendataVerdict(
+                Verdict.wrong_answer, "Wrong answer", Decimal(0), None, None
+            ),
         )
 
 
@@ -218,7 +220,7 @@ class TestSumKasiopeaStaticTestcase(TestSumKasiopeaOpendataBuild):
 
         self.assertEqual(
             self.testcase.check(os.path.join(self.task_dir, self.contestant_path)),
-            OpendataVerdict(Verdict.ok, None, Decimal(0), None, None),
+            OpendataVerdict(Verdict.ok, "OK", Decimal(0), None, None),
         )
 
 
