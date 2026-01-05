@@ -118,7 +118,7 @@ class TaskConfig(BaseEnv):
 
     solutions: dict[str, "SolutionSection"]
 
-    solution_time_limit: float = Field(ge=0)  # Needed for visualization
+    solution_time_limit: Decimal = Field(ge=0)  # Needed for visualization
 
     limits: "LimitsSection"
 
@@ -153,9 +153,10 @@ class TaskConfig(BaseEnv):
 
     @computed_field  # type: ignore[misc]
     @cached_property
-    def max_solution_time_limit(self) -> float:
+    def max_solution_time_limit(self) -> Decimal:
         return max(
-            (solution.run.time_limit for solution in self.solutions.values()), default=0
+            (solution.run.time_limit for solution in self.solutions.values()),
+            default=Decimal(0),
         )
 
     def get_solution_by_run(self, run: str) -> Optional[str]:
@@ -361,8 +362,8 @@ class TestsSection(BaseEnv):
     judge_needs_out: bool | None
     tokens_ignore_newlines: bool | None
     tokens_ignore_case: bool | None
-    tokens_float_rel_error: Maybe[float]
-    tokens_float_abs_error: Maybe[float]
+    tokens_float_rel_error: Maybe[Decimal]
+    tokens_float_abs_error: Maybe[Decimal]
     shuffle_mode: Maybe[ShuffleMode]
     shuffle_ignore_case: bool | None
 
@@ -679,9 +680,9 @@ class RunSection(BaseEnv):
     subdir: str
     build: "BuildSection"
     exec: TaskPathFromStr
-    time_limit: float = Field(ge=0)  # [seconds]
-    clock_mul: float = Field(ge=0)  # [1]
-    clock_min: float = Field(ge=0)  # [seconds]
+    time_limit: Decimal = Field(ge=0)  # [seconds]
+    clock_mul: Decimal = Field(ge=0)  # [1]
+    clock_min: Decimal = Field(ge=0)  # [seconds]
     mem_limit: int = Field(ge=0)  # [KB]
     process_limit: int = Field(ge=0)  # [1]
     # limit=0 means unlimited
@@ -692,10 +693,10 @@ class RunSection(BaseEnv):
     def executable(self) -> TaskPath:
         return TaskPath.executable_path(self.build.program_name, self.exec.path)
 
-    def clock_limit(self, override_time_limit: Optional[float] = None) -> float:
+    def clock_limit(self, override_time_limit: Decimal | None = None) -> Decimal:
         tl = override_time_limit if override_time_limit is not None else self.time_limit
         if tl == 0:
-            return 0
+            return Decimal(0)
         return max(tl * self.clock_mul, self.clock_min)
 
     @classmethod
@@ -875,8 +876,8 @@ class LimitsSection(BaseEnv):
 
     _section: str = "limits"
 
-    input_max_size: int
-    output_max_size: int
+    input_max_size: Decimal
+    output_max_size: Decimal
 
     @classmethod
     def load_dict(cls, configs: ConfigHierarchy) -> ConfigValuesDict:
@@ -893,7 +894,7 @@ class CMSSection(BaseEnv):
     title: str
     submission_format: ListStr
 
-    time_limit: float = Field(gt=0)  # [seconds]
+    time_limit: Decimal = Field(gt=0)  # [seconds]
     mem_limit: int = Field(gt=0)  # [KB]
 
     max_submissions: MaybeInt = Field(gt=0)
