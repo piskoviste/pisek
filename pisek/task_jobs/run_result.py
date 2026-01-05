@@ -9,9 +9,11 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 from dataclasses import dataclass
+from decimal import Decimal
 from enum import Enum
-from typing import Optional, Union
+from typing import Optional
 
 from pisek.utils.paths import TaskPath
 
@@ -30,8 +32,8 @@ class RunResult:
 
     kind: RunResultKind
     returncode: int
-    time: float
-    wall_time: float
+    time: Decimal
+    wall_time: Decimal
     stdin_file: TaskPath | int | None = None
     stdout_file: TaskPath | int | None = None
     stderr_file: Optional[TaskPath] = None

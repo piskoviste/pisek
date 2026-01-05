@@ -47,7 +47,7 @@ These can be basic:
 
 - string
 - int
-- float — Both `3.14` and `2e5` forms are supported.
+- decimal — Both `3.14` and `2e5` forms are supported.
 - bool
     - True values: `1`, `True`, `true`, `t`, `yes`, `y`, `on`
     - False values: `0`, `False`, `false`, `f`, `no`, `n`, `off`
@@ -305,12 +305,12 @@ If set to `true`, ASCII characters will be compared in a case-insensitive manner
 
 ### tokens_float_rel_error
 <!-- md:version 1.2.0 -->
-<!-- md:type float -->
+<!-- md:type decimal -->
 <!-- md:default-empty -->
 
 ### tokens_float_abs_error
 <!-- md:version 1.2.0 -->
-<!-- md:type float -->
+<!-- md:type decimal -->
 <!-- md:default-empty -->
 
 Only for [`out_check=tokens`](#out_check).
@@ -365,7 +365,7 @@ Name of this test. Default for `name` in each [`[testXY]`](#testxy).
 
 ### points
 <!-- md:version 1.0.0 -->
-<!-- md:type float | 'unscored' -->
+<!-- md:type decimal | 'unscored' -->
 <!-- md:flag required -->
 
 Number of points for this test. Default for `points` in each [`[testXY]`](#testxy).
@@ -516,19 +516,19 @@ The result of a test is the result of the worst testcase.
 
 ### points
 <!-- md:version 1.0.0 -->
-<!-- md:type float | 'X' -->
+<!-- md:type decimal | 'X' -->
 <!-- md:default X -->
 
 Points that program should get or `X` for any number of points.
 
 ### points_min
 <!-- md:version 1.7.0 -->
-<!-- md:type float | 'X' -->
+<!-- md:type decimal | 'X' -->
 <!-- md:default X -->
 
 ### points_max
 <!-- md:version 1.7.0 -->
-<!-- md:type float | 'X' -->
+<!-- md:type decimal | 'X' -->
 <!-- md:default X -->
 
 Upper and lower bounds on points.
@@ -625,14 +625,14 @@ Subdirectory where to look for the program. (If empty, the task root is used.) O
 
 ### time_limit
 <!-- md:version 1.6.0 -->
-<!-- md:type float -->
+<!-- md:type decimal -->
 <!-- md:default 360 -->
 
 Execution time limit [seconds]. (`0` for unlimited.)
 
 ### clock_mul
 <!-- md:version 1.6.0 -->
-<!-- md:type float -->
+<!-- md:type decimal -->
 <!-- md:default 2 -->
 
 Wall clock multiplier [1]. (`0` for unlimited.)
@@ -641,7 +641,7 @@ The wall clock limit will be computed as `max(time_limit * clock_mul, clock_min)
 
 ### clock_min
 <!-- md:version 1.6.0 -->
-<!-- md:type float -->
+<!-- md:type decimal -->
 <!-- md:default 1 -->
 
 Wall clock minimum [seconds].
@@ -926,7 +926,7 @@ The name of the submitted file. `.%l` will be replaced with the language's file 
 
 ### time_limit
 <!-- md:version 1.0.0 -->
-<!-- md:type float -->
+<!-- md:type decimal -->
 <!-- md:default 1 -->
 
 Execution time limit [seconds].

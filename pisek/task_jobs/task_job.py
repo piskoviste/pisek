@@ -65,7 +65,7 @@ class TaskHelper:
 
         return text + "p"
 
-    def _format_time(self, time: float) -> str:
+    def _format_time(self, time: Decimal) -> str:
         time_str = f"{time:.2f}"
         if self._env.time_limit is not None:
             tl = self._env.time_limit
@@ -76,7 +76,7 @@ class TaskHelper:
         return f"{time_str:>{length}}s"
 
     def _solution_header_verbosity0(
-        self, msg: str, points: Decimal | int | None, time: float
+        self, msg: str, points: Decimal | int | None, time: Decimal
     ):
         max_label_len = max(map(len, self._env.config.solutions))
         points_str = pad_left(
