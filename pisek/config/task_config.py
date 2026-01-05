@@ -683,7 +683,7 @@ class RunSection(BaseEnv):
     time_limit: Decimal = Field(ge=0)  # [seconds]
     clock_mul: Decimal = Field(ge=0)  # [1]
     clock_min: Decimal = Field(ge=0)  # [seconds]
-    mem_limit: int = Field(ge=0)  # [KB]
+    mem_limit: int = Field(ge=0)  # [MB]
     process_limit: int = Field(ge=0)  # [1]
     # limit=0 means unlimited
     args: ListStr
@@ -895,7 +895,7 @@ class CMSSection(BaseEnv):
     submission_format: ListStr
 
     time_limit: Decimal = Field(gt=0)  # [seconds]
-    mem_limit: int = Field(gt=0)  # [KB]
+    mem_limit: int = Field(gt=0)  # [MB]
 
     max_submissions: MaybeInt = Field(gt=0)
     min_submission_interval: int = Field(ge=0)  # [seconds]
