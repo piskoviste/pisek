@@ -15,7 +15,7 @@ from typing import Optional
 from pisek.env.env import Env
 from pisek.config.config_types import ProgramRole
 from pisek.config.task_config import RunSection
-from pisek.utils.paths import IInputPath
+from pisek.utils.paths import TaskPath, IInputPath
 from pisek.task_jobs.program import ProgramsJob, RunResultKind
 from pisek.task_jobs.data.testcase_info import TestcaseInfo
 
@@ -29,13 +29,15 @@ class OpendataV1ListInputs(GeneratorListInputs):
         super().__init__(env=env, generator=generator, **kwargs)
 
     def _run(self) -> list[TestcaseInfo]:
-        # Although for test in self._env.config.test_sections
-        # would be shorter, this doesn't actually access env variables
-        # and that leads to caching bug.
+        # We need to cache depending on the number of tests
+        self._env.config.tests_count
+
         return [
-            TestcaseInfo.generated(f"{test:02}")
-            for test in range(self._env.config.tests_count)
-            if test != 0
+            TestcaseInfo.generated(f"{num:02}")
+            for num, test in self._env.config.test_sections.items()
+            if not self._globs_to_files(
+                test.all_globs, TaskPath.static_path(self._env, ".")
+            )
         ]
 
 
