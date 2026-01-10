@@ -1,8 +1,15 @@
 from dataclasses import dataclass
 from decimal import Decimal
+from typing import Literal
 
 from pisek.task_jobs.data.testcase_info import TestcaseGenerationMode, TestcaseInfo
 from pisek.task_jobs.solution.solution_result import Verdict
+
+
+@dataclass
+class OpendataTestInfo:
+    points: Decimal | Literal["unscored"]
+    online_validity: int | Literal["unlimited"]
 
 
 @dataclass

@@ -263,10 +263,13 @@ def update_to_v3(config: ConfigParser, task_path: str) -> None:
         ("task", "tests"),
         ("tests", "in_mode"),
         ("tests", "out_mode"),
-        ("tests", "online_validity"),
     ]
     for section, key in IGNORED_KEYS:
         maybe_delete_key(config, section, key)
+
+    maybe_rename_key(
+        config, "tests", "tests", "online_validity", "opendata.online_validity"
+    )
 
     maybe_rename_key(
         config,

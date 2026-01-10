@@ -41,7 +41,7 @@ from pisek.jobs.task_pipeline import TaskPipeline
 from pisek.task_jobs.data.testcase_info import TestcaseInfo
 from pisek.task_jobs.data.data_manager import TEST_SEED
 
-from pisek.opendata.types import OpendataTestcaseInfo, OpendataVerdict
+from pisek.opendata.types import OpendataTestInfo, OpendataTestcaseInfo, OpendataVerdict
 from pisek.opendata.managers import OpendataPipeline
 
 
@@ -137,6 +137,12 @@ class BuiltTask:
     def __init__(self, path: str) -> None:
         self._path = path
         self._config = load_config(path, None, DEFAULT_CONFIG_FILENAME, True, True)
+
+    def tests(self) -> list[OpendataTestInfo]:
+        return [
+            OpendataTestInfo(test.points, test.opendata_online_validity)
+            for test in self._config.test_sections.values()
+        ]
 
     def _inputs_list(self) -> dict[str, TestcaseInfo]:
         infos = {}

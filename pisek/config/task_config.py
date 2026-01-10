@@ -31,7 +31,7 @@ from pydantic import (
     model_validator,
 )
 import re
-from typing import Any, Annotated, ClassVar, Mapping, Optional, TypeVar, Union
+from typing import Any, Annotated, ClassVar, Literal, Mapping, Optional, TypeVar, Union
 
 from pisek.utils.paths import TaskPath
 from pisek.utils.text import tab
@@ -464,6 +464,7 @@ class TestSection(BaseEnv):
     checks_generator_respects_seed: bool
     checks_validate: bool
     checks_different_outputs: bool
+    opendata_online_validity: int | Literal["unlimited"]
 
     @property
     def max_points(self) -> Decimal:
@@ -491,6 +492,7 @@ class TestSection(BaseEnv):
             "checks.validate",
             "checks.different_outputs",
             "checks.generator_respects_seed",
+            "opendata.online_validity",
         ]
         args: dict[str, Any] = {
             key.replace(".", "_"): configs.get_from_candidates(
