@@ -421,6 +421,13 @@ If `on`, run the [`validator`](#validator) on inputs from this test.
 Checks that not all of the primary solution's outputs on this test are the same.
 (Only if there are at least 2 testcases.)
 
+### opendata.online_validity
+<!-- md:version 2.3.0 -->
+<!-- md:type int | 'unlimited' -->
+<!-- md:default 300 -->
+
+Reserved key for the opendata module.
+
 ## [testXY]
 A section for a specific test.
 
@@ -461,6 +468,7 @@ The section for the test containing samples. Has different defaults for a few ke
 name=Samples
 points=unscored
 in_globs=sample*.in
+opendata.online_validity=unlimited
 ```
 
 ## [solutions]

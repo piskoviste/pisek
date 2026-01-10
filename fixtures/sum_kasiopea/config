@@ -18,6 +18,7 @@ points=4
 [test02]
 name=Hard input
 points=6
+opendata.online_validity=360
 
 [solution_solve]
 primary=yes

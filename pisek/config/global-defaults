@@ -24,12 +24,13 @@ predecessors=
 checks.generator_respects_seed=on
 checks.validate=on
 checks.different_outputs=on
+opendata.online_validity=300
 
 [test00]
 name=Samples
 points=unscored
 in_globs=sample*.in
-predecessors=
+opendata.online_validity=unlimited
 
 [solutions]
 run=@auto
