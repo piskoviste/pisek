@@ -16,7 +16,7 @@ from util import TestFixture, modify_config
 from pisek.user_errors import UserError
 from pisek.task_jobs.data.testcase_info import TestcaseGenerationMode
 from pisek.task_jobs.solution.solution_result import Verdict
-from pisek.opendata.types import OpendataTestcaseInfo, OpendataVerdict
+from pisek.opendata.types import OpendataTestInfo, OpendataTestcaseInfo, OpendataVerdict
 from pisek.opendata.lib import Task, BuiltTask
 
 
@@ -117,6 +117,15 @@ class TestSumKasiopeaOpendataBuild(TestFixtureOpendata):
 
 class TestSumKasiopeaOpendataListInputs(TestSumKasiopeaOpendataBuild):
     def run_opendata_test(self):
+        self.assertEqual(
+            self.built_task.tests(),
+            [
+                OpendataTestInfo("unscored", "unlimited"),
+                OpendataTestInfo(4, 300),
+                OpendataTestInfo(6, 360),
+            ],
+        )
+
         self.assertEqual(
             self.built_task.inputs_list(),
             {
