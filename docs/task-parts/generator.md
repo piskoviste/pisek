@@ -96,7 +96,7 @@ Where `seed` is 16-digit hexadecimal number.
 The generator should generate the input for this test to its stdout. The generator must be deterministic
 and respect the given seed.
 
-(Please note that the generator can generate only one input for each test.)
+(Please note that the generator is run only for tests without static outputs and may generate only one input for each test.)
 
 ??? example "Example `opendata-v1` generator"
 
