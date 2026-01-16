@@ -10,6 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from decimal import Decimal
 from typing import Iterator, Any, Optional
 from cms.db.task import Task, Dataset, Manager
 from cms.db.filecacher import FileCacher
@@ -41,7 +42,7 @@ def create_dataset(
     task: Task,
     testcases: list[InputPath],
     description: Optional[str],
-    time_limit: Optional[float],
+    time_limit: Optional[Decimal],
     autojudge: bool = True,
 ) -> Dataset:
     if description is None:
@@ -125,7 +126,9 @@ def create_dataset(
         task_type_parameters=task_params,
         score_type="GroupMin",
         score_type_parameters=score_params,
-        time_limit=time_limit if time_limit is not None else config.cms.time_limit,
+        time_limit=float(
+            time_limit if time_limit is not None else config.cms.time_limit
+        ),
         memory_limit=config.cms.mem_limit * 1024 * 1024,
         task=task,
     )

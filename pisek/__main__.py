@@ -98,7 +98,7 @@ def _main(argv: list[str]) -> None:
         parser.add_argument(
             "--time-limit",
             "-t",
-            type=float,
+            type=Decimal,
             help="override the time limit when importing to TIME_LIMIT seconds",
         )
 
