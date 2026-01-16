@@ -104,11 +104,13 @@ headers=src/a-plus-b.h
 # Allow each solution to include the given headers (defaults to none)
 # Used commonly for communication tasks
 
-in_mode = ??? (ignored)
-out_mode = ??? (ignored)
-out_format = ??? (ignored)
-online_validity = ??? (ignored)
+in_mode=??? (ignored)
+out_mode=??? (ignored)
+out_format=??? (ignored)
 # Ignored (because of compatibility with KSP/Kasiopea web)
+
+online_validity=300
+# Reserved key for the opendata module.
 
 [test01]
 # Section for each test (indexed from one)

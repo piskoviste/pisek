@@ -49,6 +49,7 @@ predecessors=
 checks.generator_respects_seed=
 checks.validate=
 checks.different_outputs=
+opendata.online_validity=
 
 [test{num}]
 #!regex test\d{2}
@@ -60,6 +61,7 @@ predecessors=
 checks.generator_respects_seed=
 checks.validate=
 checks.different_outputs=
+opendata.online_validity=
 
 [solution_{solution}]
 #!regex solution_(.*)
