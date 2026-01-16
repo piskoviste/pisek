@@ -15,6 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from dataclasses import dataclass, field
+from decimal import Decimal
 import os
 import tempfile
 from typing import Optional, Any, Union, Callable
@@ -34,8 +35,8 @@ from pisek.task_jobs.task_job import TaskJob
 class ProgramPoolItem:
     executable: TaskPath
     args: list[str]
-    time_limit: float
-    clock_limit: float
+    time_limit: Decimal
+    clock_limit: Decimal
     mem_limit: int
     process_limit: int
     stdin: Optional[Union[TaskPath, int]]
@@ -104,8 +105,8 @@ class ProgramsJob(TaskJob):
         self,
         executable: TaskPath,
         args: list[str],
-        time_limit: float,
-        clock_limit: float,
+        time_limit: Decimal,
+        clock_limit: Decimal,
         mem_limit: int,
         process_limit: int,
         stdin: Optional[Union[TaskPath, int]] = None,
@@ -161,7 +162,7 @@ class ProgramsJob(TaskJob):
         env={},
     ) -> None:
         """Adds program to execution pool."""
-        time_limit: Optional[float] = None
+        time_limit: Decimal | None = None
         if program_role.is_solution():
             time_limit = self._env.time_limit
 
@@ -233,7 +234,7 @@ class ProgramsJob(TaskJob):
 
             meta = {key: val for key, val in map(lambda x: x.split(":", 1), meta_raw)}
             if process.returncode == 0:
-                t, wt = float(meta["time"]), float(meta["time-wall"])
+                t, wt = Decimal(meta["time"]), Decimal(meta["time-wall"])
                 run_results.append(
                     RunResult(
                         RunResultKind.OK,
@@ -247,7 +248,7 @@ class ProgramsJob(TaskJob):
                     )
                 )
             elif process.returncode == 1:
-                t, wt = float(meta["time"]), float(meta["time-wall"])
+                t, wt = Decimal(meta["time"]), Decimal(meta["time-wall"])
                 if meta["status"] in ("RE", "SG"):
                     if meta["status"] == "RE":
                         return_code = int(meta["exitcode"])
@@ -317,8 +318,8 @@ class ProgramsJob(TaskJob):
         self._load_executable(
             TaskPath.executable_path(program),
             args=args,
-            time_limit=300,
-            clock_limit=300,
+            time_limit=Decimal(300),
+            clock_limit=Decimal(300),
             mem_limit=0,
             process_limit=1,
             stdin=stdin,

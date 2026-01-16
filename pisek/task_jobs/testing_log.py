@@ -13,6 +13,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+from decimal import Decimal
 import json
 from typing import Any, Optional
 
@@ -29,6 +31,13 @@ from pisek.task_jobs.solution.solution_result import (
 )
 
 TESTING_LOG = "testing_log.json"
+
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, Decimal):
+            return str(o)
+        return super().default(o)
 
 
 class CreateTestingLog(TaskJobManager):
@@ -89,4 +98,4 @@ class CreateTestingLog(TaskJobManager):
             self._warn("Not all inputs were tested. For testing them use --all-inputs.")
 
         with open(TaskPath(TESTING_LOG).path, "w") as f:
-            json.dump(log, f, indent=4)
+            json.dump(log, f, indent=4, cls=DecimalEncoder)

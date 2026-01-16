@@ -17,6 +17,7 @@
 
 import argcomplete
 import argparse
+from decimal import Decimal
 import logging
 import os
 import sys
@@ -97,7 +98,7 @@ def _main(argv: list[str]) -> None:
         parser.add_argument(
             "--time-limit",
             "-t",
-            type=float,
+            type=Decimal,
             help="override the time limit when importing to TIME_LIMIT seconds",
         )
 
@@ -196,7 +197,7 @@ def _main(argv: list[str]) -> None:
     parser_test.add_argument(
         "--time-limit",
         "-t",
-        type=float,
+        type=Decimal,
         help="override time limit for solutions to TIME_LIMIT seconds",
     )
     parser_test.add_argument(
@@ -288,7 +289,7 @@ def _main(argv: list[str]) -> None:
         "--limit",
         "-l",
         default=None,
-        type=float,
+        type=Decimal,
         help="visualize as if the time limit was LIMIT seconds",
     )
     parser_visualize.add_argument(

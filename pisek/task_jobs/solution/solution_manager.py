@@ -241,7 +241,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         points = self._format_points(self.solution_points)
         total_points = self._format_points(self._env.config.total_points)
 
-        max_time_f = max((s.slowest_time for s in self.tests), default=0.0)
+        max_time_f = max((s.slowest_time for s in self.tests), default=Decimal(0))
         max_time = self._format_time(max_time_f)
 
         if not self.state.finished() or self._env.verbosity == 0:
@@ -354,10 +354,10 @@ class TestJobGroup(TaskHelper):
         return compute_verdict(self._verdicts(self.all_jobs))
 
     @property
-    def slowest_time(self) -> float:
+    def slowest_time(self) -> Decimal:
         results = self._results(self.all_jobs)
         times = map(lambda r: r.solution_rr.time, results)
-        return max(times, default=0.0)
+        return max(times, default=Decimal(0))
 
     def _job_results(self, jobs: list[RunChecker]) -> list[Optional[SolutionResult]]:
         return list(map(lambda j: j.result, jobs))

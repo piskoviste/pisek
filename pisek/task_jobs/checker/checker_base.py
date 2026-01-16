@@ -235,7 +235,7 @@ class RunBatchChecker(RunChecker):
         else:
             # There is no solution (checking static tests against themselves)
             # XXX: It didn't technically finish in 0 time.
-            return RunResult(RunResultKind.OK, 0, 0.0, 0.0)
+            return RunResult(RunResultKind.OK, 0, Decimal(0), Decimal(0))
 
     def _checking_message(self) -> str:
         return (

@@ -61,8 +61,8 @@ class RunDiffChecker(RunBatchChecker):
         rr = RunResult(
             RunResultKind.OK,
             diff.returncode,
-            0,
-            0,
+            Decimal(0),
+            Decimal(0),
             status=f"Exited with return code {diff.returncode}",
         )
         if diff.returncode == 0:
