@@ -11,6 +11,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from datetime import timedelta
+from decimal import Decimal
 from typing import Optional
 from cms.db.task import Task
 from sqlalchemy.orm import Session
@@ -27,7 +28,7 @@ def create_task(
     env: Env,
     testcases: list[InputPath],
     description: str,
-    time_limit: Optional[float],
+    time_limit: Optional[Decimal],
 ) -> Task:
     config = env.config
 
