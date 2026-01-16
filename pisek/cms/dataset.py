@@ -126,7 +126,9 @@ def create_dataset(
         task_type_parameters=task_params,
         score_type="GroupMin",
         score_type_parameters=score_params,
-        time_limit=float(time_limit if time_limit is not None else config.cms.time_limit),
+        time_limit=float(
+            time_limit if time_limit is not None else config.cms.time_limit
+        ),
         memory_limit=config.cms.mem_limit * 1024 * 1024,
         task=task,
     )
