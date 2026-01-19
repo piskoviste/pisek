@@ -63,14 +63,6 @@ def test_task_path(path, solutions: Optional[list[str]] = None, **env_args) -> N
     return run_pipeline(path, TaskPipeline, solutions=solutions, **env_args)
 
 
-def test_solutions(args) -> None:
-    return test_task(args)
-
-
-def test_generator(args) -> None:
-    return test_task(args, solutions=[])
-
-
 @locked_folder
 def clean_directory() -> None:
     task_dir = PATH
@@ -167,6 +159,9 @@ def _main(argv: list[str]) -> None:
     test_subparsers = parser_test.add_subparsers(help="testing target", dest="target")
     test_all = test_subparsers.add_parser("all", help="test all")
     test_gen = test_subparsers.add_parser("generator", help="test only generator")
+    test_primary = test_subparsers.add_parser(
+        "primary", help="test generator & primary solution"
+    )
     test_sols = test_subparsers.add_parser(
         "solutions", help="test generator & given solutions"
     )
@@ -377,14 +372,7 @@ def _main(argv: list[str]) -> None:
     root_logger.addHandler(json_logging.get_handler())
 
     if args.subcommand == "test":
-        if args.target == "generator":
-            return test_generator(args)
-        elif args.target == "solutions":
-            return test_solutions(args)
-        elif args.target is None or args.target == "all":
-            return test_task(args, solutions=None)
-        else:
-            assert False, "Unknown command"
+        return test_task(args)
 
     elif args.subcommand == "config":
         if args.config_subcommand == "update":

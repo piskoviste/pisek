@@ -19,7 +19,7 @@ class TestCLI(TestFixture):
         return "fixtures/sum_cms/"
 
     def args(self) -> list[list[str]]:
-        return [["test", "--time-limit", "0.2"]]
+        return [["test"]]
 
     def runTest(self) -> None:
         if not self.fixture_path:
@@ -40,9 +40,14 @@ class TestCLI(TestFixture):
         self.check_files()
 
 
-class TestCLITestSolution(TestCLI):
+class TestCLITestPrimary(TestCLI):
     def args(self) -> list[list[str]]:
-        return [["test", "solutions", "solve"]]
+        return [["test", "primary"]]
+
+
+class TestCLITestSolutions(TestCLI):
+    def args(self) -> list[list[str]]:
+        return [["test", "solutions", "solve_3b", "solve_0b.py"]]
 
 
 class TestCLITestGenerator(TestCLI):

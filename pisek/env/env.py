@@ -17,7 +17,7 @@
 from enum import StrEnum, auto
 import os
 from pydantic import Field
-from typing import Optional
+from typing import assert_never, Optional
 
 from pisek.utils.colors import color_settings
 from pisek.env.base_env import BaseEnv
@@ -30,6 +30,7 @@ class TestingTarget(StrEnum):
     all = auto()
     build = auto()
     generator = auto()
+    primary = auto()
     solutions = auto()
 
 
@@ -73,7 +74,7 @@ class Env(BaseEnv):
 
     @staticmethod
     def load(
-        target: str = TestingTarget.all,
+        target: TestingTarget | None = TestingTarget.all,
         jobs: int | None = None,
         verbosity: int = 0,
         file_contents: bool = False,
@@ -97,11 +98,16 @@ class Env(BaseEnv):
 
         config = load_config(".", pisek_dir, config_filename, strict)
 
-        if target == TestingTarget.build:
-            assert solutions is None
-            solutions = [config.primary_solution]
-
-        expanded_solutions = expand_solutions(config, solutions)
+        if target == TestingTarget.generator:
+            expanded_solutions = []
+        elif target == TestingTarget.build or target == TestingTarget.primary:
+            expanded_solutions = [config.primary_solution]
+        elif target == TestingTarget.all or target is None:
+            expanded_solutions = list(config.solutions)
+        elif target == TestingTarget.solutions:
+            expanded_solutions = expand_solutions(config, solutions)
+        else:
+            assert_never(target)
 
         if expanded_solutions and config.tests.judge_needs_out:
             if config.primary_solution in expanded_solutions:
