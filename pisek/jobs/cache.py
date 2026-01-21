@@ -26,7 +26,6 @@ from pisek.utils.colors import color_settings
 from pisek.utils.paths import INTERNALS_DIR
 from pisek.jobs.logging import LogEntry
 
-
 CACHE_VERSION_FILE = os.path.join(INTERNALS_DIR, "cache_version")
 CACHE_CONTENT_FILE = os.path.join(INTERNALS_DIR, "cache")
 HASH_INDEX_FILE = os.path.join(INTERNALS_DIR, "hash_index")

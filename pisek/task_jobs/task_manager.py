@@ -16,7 +16,6 @@ from pisek.jobs.status import StatusJobManager
 from pisek.task_jobs.task_job import TaskHelper
 from pisek.task_jobs.data.testcase_info import TestcaseInfo
 
-
 TOOLS_MAN_CODE = "tools"
 GENERATOR_MAN_CODE = "generator"
 INPUTS_MAN_CODE = "inputs"

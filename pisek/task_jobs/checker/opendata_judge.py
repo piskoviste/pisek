@@ -27,7 +27,6 @@ from pisek.task_jobs.solution.solution_result import (
 
 from pisek.task_jobs.checker.checker_base import RunBatchChecker
 
-
 OPENDATA_NO_SEED = "-"
 
 
