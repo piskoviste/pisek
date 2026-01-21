@@ -57,7 +57,6 @@ from pisek.env.context import init_context
 from pisek.task_jobs.solution.solution_result import TEST_SPEC
 from pisek.task_jobs.builder.strategies import ALL_STRATEGIES
 
-
 T = TypeVar("T")
 Maybe = Annotated[T | None, BeforeValidator(lambda t: t or None)]
 

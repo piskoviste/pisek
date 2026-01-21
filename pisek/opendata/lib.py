@@ -44,7 +44,6 @@ from pisek.task_jobs.data.data_manager import TEST_SEED
 from pisek.opendata.types import OpendataTestInfo, OpendataTestcaseInfo, OpendataVerdict
 from pisek.opendata.managers import OpendataPipeline
 
-
 ENV_ARGS = {
     "no_colors": True,
     "no_jumps": True,
