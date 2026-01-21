@@ -63,6 +63,7 @@ class BuildManager(TaskJobManager):
 
         if self._env.target in (
             TestingTarget.build,
+            TestingTarget.primary,
             TestingTarget.solutions,
             TestingTarget.all,
         ):
