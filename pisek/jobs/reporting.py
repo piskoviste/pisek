@@ -118,7 +118,7 @@ class CommandLineReporter(Reporter):
             msg = self._colored(
                 LINE_SEPARATOR + LINE_SEPARATOR.join(fails) + LINE_SEPARATOR, "red"
             )
-            self._print(msg, end="")
+            self._print(msg, end="", file=sys.stderr)
 
     def _format_job(self, job: Job, now: float) -> str:
         run_time: float = 0 if job.started is None else max(0, now - job.started)
