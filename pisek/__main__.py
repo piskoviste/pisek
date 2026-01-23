@@ -17,7 +17,6 @@
 
 import argcomplete
 import argparse
-from decimal import Decimal
 import logging
 import os
 import sys
@@ -35,6 +34,10 @@ from pisek.user_errors import (
 from pisek.utils.util import clean_task_dir
 from pisek.utils.text import eprint
 from pisek.utils.colors import color_settings
+from pisek.utils.argparse_util import (
+    argparse_positive_Decimal,
+    argparse_nonnegative_Decimal,
+)
 
 from pisek.visualize import visualize
 from pisek.init import init_task
@@ -98,7 +101,7 @@ def _main(argv: list[str]) -> None:
         parser.add_argument(
             "--time-limit",
             "-t",
-            type=Decimal,
+            type=argparse_positive_Decimal,
             help="override the time limit when importing to TIME_LIMIT seconds",
         )
 
@@ -197,7 +200,7 @@ def _main(argv: list[str]) -> None:
     parser_test.add_argument(
         "--time-limit",
         "-t",
-        type=Decimal,
+        type=argparse_nonnegative_Decimal,
         help="override time limit for solutions to TIME_LIMIT seconds",
     )
     parser_test.add_argument(
@@ -289,7 +292,7 @@ def _main(argv: list[str]) -> None:
         "--limit",
         "-l",
         default=None,
-        type=Decimal,
+        type=argparse_nonnegative_Decimal,
         help="visualize as if the time limit was LIMIT seconds",
     )
     parser_visualize.add_argument(
