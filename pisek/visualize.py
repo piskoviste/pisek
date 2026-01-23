@@ -39,7 +39,7 @@ class LoggedResult:
     verdict: Verdict
     relative_points: Optional[Decimal]
     absolute_points: Optional[Decimal]
-    time: float
+    time: Decimal
     test: str
     original_verdict: Verdict
 
@@ -57,7 +57,7 @@ class LoggedResult:
 
     def to_str(
         self,
-        limit: float,
+        limit: Decimal,
         segments: int,
         test_pad_length: int = 15,
     ) -> str:
@@ -93,7 +93,7 @@ class LoggedResult:
         )
 
 
-def limit_result(result: LoggedResult, limit: float) -> LoggedResult:
+def limit_result(result: LoggedResult, limit: Decimal) -> LoggedResult:
     if result.time <= limit and result.verdict == Verdict.timeout:
         new_verdict = result.original_verdict
         if new_verdict == Verdict.timeout:
@@ -150,7 +150,7 @@ class SolutionResults:
 
     @staticmethod
     def from_log(
-        name: str, config: TaskConfig, testing_log, limit: float
+        name: str, config: TaskConfig, testing_log, limit: Decimal
     ) -> "SolutionResults":
         if name not in testing_log["solutions"]:
             raise MissingSolution(name)
@@ -167,7 +167,7 @@ class SolutionResults:
                         Verdict[result["result"]],
                         load_decimal(result, "relative_points"),
                         load_decimal(result, "absolute_points"),
-                        result["time"],
+                        Decimal(result["time"]),
                         test_name,
                         Verdict[result["result"]],
                     ),
@@ -230,9 +230,9 @@ class SolutionResults:
 
         return fails
 
-    def get_time_limit_range(self, num: int) -> tuple[float, float]:
+    def get_time_limit_range(self, num: int) -> tuple[Decimal, Decimal]:
         results = self.get_by_test()[num]
-        times = [0] + list(map(lambda r: r.time, results))
+        times = [Decimal(0)] + list(map(lambda r: r.time, results))
         times.sort()
         min_possible = len(times) - 1
         max_possible = 0
@@ -245,7 +245,7 @@ class SolutionResults:
                 min_possible = min(i, min_possible)
                 max_possible = max(i, max_possible)
 
-        times.append(inf)
+        times.append(Decimal(inf))
         return (times[min_possible], times[max_possible + 1])
 
 
@@ -262,7 +262,7 @@ def visualize(
     filter: str,
     bundle: bool,
     solutions: Optional[list[str]],
-    limit: Optional[float],
+    limit: Decimal | None,
     filename: str,
     segments: Optional[int],
     pisek_dir: Optional[str],
@@ -274,7 +274,7 @@ def visualize(
     log_path = os.path.join(path, filename)
     try:
         with open(log_path) as log_file:
-            testing_log = json.load(log_file)
+            testing_log = json.load(log_file, parse_float=Decimal)
     except FileNotFoundError:
         raise MissingFile(
             f"File {log_path} not found. Test with --testing-log to create a log."
@@ -352,8 +352,8 @@ def visualize(
             )
         )
 
-    min_possible = 0.0
-    max_possible = inf
+    min_possible = Decimal(0)
+    max_possible = Decimal(inf)
     for sol, sol_res in results.items():
         for num in config.test_sections:
             a, b = sol_res.get_time_limit_range(num)

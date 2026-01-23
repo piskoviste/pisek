@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from decimal import Decimal
 from enum import StrEnum, auto
 import os
 from pydantic import Field
@@ -67,7 +68,7 @@ class Env(BaseEnv):
     strict: bool
     testing_log: bool
     solutions: list[str]
-    time_limit: Optional[float] = Field(ge=0)
+    time_limit: Decimal | None = Field(ge=0)
     all_inputs: bool
     repeat: int = Field(ge=1)
     iteration: int = Field(ge=0)
@@ -86,7 +87,7 @@ class Env(BaseEnv):
         strict: bool = False,
         testing_log: bool = False,
         solutions: Optional[list[str]] = None,
-        time_limit: Optional[float] = None,
+        time_limit: Decimal | None = None,
         repeat: int = 1,
         iteration: int = 0,
         pisek_dir: Optional[str] = None,
