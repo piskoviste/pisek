@@ -123,6 +123,7 @@ class BuildStrategyName(StrEnum):
     java = auto()
     make = auto()
     cargo = auto()
+    go = auto()
     auto = auto()
 
 

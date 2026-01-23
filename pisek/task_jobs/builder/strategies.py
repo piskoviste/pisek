@@ -408,6 +408,37 @@ class Java(BuildStrategy):
         return self.target
 
 
+class Go(BuildBinary):
+    name = BuildStrategyName.go
+
+    @classmethod
+    def applicable_on_files(cls, build: "BuildSection", sources: list[str]) -> bool:
+        return len(sources) == 1 and sources[0].endswith(".go")
+
+    @classmethod
+    def applicable_on_directory(cls, build: "BuildSection", directory: str) -> bool:
+        return os.path.exists(os.path.join(directory, "go.mod"))
+
+    def _build(self) -> str:
+        if os.path.isdir(self.sources[0]):
+            args = [
+                "go",
+                "build",
+                "-C",
+                self.sources[0],
+                "-o",
+                os.path.relpath(self.target, self.sources[0]),
+            ]
+        else:
+            args = ["go", "build", "-o", self.target, self.sources[0]]
+
+        self._run_subprocess(
+            args + self._build_section.comp_args,
+            self._build_section.program_name,
+        )
+        return self.target
+
+
 class Make(BuildStrategy):
     name = BuildStrategyName.make
     _target_subdir: str = "target"
@@ -519,6 +550,7 @@ AUTO_STRATEGIES: list[type[BuildStrategy]] = [
     Cpp,
     Pascal,
     Java,
+    Go,
     Make,
     Cargo,
 ]
