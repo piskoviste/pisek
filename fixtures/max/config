@@ -59,6 +59,12 @@ tests=@all
 [solution_solve_java_complex]
 tests=@all
 
+[solution_solve_go_simple]
+tests=@all
+
+[solution_solve_go_complex]
+tests=@all
+
 [solution_solve_env]
 tests=@all
 
@@ -86,6 +92,12 @@ exec=min
 [run_solution:solve_rs_complex_max]
 build=solve_rs_complex
 exec=max
+
+[run_solution:solve_go_simple]
+process_limit=0
+
+[run_solution:solve_go_complex]
+process_limit=0
 
 [run_solution:solve_env]
 env_TASK=max
