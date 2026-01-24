@@ -436,7 +436,7 @@ def main(argv: list[str]) -> int:
     except TestingFailed:
         return 1
     except (TaskConfigError, MissingFile, InvalidArgument, InvalidOperation) as e:
-        print(color_settings.colored(str(e), "red"))
+        eprint(color_settings.colored(str(e), "red"))
         return 2
     except UserError:
         raise NotImplementedError()
