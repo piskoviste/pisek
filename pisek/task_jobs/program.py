@@ -14,10 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from contextlib import ExitStack
 from dataclasses import dataclass, field
 from decimal import Decimal
 import os
-import tempfile
+from tempfile import NamedTemporaryFile, TemporaryDirectory, TemporaryFile
 from typing import Optional, Any, Union, Callable
 import signal
 import subprocess
@@ -33,6 +34,7 @@ from pisek.task_jobs.task_job import TaskJob
 
 @dataclass
 class ProgramPoolItem:
+    name: str
     executable: TaskPath
     args: list[str]
     time_limit: Decimal
@@ -103,7 +105,7 @@ class ProgramsJob(TaskJob):
 
     def _load_executable(
         self,
-        executable: TaskPath,
+        path: TaskPath,
         args: list[str],
         time_limit: Decimal,
         clock_limit: Decimal,
@@ -114,15 +116,16 @@ class ProgramsJob(TaskJob):
         stderr: Optional[LogPath] = None,
         env: dict[str, str] = {},
     ):
-        if self._is_file(executable):
-            self._access_file(executable)
-        elif self._is_dir(executable):
-            self._access_dir(executable)
-            executable = executable.join("run")
+        if self._is_file(path):
+            self._access_file(path)
+            executable = path
+        elif self._is_dir(path):
+            self._access_dir(path)
+            executable = path.join("run")
 
         if self._is_dir(executable):
             raise PipelineItemFailure(
-                f"Cannot execute '{executable:p}': Is a directory.."
+                f"Cannot execute '{executable:p}': Is a directory."
             )
         elif not self._exists(executable):
             raise PipelineItemFailure(f"Cannot execute '{executable:p}': File missing.")
@@ -138,6 +141,7 @@ class ProgramsJob(TaskJob):
 
         self._program_pool.append(
             ProgramPoolItem(
+                name=path.name,
                 executable=executable,
                 args=args,
                 time_limit=time_limit,
@@ -167,7 +171,7 @@ class ProgramsJob(TaskJob):
             time_limit = self._env.time_limit
 
         self._load_executable(
-            executable=program.executable,
+            path=program.executable,
             args=program.args + args,
             time_limit=program.time_limit if time_limit is None else time_limit,
             clock_limit=program.clock_limit(time_limit),
@@ -184,114 +188,120 @@ class ProgramsJob(TaskJob):
             raise RuntimeError("Callback already loaded.")
         self._callback = callback
 
+    def _read_run_result(
+        self, pool_item: ProgramPoolItem, process: subprocess.Popen, meta_file: str
+    ) -> RunResult:
+        assert process.stderr is not None  # To make mypy happy
+
+        with open(meta_file) as f:
+            meta_raw = f.read().strip().split("\n")
+
+        meta = {key: val for key, val in map(lambda x: x.split(":", 1), meta_raw)}
+        if process.returncode == 0:
+            return RunResult(
+                RunResultKind.OK,
+                0,
+                Decimal(meta["time"]),
+                Decimal(meta["time-wall"]),
+                pool_item.stdin,
+                pool_item.stdout,
+                pool_item.stderr,
+                "Exited with return code 0",
+            )
+
+        elif process.returncode == 1:
+            t, wt = Decimal(meta["time"]), Decimal(meta["time-wall"])
+            if meta["status"] in ("RE", "SG"):
+                if meta["status"] == "RE":
+                    return_code = int(meta["exitcode"])
+                elif meta["status"] == "SG":
+                    return_code = int(meta["exitsig"])
+                    meta["message"] += f" ({signal.Signals(return_code).name})"
+
+                return RunResult(
+                    RunResultKind.RUNTIME_ERROR,
+                    return_code,
+                    t,
+                    wt,
+                    pool_item.stdin,
+                    pool_item.stdout,
+                    pool_item.stderr,
+                    meta["message"],
+                )
+
+            elif meta["status"] == "TO":
+                time_limit = (
+                    f"{pool_item.time_limit}s"
+                    if t > pool_item.time_limit
+                    else f"{pool_item.clock_limit}ws"
+                )
+                return RunResult(
+                    RunResultKind.TIMEOUT,
+                    -1,
+                    t,
+                    wt,
+                    pool_item.stdin,
+                    pool_item.stdout,
+                    pool_item.stderr,
+                    f"Timeout after {time_limit}",
+                )
+            else:
+                raise RuntimeError(f"Unknown minibox status {meta['message']}.")
+        else:
+            raise PipelineItemFailure(
+                f"Minibox error:\n{tab(process.stderr.read().decode())}"
+            )
+
     def _run_programs(self) -> list[RunResult]:
         """Runs all programs in execution pool."""
         running_pool: list[subprocess.Popen] = []
         meta_files: list[str] = []
-        tmp_dirs: list[str] = []
+        tmp_dirs: list[TemporaryDirectory] = []
         minibox = TaskPath.executable_path("_minibox").abspath
-        for pool_item in self._program_pool:
-            fd, meta_file = tempfile.mkstemp()
-            os.close(fd)
-            meta_files.append(meta_file)
+        with ExitStack() as exit_stack:
+            for pool_item in self._program_pool:
+                meta_file = NamedTemporaryFile(prefix="pisek_", delete_on_close=False)
+                exit_stack.enter_context(meta_file)
+                meta_file.close()
+                meta_files.append(meta_file.name)
 
-            popen = pool_item.to_popen(minibox, meta_file)
-            self._log(
-                "debug",
-                "Executing '" + " ".join(popen["args"]) + "'",
-                bypass_cache=True,
-            )
+                popen = pool_item.to_popen(minibox, meta_file.name)
+                self._log(
+                    "debug",
+                    "Executing '" + " ".join(popen["args"]) + "'",
+                    bypass_cache=True,
+                )
 
-            tmp_dir = tempfile.mkdtemp(prefix="pisek_")
-            tmp_dirs.append(tmp_dir)
-            running_pool.append(subprocess.Popen(**popen, cwd=tmp_dir))
+                tmp_dir = TemporaryDirectory(prefix="pisek_")
+                exit_stack.enter_context(tmp_dir)
+                tmp_dirs.append(tmp_dir)
 
-        if self._callback is not None:
-            callback_exec = False
-            while True:
-                states = [process.poll() is not None for process in running_pool]
-                if not callback_exec and any(states):
-                    callback_exec = True
-                    self._callback(running_pool[states.index(True)])
+                running_pool.append(subprocess.Popen(**popen, cwd=tmp_dir.name))
 
-                if all(states):
-                    break
+            if self._callback is not None:
+                callback_exec = False
+                while True:
+                    states = [process.poll() is not None for process in running_pool]
+                    if not callback_exec and any(states):
+                        callback_exec = True
+                        self._callback(running_pool[states.index(True)])
 
-        run_results = []
-        for pool_item, process, tmp_dir, meta_file in zip(
-            self._program_pool, running_pool, tmp_dirs, meta_files
-        ):
-            self._wait_for_subprocess(process)
-            assert process.stderr is not None  # To make mypy happy
+                    if all(states):
+                        break
 
-            with open(meta_file) as f:
-                meta_raw = f.read().strip().split("\n")
-
-            assert meta_file.startswith("/tmp")  # Better safe then sorry
-            assert tmp_dir.startswith("/tmp")
-            os.remove(meta_file)
-            os.removedirs(tmp_dir)
-
-            meta = {key: val for key, val in map(lambda x: x.split(":", 1), meta_raw)}
-            if process.returncode == 0:
-                t, wt = Decimal(meta["time"]), Decimal(meta["time-wall"])
+            run_results = []
+            for pool_item, process, tmp_dir, meta_file_path in zip(
+                self._program_pool, running_pool, tmp_dirs, meta_files
+            ):
+                self._wait_for_subprocess(process)
                 run_results.append(
-                    RunResult(
-                        RunResultKind.OK,
-                        0,
-                        t,
-                        wt,
-                        pool_item.stdin,
-                        pool_item.stdout,
-                        pool_item.stderr,
-                        "Exited with return code 0",
-                    )
+                    self._read_run_result(pool_item, process, meta_file_path)
                 )
-            elif process.returncode == 1:
-                t, wt = Decimal(meta["time"]), Decimal(meta["time-wall"])
-                if meta["status"] in ("RE", "SG"):
-                    if meta["status"] == "RE":
-                        return_code = int(meta["exitcode"])
-                    elif meta["status"] == "SG":
-                        return_code = int(meta["exitsig"])
-                        meta["message"] += f" ({signal.Signals(return_code).name})"
 
-                    run_results.append(
-                        RunResult(
-                            RunResultKind.RUNTIME_ERROR,
-                            return_code,
-                            t,
-                            wt,
-                            pool_item.stdin,
-                            pool_item.stdout,
-                            pool_item.stderr,
-                            meta["message"],
-                        )
+                if os.listdir(tmp_dir.name):
+                    raise PipelineItemFailure(
+                        f"'{pool_item.name}' created a file in cwd."
                     )
-                elif meta["status"] == "TO":
-                    time_limit = (
-                        f"{pool_item.time_limit}s"
-                        if t > pool_item.time_limit
-                        else f"{pool_item.clock_limit}ws"
-                    )
-                    run_results.append(
-                        RunResult(
-                            RunResultKind.TIMEOUT,
-                            -1,
-                            t,
-                            wt,
-                            pool_item.stdin,
-                            pool_item.stdout,
-                            pool_item.stderr,
-                            f"Timeout after {time_limit}",
-                        )
-                    )
-                else:
-                    raise RuntimeError(f"Unknown minibox status {meta['message']}.")
-            else:
-                raise PipelineItemFailure(
-                    f"Minibox error:\n{tab(process.stderr.read().decode())}"
-                )
 
         return run_results
 
