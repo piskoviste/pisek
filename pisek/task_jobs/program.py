@@ -54,7 +54,9 @@ class ProgramPoolItem:
         minibox_args.append(f"--time={self.time_limit}")
         minibox_args.append(f"--wall-time={self.clock_limit}")
         minibox_args.append(f"--mem={self.mem_limit*1024}")
-        minibox_args.append(f"--processes={self.process_limit}")
+        # Minibox doesn't support limits for multiple processes (#613)
+        if self.process_limit != 1:
+            minibox_args.append(f"--processes=0")
 
         for std in ("stdin", "stdout", "stderr"):
             attr = getattr(self, std)
