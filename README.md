@@ -4,7 +4,7 @@ Tool for developing tasks for programming competitions.
 
 ## Installation
 
-Pisek requires Python 3.11 or newer. You can install it with pip:
+Pisek requires Python 3.12 or newer. You can install it with pip:
 ```bash
 pip install pisek
 ```
