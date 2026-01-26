@@ -5,6 +5,8 @@ task_type=
 score_precision=
 
 [tests]
+has_sample_test=
+
 in_gen=
 gen_type=
 #!if tests in_gen!=

@@ -112,7 +112,7 @@ class ConfigKeyDescription:
             return self.similarity_function(key)
 
     def score(self, section: str, key: str) -> float:
-        return (9 * self.section.similarity(section) + self.similarity(key)) / 10
+        return (self.section.similarity(section) + self.similarity(key)) / 2
 
     def applicable(self, section: str, key: str, config: "ConfigHierarchy") -> str:
         text = ""

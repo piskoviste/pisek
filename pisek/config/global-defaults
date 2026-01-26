@@ -4,6 +4,8 @@ task_type=batch
 score_precision=0
 
 [tests]
+has_sample_test=yes
+
 gen_type=
 validator=
 validator_type=

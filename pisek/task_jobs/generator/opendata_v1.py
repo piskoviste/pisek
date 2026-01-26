@@ -29,8 +29,8 @@ class OpendataV1ListInputs(GeneratorListInputs):
         super().__init__(env=env, generator=generator, **kwargs)
 
     def _run(self) -> list[TestcaseInfo]:
-        # We need to cache depending on the number of tests
-        self._env.config.tests_count
+        # We need to cache depending on the tests present
+        self._env.config.test_nums
 
         return [
             TestcaseInfo.generated(f"{num:02}")
