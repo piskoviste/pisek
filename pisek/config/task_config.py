@@ -134,8 +134,8 @@ class TaskConfig(BaseEnv):
 
     @computed_field  # type: ignore[misc]
     @property
-    def tests_count(self) -> int:
-        return len(self.test_sections)
+    def test_nums(self) -> list[int]:
+        return list(self.test_sections)
 
     @computed_field  # type: ignore[misc]
     @cached_property
@@ -188,15 +188,20 @@ class TaskConfig(BaseEnv):
                     t, args["tests"][program], configs
                 )
 
+        has_sample_test = TypeAdapter(bool).validate_strings(
+            configs.get("tests", "has_sample_test").value
+        )
         # Load tests
         args["test_sections"] = test_sec = {}
         # Sort so tests.keys() returns tests in sorted order
         for section in sorted(section_names, key=lambda cv: cv.value):
             section_name = section.value
             if m := re.fullmatch(r"test(\d{2})", section_name):
-                num = m[1]
-                test_sec[int(num)] = TestSection.load_dict(
-                    ConfigValue(str(int(num)), section.config, section.section, None),
+                num = int(m[1])
+                if num == 0 and not has_sample_test:
+                    continue
+                test_sec[num] = TestSection.load_dict(
+                    ConfigValue(str(num), section.config, section.section, None),
                     configs,
                 )
 
@@ -260,7 +265,9 @@ class TaskConfig(BaseEnv):
                 {},
             )
 
-        for i in range(len(self.test_sections)):
+        for i in range(0, max(self.test_sections)):
+            if i == 0 and not self.tests.has_sample_test:
+                continue
             if i not in self.test_sections:
                 raise PydanticCustomError(
                     "missing_test",
@@ -327,7 +334,7 @@ class TaskConfig(BaseEnv):
 
             return test.all_predecessors
 
-        for i in range(self.tests_count):
+        for i in self.test_nums:
             compute_test(i)
 
 
@@ -346,6 +353,8 @@ class TaskSection(BaseEnv):
 
 class TestsSection(BaseEnv):
     _section: str = "tests"
+
+    has_sample_test: bool
 
     static_subdir: TaskPathFromStr
     in_gen: Maybe["RunSection"]
@@ -372,6 +381,7 @@ class TestsSection(BaseEnv):
     @staticmethod
     def load_dict(task_type: str, configs: ConfigHierarchy) -> ConfigValuesDict:
         GLOBAL_KEYS = [
+            "has_sample_test",
             "in_gen",
             "validator",
             "out_check",

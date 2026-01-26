@@ -152,6 +152,13 @@ How many decimal digits scores are rounded to.
 
 ## [tests]
 
+### has_sample_test
+<!-- md:version 2.3.0 -->
+<!-- md:type bool -->
+<!-- md:default yes -->
+
+Whether this task has [`[test00]`](#test00).
+
 ### in_gen
 <!-- md:version 1.0.0 -->
 <!-- md:type run_ref -->

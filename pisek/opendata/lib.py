@@ -153,7 +153,7 @@ class BuiltTask:
 
     def inputs_list(self) -> dict[int, list[OpendataTestcaseInfo]]:
         result: dict[int, list[OpendataTestcaseInfo]] = {
-            test_num: [] for test_num in range(self._config.tests_count)
+            test_num: [] for test_num in self._config.test_nums
         }
         for ti in self._inputs_list().values():
             for test_num in result.keys():
@@ -172,7 +172,7 @@ class BuiltTask:
         input_path: str,
         output_path: str,
     ) -> "Testcase":
-        if not 0 <= test <= self._config.tests_count:
+        if test not in self._config.test_nums:
             raise InvalidArgument(f"No test with number {test}")
 
         testcase_infos = self._inputs_list()

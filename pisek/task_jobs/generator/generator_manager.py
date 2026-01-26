@@ -233,7 +233,7 @@ class TestcaseInfoMixin(JobManager):
         self._check_input_jobs(input_path)
 
         if self._env.config.tests.validator is not None:
-            for t in range(self._env.config.tests_count):
+            for t in self._env.config.test_nums:
                 if not self._env.config.test_sections[t].in_test(input_path.name):
                     continue
                 if not self._env.config.test_sections[t].checks_validate:

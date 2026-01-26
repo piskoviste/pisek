@@ -77,15 +77,16 @@ class DataManager(TaskJobManager):
                     f"No inputs for test {test.num} with globs {test.all_globs}."
                 )
 
-        for testcase_info in self._testcase_infos[0]:
-            if testcase_info.generation_mode != TestcaseGenerationMode.static:
-                raise PipelineItemFailure(
-                    f"Sample inputs must be static, but '{testcase_info.name}' is {testcase_info.generation_mode}."
-                )
+        if self._env.config.tests.has_sample_test:
+            for testcase_info in self._testcase_infos[0]:
+                if testcase_info.generation_mode != TestcaseGenerationMode.static:
+                    raise PipelineItemFailure(
+                        f"Sample inputs must be static, but '{testcase_info.name}' is {testcase_info.generation_mode}."
+                    )
 
         used_inputs = set(sum(self._testcase_infos.values(), start=[]))
         self._report_not_included_inputs(
-            used_inputs - set(self._testcase_infos[self._env.config.tests_count - 1])
+            used_inputs - set(self._testcase_infos[max(self._env.config.test_nums)])
         )
         self._report_unused_inputs(set(all_testcase_infos) - used_inputs)
         self._check_one_input_in_nonsample_test()
