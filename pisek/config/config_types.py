@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>
 
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from enum import auto, StrEnum
 from pydantic_core import PydanticCustomError
 from pydantic import BeforeValidator
@@ -67,7 +67,7 @@ def validate_test_points(points: str):
         p = Decimal(points)
         assert p >= 0 and p.is_finite()
         return p
-    except (AssertionError, ValueError):
+    except (AssertionError, InvalidOperation):
         raise PydanticCustomError(
             "test_points_parsing",
             "Input should be non-negative decimal or 'unscored'",
@@ -86,7 +86,7 @@ def validate_solution_points(points: str):
         p = Decimal(points)
         assert p >= 0 and p.is_finite()
         return p
-    except (AssertionError, ValueError):
+    except (AssertionError, InvalidOperation):
         raise PydanticCustomError(
             "solution_points_parsing",
             "Input should be non-negative decimal or 'X'",
