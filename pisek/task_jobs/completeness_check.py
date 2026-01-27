@@ -55,22 +55,23 @@ class CompletenessCheck(TaskJobManager):
         return True
 
     def _check_dedicated_solutions(self) -> None:
-        """Checks that each test has it's own dedicated solution."""
-        if self._env.config.checks.solution_for_each_test:
-            for num, test in self._env.config.test_sections.items():
-                if num == 0:
-                    continue  # Samples
+        """Checks that tests have their own dedicated solutions."""
+        for num, test in self._env.config.test_sections.items():
+            if not test.checks_solution_for_this_test:
+                continue
+            if num == 0:
+                continue  # Samples
 
-                ok = False
-                for solution in self._env.solutions:
-                    if self._check_solution_succeeds_only_on(
-                        solution, [num] + test.all_predecessors
-                    ):
-                        ok = True
-                        break
+            ok = False
+            for solution in self._env.solutions:
+                if self._check_solution_succeeds_only_on(
+                    solution, [num] + test.all_predecessors
+                ):
+                    ok = True
+                    break
 
-                if not ok:
-                    self._warn(f"{test.name} has no dedicated solution")
+            if not ok:
+                self._warn(f"{test.name} has no dedicated solution")
 
     def _check_different_outputs(self) -> None:
         """Checks that for each test primary solution's outputs aren't the same."""

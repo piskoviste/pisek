@@ -420,6 +420,20 @@ Checks that the generator generates two different inputs for two different seeds
 
 If `on`, run the [`validator`](#validator) on inputs from this test.
 
+
+### checks.solution_for_this_test
+<!-- md:version 2.3.0 -->
+<!-- md:type bool -->
+<!-- md:default off -->
+
+Checks that a dedicated solution exists for this test (ignored for [`[test00]`](#test00)).
+
+A dedicated solution for a test is one that:
+
+- Gets full points on this test and its predecessors.
+- Doesn't get full points on all other tests.
+
+
 ### checks.different_outputs
 <!-- md:version 2.0.0 -->
 <!-- md:type bool -->
@@ -852,18 +866,6 @@ See also the `checks` keys for per-test checks:
 
 !!! danger
     Please be careful when disabling checks as it can transform task preparation into a minefield.
-
-### solution_for_each_test
-<!-- md:version 1.6.0 -->
-<!-- md:type bool -->
-<!-- md:default off -->
-
-Checks that a dedicated solution exists for each test (aside from samples).
-
-A dedicated solution for a test is one that:
-
-- Gets full points on this test and its predecessors.
-- Doesn't get full points on all other tests.
 
 ### no_unused_inputs
 <!-- md:version 1.4.0 -->
