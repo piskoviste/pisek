@@ -473,6 +473,7 @@ class TestSection(BaseEnv):
     all_predecessors: list[int] = []
     checks_generator_respects_seed: bool
     checks_validate: bool
+    checks_solution_for_this_test: bool
     checks_different_outputs: bool
     opendata_online_validity: int | Literal["unlimited"]
 
@@ -499,9 +500,10 @@ class TestSection(BaseEnv):
             "points",
             "in_globs",
             "predecessors",
-            "checks.validate",
-            "checks.different_outputs",
             "checks.generator_respects_seed",
+            "checks.validate",
+            "checks.solution_for_this_test",
+            "checks.different_outputs",
             "opendata.online_validity",
         ]
         args: dict[str, Any] = {
@@ -978,7 +980,6 @@ class ChecksSection(BaseEnv):
 
     _section: str = "checks"
 
-    solution_for_each_test: bool
     no_unused_inputs: bool
     all_inputs_in_last_test: bool
     one_input_in_each_nonsample_test: bool

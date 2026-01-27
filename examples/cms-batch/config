@@ -23,8 +23,9 @@ judge_type=cms-batch
 # CMS doesn't support normalization, so output can be anything
 out_format=binary
 
+checks.solution_for_this_test=on
+
 [checks]
-solution_for_each_test=on
 all_inputs_in_last_test=on
 
 [test01]
