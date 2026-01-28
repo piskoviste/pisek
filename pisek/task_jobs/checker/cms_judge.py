@@ -81,8 +81,6 @@ class RunCMSJudge(RunChecker):
             return RelativeSolutionResult(
                 verdict=verdict,
                 message=message,
-                solution_rr=self._solution_run_res,
-                checker_rr=judge_run_result,
                 relative_points=points,
             )
         else:
@@ -131,7 +129,7 @@ class RunCMSBatchJudge(RunCMSJudge, RunBatchChecker):
         if config.tests.judge_needs_out:
             self._access_file(self.correct_output)
 
-        result = self._run_program(
+        self.checker_rr = self._run_program(
             ProgramRole.judge,
             self.judge,
             args=[
@@ -151,5 +149,5 @@ class RunCMSBatchJudge(RunCMSJudge, RunBatchChecker):
             stderr=self.checker_log_file,
         )
 
-        sol_result = self._load_solution_result(result)
+        sol_result = self._load_solution_result(self.checker_rr)
         return sol_result

@@ -46,7 +46,9 @@ class FuzzingManager(TaskJobManager):
         self._inputs: dict[str, tuple[list[int], int | None]] = primary_sol["inputs"]
         testcases: list[tuple[InputPath, OutputPath]] = []
         for inp, res in primary_sol["results"].items():
-            testcases.append((inp, res.solution_rr.stdout_file.to_sanitized_output()))
+            testcases.append(
+                (inp, res.solution_run_result.stdout_file.to_sanitized_output())
+            )
 
         jt = self._env.config.checks.fuzzing_thoroughness
         CHOICE_JOBS: list[tuple[type[Invalidate], int]] = [

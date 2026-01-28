@@ -78,14 +78,12 @@ class Verdict(Enum):
         return max(len(v.name) for v in Verdict)
 
 
-@dataclass(init=False)
+@dataclass(init=False, frozen=True)
 class SolutionResult(ABC):
     """Class representing result of a solution on given input."""
 
     verdict: Verdict
     message: str | None
-    solution_rr: RunResult
-    checker_rr: RunResult | None
     log: str | None = None
     note: str | None = None
 
@@ -101,12 +99,10 @@ class SolutionResult(ABC):
         pass
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class RelativeSolutionResult(SolutionResult):
     verdict: Verdict
     message: Optional[str]
-    solution_rr: RunResult
-    checker_rr: Optional[RunResult]
     log: str | None = None
     note: str | None = None
     relative_points: Decimal
@@ -117,12 +113,10 @@ class RelativeSolutionResult(SolutionResult):
         )
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class AbsoluteSolutionResult(SolutionResult):
     verdict: Verdict
     message: Optional[str]
-    solution_rr: RunResult
-    checker_rr: Optional[RunResult]
     log: str | None = None
     note: str | None = None
     absolute_points: Decimal
@@ -170,3 +164,10 @@ TEST_SPEC: dict[str, tuple[Callable[[Verdict], bool], Callable[[Verdict], bool]]
     "!": (verdict_always, partial(specific_verdict, verdict=Verdict.error)),
     "T": (verdict_always, partial(specific_verdict, verdict=Verdict.timeout)),
 }
+
+
+@dataclass(frozen=True)
+class SolutionResultDetail:
+    solution_run_result: RunResult
+    checker_run_result: RunResult | None
+    result: SolutionResult

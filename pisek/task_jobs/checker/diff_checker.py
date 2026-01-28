@@ -69,16 +69,12 @@ class RunDiffChecker(RunBatchChecker):
             return RelativeSolutionResult(
                 verdict=Verdict.ok,
                 message="OK",
-                solution_rr=self._solution_run_res,
-                checker_rr=rr,
                 relative_points=Decimal(1),
             )
         elif diff.returncode == 1:
             return RelativeSolutionResult(
                 verdict=Verdict.wrong_answer,
                 message="Wrong answer",
-                solution_rr=self._solution_run_res,
-                checker_rr=rr,
                 relative_points=Decimal(0),
             )
         else:
