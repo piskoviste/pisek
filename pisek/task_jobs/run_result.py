@@ -12,16 +12,16 @@
 
 from dataclasses import dataclass
 from decimal import Decimal
-from enum import Enum
+from enum import auto, StrEnum
 from typing import Optional
 
 from pisek.utils.paths import TaskPath
 
 
-class RunResultKind(Enum):
-    OK = 0
-    RUNTIME_ERROR = 1
-    TIMEOUT = 2
+class RunResultKind(StrEnum):
+    OK = auto()
+    RUNTIME_ERROR = auto()
+    TIMEOUT = auto()
 
 
 @dataclass(frozen=True)

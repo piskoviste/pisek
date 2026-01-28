@@ -53,16 +53,12 @@ class RunJudgeLibChecker(RunBatchChecker):
             return RelativeSolutionResult(
                 verdict=Verdict.ok,
                 message="OK",
-                solution_rr=self._solution_run_res,
-                checker_rr=checker,
                 relative_points=Decimal(1),
             )
         elif checker.returncode == 43:
             return RelativeSolutionResult(
                 verdict=Verdict.wrong_answer,
                 message="Wrong answer",
-                solution_rr=self._solution_run_res,
-                checker_rr=checker,
                 relative_points=Decimal(0),
             )
         else:

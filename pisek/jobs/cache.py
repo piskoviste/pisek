@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from dataclasses import dataclass
 import hashlib
 import time
 from typing import Any, Iterable
@@ -33,14 +34,25 @@ SAVED_LAST_SIGNATURES = 5
 CACHE_SAVE_INTERVAL = 1  # seconds
 
 
+@dataclass
 class CacheEntry:
     """Object representing single cached job."""
+
+    name: str
+    signature: str
+    cached_attributes: dict[str, Any]
+    prerequisites_results: list[str]
+    envs: list[tuple[str, ...]]
+    files: list[str]
+    globs: list[str]
+    output: list[tuple[str, bool]]
+    logs: list[LogEntry]
 
     def __init__(
         self,
         name: str,
         signature: str,
-        result: Any,
+        cached_attributes: dict[str, Any],
         envs: Iterable[tuple[str, ...]],
         files: Iterable[str],
         globs: Iterable[str],
@@ -50,21 +62,13 @@ class CacheEntry:
     ) -> None:
         self.name = name
         self.signature = signature
-        self.result = result
+        self.cached_attributes = dict(sorted(cached_attributes.items()))
         self.prerequisites_results = list(sorted(prerequisites_results))
         self.envs = list(sorted(envs))
         self.files = list(sorted(files))
         self.globs = list(sorted(globs))
         self.output = output
         self.logs = logs
-
-    def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}(name={self.name}, signature={self.signature}, "
-            f"result={self.result}, prerequisites_results={self.prerequisites_results}, "
-            f"envs={self.envs}, files={self.files}, globs={self.globs}, output={self.output},"
-            f"logs={self.logs})"
-        )
 
 
 class Cache:

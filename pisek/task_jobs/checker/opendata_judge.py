@@ -164,8 +164,6 @@ class RunOpendataJudge(RunBatchChecker):
                 return RelativeSolutionResult(
                     verdict=Verdict.ok,
                     message=message,
-                    solution_rr=self._solution_run_res,
-                    checker_rr=self._result,
                     log=key_values.get("LOG"),
                     note=key_values.get("NOTE"),
                     relative_points=Decimal(1),
@@ -183,8 +181,6 @@ class RunOpendataJudge(RunBatchChecker):
             return AbsoluteSolutionResult(
                 verdict=verdict,
                 message=message,
-                solution_rr=self._solution_run_res,
-                checker_rr=self._result,
                 log=key_values.get("LOG"),
                 note=key_values.get("NOTE"),
                 absolute_points=points,
@@ -194,8 +190,6 @@ class RunOpendataJudge(RunBatchChecker):
             return RelativeSolutionResult(
                 verdict=Verdict.wrong_answer,
                 message=message,
-                solution_rr=self._solution_run_res,
-                checker_rr=self._result,
                 log=key_values.get("LOG"),
                 note=key_values.get("NOTE"),
                 relative_points=Decimal(0),

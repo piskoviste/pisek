@@ -16,7 +16,7 @@
 
 from decimal import Decimal
 import json
-from typing import Any, Optional
+from typing import Any
 
 from pisek.utils.paths import TaskPath
 from pisek.jobs.jobs import Job, PipelineItemFailure
@@ -28,6 +28,7 @@ from pisek.task_jobs.solution.solution_result import (
     SolutionResult,
     RelativeSolutionResult,
     AbsoluteSolutionResult,
+    SolutionResultDetail,
 )
 
 TESTING_LOG = "testing_log.json"
@@ -65,28 +66,29 @@ class CreateTestingLog(TaskJobManager):
             solution_results = log["solutions"][solution]["results"]
 
             inp: TaskPath
-            sol_res: Optional[SolutionResult]
-            for inp, sol_res in data["results"].items():
-                if sol_res is None:
+            detail: SolutionResultDetail | None
+            for inp, detail in data["results"].items():
+                if detail is None:
                     warn_skipped = True
                     continue
+
                 solution_results[inp.name] = {
-                    "time": sol_res.solution_rr.time,
-                    "wall_clock_time": sol_res.solution_rr.wall_time,
-                    "result": sol_res.verdict.name,
+                    "time": detail.solution_run_result.time,
+                    "wall_clock_time": detail.solution_run_result.wall_time,
+                    "result": detail.result.verdict.name,
                 }
 
-                if isinstance(sol_res, RelativeSolutionResult):
+                if isinstance(detail.result, RelativeSolutionResult):
                     solution_results[inp.name]["relative_points"] = str(
-                        sol_res.relative_points
+                        detail.result.relative_points
                     )
-                elif isinstance(sol_res, AbsoluteSolutionResult):
+                elif isinstance(detail.result, AbsoluteSolutionResult):
                     solution_results[inp.name]["absolute_points"] = str(
-                        sol_res.absolute_points
+                        detail.result.absolute_points
                     )
                 else:
                     raise ValueError(
-                        f"Unknown {SolutionResult.__name__} instance found: {type(sol_res)}"
+                        f"Unknown {SolutionResult.__name__} instance found: {type(detail.result)}"
                     )
 
         if len(solutions) == 0:

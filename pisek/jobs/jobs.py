@@ -194,6 +194,7 @@ class Job(PipelineItem, CaptureInitParams):
     _kwargs: dict[str, Any]
 
     def __init__(self, env: "Env", name: str) -> None:
+        self._cached_attributes: list[str] = ["result"]
         self._env = env
         self._accessed_envs: MutableSet[tuple[str, ...]] = set()
         self._accessed_globs: MutableSet[str] = set()
@@ -202,6 +203,10 @@ class Job(PipelineItem, CaptureInitParams):
         self.name = name
         self.started: float | None = None
         super().__init__(name)
+
+    def _register_cached_attribute(self, name: str) -> None:
+        """Registers attribute as cached so it's stored and loaded from cache."""
+        self._cached_attributes.append(name)
 
     def _log(self, level: LogLevel, message: str, bypass_cache: bool = False) -> None:
         super()._log(level, message)
@@ -269,7 +274,7 @@ class Job(PipelineItem, CaptureInitParams):
 
         return (sign.hexdigest(), None)
 
-    def _find_entry(self, cache: Cache) -> Optional[CacheEntry]:
+    def _find_entry(self, cache: Cache) -> CacheEntry | None:
         """Finds a corresponding CacheEntry for this Job."""
         for cache_entry in cache[self.name]:
             sign, err = self._signature(
@@ -283,7 +288,7 @@ class Job(PipelineItem, CaptureInitParams):
                 return cache_entry
         return None
 
-    def _export(self, result: Any, cache: Cache) -> CacheEntry:
+    def _export(self, cache: Cache) -> CacheEntry:
         """Export this job into CacheEntry."""
         sign, err = self._signature(
             self._accessed_envs,
@@ -299,7 +304,7 @@ class Job(PipelineItem, CaptureInitParams):
         return CacheEntry(
             self.name,
             sign,
-            result,
+            {c: getattr(self, c) for c in self._cached_attributes},
             self._accessed_envs,
             self._accessed_files,
             self._accessed_globs,
@@ -324,7 +329,10 @@ class Job(PipelineItem, CaptureInitParams):
             for log_entry in entry.logs:
                 log(log_entry)
             self._accessed_files = set(entry.files)
-            self.result = entry.result
+            for cached_attribute in self._cached_attributes:
+                setattr(
+                    self, cached_attribute, entry.cached_attributes[cached_attribute]
+                )
             self.state = State.succeeded
 
     def run(self, env: "Env") -> None:
@@ -346,7 +354,7 @@ class Job(PipelineItem, CaptureInitParams):
     def finalize(self, cache: Cache | None):
         if self.state == State.running:
             if cache is not None:
-                cache.add(self._export(self.result, cache))
+                cache.add(self._export(cache))
             self.state = State.succeeded
         return self.finish()
 

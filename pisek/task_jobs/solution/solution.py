@@ -14,14 +14,14 @@
 import os
 import tempfile
 import time
-from typing import Optional
+from typing import Optional, override
 
 from pisek.env.env import Env
 from pisek.jobs.jobs import State
 from pisek.utils.paths import IInputPath, IOutputPath
 from pisek.config.config_types import ProgramRole
 from pisek.config.task_config import RunSection
-from pisek.task_jobs.program import RunResult, ProgramsJob
+from pisek.task_jobs.program import ProgramsJob, RunResult, RunResultKind
 from pisek.task_jobs.solution.solution_result import Verdict, SolutionResult
 from pisek.task_jobs.checker.cms_judge import RunCMSJudge
 
@@ -41,6 +41,9 @@ class RunSolution(ProgramsJob):
         self._needed_by = 1
         self.solution = solution
         self.is_primary = is_primary
+
+        self.solution_rr: RunResult | None = None
+        self._register_cached_attribute("solution_rr")
 
     def require(self):
         self._needed_by += 1
@@ -80,14 +83,15 @@ class RunBatchSolution(RunSolution):
         self.output = output.to_raw(env.config.tests.out_format)
         self.log_file = input_.to_log("solution")
 
-    def _run(self) -> RunResult:
-        return self._run_program(
+    def _run(self) -> RunResultKind:
+        self.solution_rr = self._run_program(
             program_role=self._solution_type(),
             program=self.solution,
             stdin=self.input,
             stdout=self.output,
             stderr=self.log_file,
         )
+        return self.solution_rr.kind
 
 
 class RunInteractive(RunCMSJudge, RunSolution):
@@ -116,7 +120,8 @@ class RunInteractive(RunCMSJudge, RunSolution):
             **kwargs,
         )
 
-    def _get_solution_run_res(self) -> RunResult:
+    @override
+    def _get_solution_run_res_kind(self) -> RunResultKind:
         with tempfile.TemporaryDirectory() as fifo_dir:
             fifo_from_solution = os.path.join(fifo_dir, "solution-to-manager")
             fifo_to_solution = os.path.join(fifo_dir, "manager-to-solution")
@@ -156,13 +161,15 @@ class RunInteractive(RunCMSJudge, RunSolution):
 
             self._load_callback(close_pipes)
 
-            judge_res, sol_res = self._run_programs()
+            judge_res, self.solution_rr = self._run_programs()
             self._judge_run_result = judge_res
 
-            return sol_res
+            return self.solution_rr.kind
 
+    @override
     def _check(self) -> SolutionResult:
         return self._load_solution_result(self._judge_run_result)
 
+    @override
     def _checking_message(self) -> str:
         return f"solution {self.solution.name} on input {self.input.col(self._env)}"

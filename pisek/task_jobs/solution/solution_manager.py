@@ -34,7 +34,11 @@ from pisek.task_jobs.task_manager import TaskJobManager
 from pisek.task_jobs.tools import sanitize_job
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
 from pisek.task_jobs.generator.generator_manager import TestcaseInfoMixin
-from pisek.task_jobs.solution.solution_result import Verdict, SolutionResult
+from pisek.task_jobs.solution.solution_result import (
+    Verdict,
+    SolutionResult,
+    SolutionResultDetail,
+)
 from pisek.task_jobs.solution.solution import (
     RunSolution,
     RunBatchSolution,
@@ -78,10 +82,10 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
     ) -> None:
         super()._register_skipped_testcase(testcase_info, seed, test)
         input_path = testcase_info.input_path(seed, solution=self.solution_label)
+        self.tests[-1].solution_jobs[input_path] = self._sols[input_path]
+        self._sols[input_path].require()
         if self._env.config.test_sections[test].new_in_test(input_path.name):
-            self.tests[-1].new_run_jobs.append(self._sols[input_path])
             self.tests[-1].new_jobs.append(self._checkers[input_path])
-            self._sols[input_path].require()
         else:
             self.tests[-1].previous_jobs.append(self._checkers[input_path])
 
@@ -176,7 +180,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         self._sols[input_path] = run_sol
         self._checkers[input_path] = run_checker
         self.tests[-1].new_jobs.append(run_checker)
-        self.tests[-1].new_run_jobs.append(run_sol)
+        self.tests[-1].solution_jobs[input_path] = run_sol
 
     def _create_batch_jobs(
         self, testcase_info: TestcaseInfo, seed: Optional[int], test: int
@@ -312,9 +316,20 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
 
         result["results"] = {}
         result["checker_outs"] = set()
+
+        assert sorted(self._sols) == sorted(self._checkers)
         for inp, checker_job in self._checkers.items():
-            result["results"][inp] = checker_job.result
-            add_checker_out(checker_job)
+            solution_job = self._sols[inp]
+            if checker_job.result is None:
+                result["results"][inp] = None
+            else:
+                assert solution_job.solution_rr is not None
+                result["results"][inp] = SolutionResultDetail(
+                    solution_job.solution_rr,
+                    checker_job.checker_rr,
+                    checker_job.result,
+                )
+                add_checker_out(checker_job)
 
         for checker_job in self._static_out_checkers.values():
             add_checker_out(checker_job)
@@ -333,7 +348,7 @@ class TestJobGroup(TaskHelper):
         self.test = env.config.test_sections[num]
         self.expected_str = expected_str
 
-        self.new_run_jobs: list[RunSolution] = []
+        self.solution_jobs: dict[IInputPath, RunSolution] = {}
         self.previous_jobs: list[RunChecker] = []
         self.new_jobs: list[RunChecker] = []
 
@@ -355,8 +370,11 @@ class TestJobGroup(TaskHelper):
 
     @property
     def slowest_time(self) -> Decimal:
-        results = self._results(self.all_jobs)
-        times = map(lambda r: r.solution_rr.time, results)
+        times = (
+            run_solution.solution_rr.time
+            for run_solution in self.solution_jobs.values()
+            if run_solution.solution_rr is not None
+        )
         return max(times, default=Decimal(0))
 
     def _job_results(self, jobs: list[RunChecker]) -> list[Optional[SolutionResult]]:
@@ -490,9 +508,12 @@ class TestJobGroup(TaskHelper):
                 input_verdict = tab(
                     f"{job.input.name:<{max_inp_name_len}} {points}: {job.verdict_text()}"
                 )
+
+                sol_rr = self.solution_jobs[job.input].solution_rr
+                assert sol_rr is not None
                 text += right_aligned_text(
                     input_verdict,
-                    self._format_time(job.result.solution_rr.time),
+                    self._format_time(sol_rr.time),
                     offset=-2,
                 )
                 text += "\n"
@@ -518,7 +539,9 @@ class TestJobGroup(TaskHelper):
         if not ok:
             msg = f"{self.test.name} did not result as expected: '{self.expected_str}'"
             if breaker is not None:
-                msg += f"\n{tab(breaker.message())}"
+                sol_rr = self.solution_jobs[breaker.input].solution_rr
+                assert sol_rr is not None
+                msg += f"\n{tab(breaker.message(sol_rr))}"
             raise PipelineItemFailure(msg)
 
     def _as_expected(
@@ -540,5 +563,5 @@ class TestJobGroup(TaskHelper):
             return
 
         self._canceled = True
-        for job in self.new_run_jobs:
+        for job in self.solution_jobs.values():
             job.unrequire()
