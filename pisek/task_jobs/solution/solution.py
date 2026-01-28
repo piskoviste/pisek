@@ -41,7 +41,9 @@ class RunSolution(ProgramsJob):
         self._needed_by = 1
         self.solution = solution
         self.is_primary = is_primary
+
         self.solution_rr: RunResult | None = None
+        self._register_cached_attribute("solution_rr")
 
     def require(self):
         self._needed_by += 1

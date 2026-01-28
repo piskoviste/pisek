@@ -51,6 +51,7 @@ class RunChecker(ProgramsJob):
         self.expected_verdict = expected_verdict
 
         self.checker_rr: RunResult | None = None
+        self._register_cached_attribute("checker_rr")
         self.result: SolutionResult | None
 
     @abstractmethod
