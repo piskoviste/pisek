@@ -50,7 +50,7 @@ class FuzzingManager(TaskJobManager):
                 (inp, res.solution_run_result.stdout_file.to_sanitized_output())
             )
 
-        jt = self._env.config.checks.fuzzing_thoroughness
+        jt = self._env.config.tests.checks_fuzzing_thoroughness
         CHOICE_JOBS: list[tuple[type[Invalidate], int]] = [
             (Incomplete, jt // 10),
             (BlankLine, jt // 10),
@@ -64,14 +64,14 @@ class FuzzingManager(TaskJobManager):
         rand_gen = random.Random(4)  # Reproducibility!
         seeds = rand_gen.sample(range(0, 16**8), total_times)
 
-        if self._env.config.checks.fuzzing_thoroughness:
+        if self._env.config.tests.checks_fuzzing_thoroughness:
             for job, times in CHOICE_JOBS:
                 for _ in range(times):
                     seed = seeds.pop()
                     inp, out = rand_gen.choice(testcases)
                     jobs += self._fuzz_jobs(job, inp, out, seed, rand_gen)
 
-        if self._env.config.checks.judge_rejects_trailing_string:
+        if self._env.config.tests.checks_judge_rejects_trailing_string:
             for inp, out in testcases:
                 jobs += self._fuzz_jobs(
                     TrailingString,

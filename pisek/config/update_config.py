@@ -281,9 +281,9 @@ def update_to_v3(config: ConfigParser, task_path: str) -> None:
     maybe_rename_key(
         config,
         "checks",
-        "checks",
+        "tests",
         "all_inputs_in_last_subtask",
-        "all_inputs_in_last_test",
+        "checks.all_inputs_in_last_test",
     )
 
     for section in config.sections():

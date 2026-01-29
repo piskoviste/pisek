@@ -48,10 +48,19 @@ name=
 points=
 in_globs=
 predecessors=
+
+checks.no_unused_inputs=
+checks.all_inputs_in_last_test=
+checks.one_input_in_each_nonsample_test=
 checks.generator_respects_seed=
 checks.validate=
 checks.different_outputs=
 checks.solution_for_this_test=
+checks.fuzzing_thoroughness=
+#!if tests out_check==judge
+checks.judge_rejects_trailing_string=
+#!if tests out_check==judge
+
 opendata.online_validity=
 
 [test{num}]
@@ -412,14 +421,6 @@ extra_sources_java=
 [limits]
 input_max_size=
 output_max_size=
-
-[checks]
-no_unused_inputs=
-all_inputs_in_last_test=
-one_input_in_each_nonsample_test=
-fuzzing_thoroughness=
-judge_rejects_trailing_string=
-#!if tests out_check==judge
 
 [cms]
 name=

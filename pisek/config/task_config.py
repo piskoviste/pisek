@@ -123,8 +123,6 @@ class TaskConfig(BaseEnv):
 
     cms: "CMSSection"
 
-    checks: "ChecksSection"
-
     @computed_field  # type: ignore[misc]
     @cached_property
     def total_points(self) -> Decimal:
@@ -214,7 +212,6 @@ class TaskConfig(BaseEnv):
 
         args["limits"] = LimitsSection.load_dict(configs)
         args["cms"] = CMSSection.load_dict(configs)
-        args["checks"] = ChecksSection.load_dict(configs)
 
         args["solution_time_limit"] = configs.get_from_candidates(
             [("run_solution", "time_limit"), ("run", "time_limit")]
@@ -375,6 +372,12 @@ class TestsSection(BaseEnv):
     shuffle_mode: Maybe[ShuffleMode]
     shuffle_ignore_case: bool | None
 
+    checks_no_unused_inputs: bool
+    checks_all_inputs_in_last_test: bool
+    checks_one_input_in_each_nonsample_test: bool
+    checks_fuzzing_thoroughness: int
+    checks_judge_rejects_trailing_string: bool
+
     in_format: DataFormat
     out_format: DataFormat
 
@@ -388,6 +391,11 @@ class TestsSection(BaseEnv):
             "in_format",
             "out_format",
             "static_subdir",
+            "checks.no_unused_inputs",
+            "checks.all_inputs_in_last_test",
+            "checks.one_input_in_each_nonsample_test",
+            "checks.fuzzing_thoroughness",
+            "checks.judge_rejects_trailing_string",
         ]
         PROGRAM_TYPES = [
             ("gen_type", "in_gen"),
@@ -406,7 +414,7 @@ class TestsSection(BaseEnv):
             ((None, "shuffle"), "shuffle_ignore_case", "0"),
         ]
         args: dict[str, ConfigValue] = {
-            key: configs.get("tests", key) for key in GLOBAL_KEYS
+            key.replace(".", "_"): configs.get("tests", key) for key in GLOBAL_KEYS
         }
 
         for program_type, program in PROGRAM_TYPES:
@@ -973,25 +981,6 @@ class CMSSection(BaseEnv):
     def get_default_file_name(cls, name: str):
         name = re.sub(r"[^a-zA-Z0-9]+", "_", name)
         return f"{name}.%l"
-
-
-class ChecksSection(BaseEnv):
-    """Configuration of checks for pisek to run."""
-
-    _section: str = "checks"
-
-    no_unused_inputs: bool
-    all_inputs_in_last_test: bool
-    one_input_in_each_nonsample_test: bool
-    fuzzing_thoroughness: int
-    judge_rejects_trailing_string: bool
-
-    @classmethod
-    def load_dict(cls, configs: ConfigHierarchy) -> ConfigValuesDict:
-        args: dict[str, ConfigValue] = {
-            key: configs.get("checks", key) for key in cls.model_fields
-        }
-        return {"_section": configs.get("checks", None), **args}
 
 
 def _format_message(err: ErrorDetails) -> str:

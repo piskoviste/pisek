@@ -11,8 +11,8 @@ out_format=text
 # Otherwise use
 # out_format=binary
 
+# In opendata tasks, often one subtask = one testcase
+checks.one_input_in_each_nonsample_test=on
+
 [run_solution]
 subdir=solutions/
-
-[checks]
-one_input_in_each_nonsample_test=on
