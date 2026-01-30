@@ -128,8 +128,8 @@ class TaskPipeline(JobPipeline):
             and env.config.task.task_type != TaskType.interactive
             and env.config.tests.out_check == OutCheck.judge
             and (
-                env.config.checks.fuzzing_thoroughness > 0
-                or env.config.checks.judge_rejects_trailing_string
+                env.config.tests.checks_fuzzing_thoroughness > 0
+                or env.config.tests.checks_judge_rejects_trailing_string
             )
         ):
             named_pipeline.append(fuzz_judge := (FuzzingManager(), FUZZ_MAN_CODE))

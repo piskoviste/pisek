@@ -14,11 +14,9 @@ out_format=binary
 
 static_subdir=static_tests/
 
+# Turn on some checks disabled by default
+checks.all_inputs_in_last_test=on
 checks.solution_for_this_test=on
 
 [run_solution]
 subdir=solutions/
-
-[checks]
-# Turn on some checks disabled by default
-all_inputs_in_last_test=on

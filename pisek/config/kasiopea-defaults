@@ -48,12 +48,6 @@ subdir=
 input_max_size=50
 output_max_size=10
 
-[checks]
-no_unused_inputs=on
-all_inputs_in_last_test=off
-one_input_in_each_nonsample_test=on
-fuzzing_thoroughness=250
-
 [cms]
 name=
 title=@name

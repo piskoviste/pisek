@@ -23,10 +23,17 @@ static_subdir=.
 name=@auto
 in_globs=@ith
 predecessors=
+
+checks.no_unused_inputs=on
+checks.all_inputs_in_last_test=off
+checks.one_input_in_each_nonsample_test=off
 checks.generator_respects_seed=on
 checks.validate=on
 checks.different_outputs=on
 checks.solution_for_this_test=off
+checks.fuzzing_thoroughness=250
+checks.judge_rejects_trailing_string=on
+
 opendata.online_validity=300
 
 [test00]
@@ -71,13 +78,6 @@ extra_sources_java=
 [limits]
 input_max_size=50
 output_max_size=10
-
-[checks]
-no_unused_inputs=on
-all_inputs_in_last_test=off
-one_input_in_each_nonsample_test=off
-fuzzing_thoroughness=250
-judge_rejects_trailing_string=on
 
 [cms]
 name=
