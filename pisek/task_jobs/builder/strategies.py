@@ -190,7 +190,7 @@ class BuildStrategy(ABC):
         except FileNotFoundError:
             raise PipelineItemFailure(f"Missing tool: {tool}")
 
-    def _run_subprocess(self, args: list[str], program: str, **kwargs) -> str:
+    def _run_subprocess(self, args: list[str], **kwargs) -> str:
         self._check_tool(args[0])
 
         self._log("debug", "Building '" + " ".join(args) + "'", bypass_cache=True)
@@ -212,7 +212,7 @@ class BuildStrategy(ABC):
 
         if comp.returncode != 0:
             raise PipelineItemFailure(
-                f"Build of {program} failed.\n"
+                f"Build of {self._build_section.program_name} failed.\n"
                 + tab(self._env.colored("> " + " ".join(args), "magenta"))
                 + "\n"
                 + tab(self._env.colored(stderr, "yellow"))
@@ -323,8 +323,7 @@ class C(BuildBinary):
         self._run_subprocess(
             ["gcc", *self.sources, "-o", self.target, "-I."]
             + c_flags
-            + self._build_section.comp_args,
-            self._build_section.program_name,
+            + self._build_section.comp_args
         )
         return self.target
 
@@ -355,7 +354,6 @@ class Cpp(BuildBinary):
             ["g++", *self.sources, "-o", self.target, "-I."]
             + cpp_flags
             + self._build_section.comp_args,
-            self._build_section.program_name,
         )
         return self.target
 
@@ -370,8 +368,7 @@ class Pascal(BuildBinary):
     def _build(self) -> str:
         pas_flags = ["-gl", "-O3", "-Sg", "-o" + self.target, "-FE."]
         self._run_subprocess(
-            ["fpc"] + pas_flags + self.sources + self._build_section.comp_args,
-            self._build_section.program_name,
+            ["fpc"] + pas_flags + self.sources + self._build_section.comp_args
         )
         return self.target
 
@@ -395,7 +392,7 @@ class Java(BuildStrategy):
 
         entry_class = self._get_entrypoint(".java").rstrip(".java")
         arguments = ["javac", "-d", self.target] + self.sources
-        self._run_subprocess(arguments, self._build_section.program_name)
+        self._run_subprocess(arguments)
         self._check_no_run()
         run_path = os.path.join(self.target, "run")
         with self._open(run_path, "w") as run_file:
@@ -432,10 +429,7 @@ class Go(BuildBinary):
         else:
             args = ["go", "build", "-o", self.target, self.sources[0]]
 
-        self._run_subprocess(
-            args + self._build_section.comp_args,
-            self._build_section.program_name,
-        )
+        self._run_subprocess(args + self._build_section.comp_args)
         return self.target
 
 
@@ -459,7 +453,7 @@ class Make(BuildStrategy):
                     f"Makefile strategy: '{self._target_subdir}' already exists"
                 )
             self._makedirs(self._target_subdir)
-            self._run_subprocess(["make"], self._build_section.program_name)
+            self._run_subprocess(["make"])
             if not self._isdir(self._target_subdir):
                 raise PipelineItemFailure(
                     f"Makefile must create '{self._target_subdir}/' directory"
@@ -497,24 +491,10 @@ class Cargo(BuildStrategy):
                 ("never" if self._env.no_colors else "always"),
             ]
 
-            self._run_subprocess(
-                [
-                    "cargo",
-                    "check",
-                    *args,
-                ],
-                self._build_section.program_name,
-            )
+            self._run_subprocess(["cargo", "check", *args])
 
             output = self._run_subprocess(
-                [
-                    "cargo",
-                    "build",
-                    *args,
-                    "--message-format",
-                    "json",
-                ],
-                self._build_section.program_name,
+                ["cargo", "build", *args, "--message-format", "json"]
             )
 
         self._makedirs(self._artifact_dir)
