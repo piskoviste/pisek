@@ -294,6 +294,8 @@ class Python(BuildScript):
         else:
             self._check_no_run()
             self._symlink(self._build_script(entrypoint), "run")
+            # Make __pycache__ now so caching works properly
+            self._run_subprocess(["python3", "-m", "py_compile", *self.sources])
             return "."
 
 
