@@ -61,15 +61,15 @@ class Incomplete(Invalidate):
         )
 
     def _run(self):
-        with self._open_file(self.from_file) as f:
+        with self._open_file(self.from_file, "rb") as f:
             lines = f.readlines()
 
         rand_gen = Random(self.seed)
         if lines:
             lines = lines[: rand_gen.randint(0, len(lines) - 1)]
 
-        with self._open_file(self.to_file, "w") as f:
-            f.write("".join(lines))
+        with self._open_file(self.to_file, "wb") as f:
+            f.write(b"".join(lines))
 
 
 class BlankLine(Invalidate):
@@ -87,15 +87,15 @@ class BlankLine(Invalidate):
         )
 
     def _run(self):
-        with self._open_file(self.from_file) as f:
+        with self._open_file(self.from_file, "rb") as f:
             lines = f.readlines()
 
         rand_gen = Random(self.seed)
         if lines:
-            lines[self._select_line_index(rand_gen, len(lines))] = "\n"
+            lines[self._select_line_index(rand_gen, len(lines))] = b"\n"
 
-        with self._open_file(self.to_file, "w") as f:
-            f.write("".join(lines))
+        with self._open_file(self.to_file, "wb") as f:
+            f.write(b"".join(lines))
 
 
 class ChaosMonkey(Invalidate):
@@ -128,7 +128,7 @@ class ChaosMonkey(Invalidate):
             lambda _: randword(rand_gen.randint(1, 10), rand_gen),
         ]
         CHANGE_MODIFIERS = [
-            lambda x: f"{x} {x}",
+            lambda x: x + b" " + x,
             lambda _: "",
             lambda x: randword(len(x), rand_gen),
             lambda x: randword(len(x) + 1, rand_gen),
@@ -136,12 +136,12 @@ class ChaosMonkey(Invalidate):
         ]
 
         lines = []
-        with self._open_file(self.from_file) as f:
+        with self._open_file(self.from_file, "rb") as f:
             for line in f.readlines():
-                lines.append(line.rstrip("\n").split(" "))
+                lines.append(line.rstrip(b"\n").split(b" "))
 
         if len(lines) == 0:
-            lines = [[str(rand_gen.choice(CREATE_MODIFIERS)(""))]]
+            lines = [[str(rand_gen.choice(CREATE_MODIFIERS)(b"")).encode()]]
         else:
             line = self._select_line_index(rand_gen, len(lines))
             token = rand_gen.randint(0, len(lines[line]) - 1)
@@ -152,11 +152,13 @@ class ChaosMonkey(Invalidate):
                 modifiers += NUMBER_MODIFIERS
             except ValueError:
                 pass
-            lines[line][token] = str(rand_gen.choice(modifiers)(lines[line][token]))
+            lines[line][token] = str(
+                rand_gen.choice(modifiers)(lines[line][token])
+            ).encode()
 
-        with self._open_file(self.to_file, "w") as f:
+        with self._open_file(self.to_file, "wb") as f:
             for line in lines:
-                f.write(" ".join(line) + "\n")
+                f.write(b" ".join(line) + b"\n")
 
 
 class TrailingString(Invalidate):
@@ -172,15 +174,15 @@ class TrailingString(Invalidate):
         )
 
     def _run(self):
-        with self._open_file(self.from_file) as f:
+        with self._open_file(self.from_file, "rb") as f:
             lines = f.readlines()
 
         # TODO: Find some more permanent solution (#545)
-        if lines and not lines[-1].endswith("\n"):
-            lines[-1] += "\n"
+        if lines and not lines[-1].endswith(b"\n"):
+            lines[-1] += b"\n"
 
         rand_gen = Random(self.seed)
-        lines.append(randword(60, rand_gen) + "\n")
+        lines.append((randword(60, rand_gen) + "\n").encode())
 
-        with self._open_file(self.to_file, "w") as f:
-            f.write("".join(lines))
+        with self._open_file(self.to_file, "wb") as f:
+            f.write(b"".join(lines))
