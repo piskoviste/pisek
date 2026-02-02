@@ -525,6 +525,7 @@ class Cargo(BuildStrategy):
         return self._artifact_dir
 
 
+# When adding a strategy, add it also to docs/config-v3-documentation.md#strategy
 AUTO_STRATEGIES: list[type[BuildStrategy]] = [
     Python,
     Shell,
