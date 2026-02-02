@@ -829,6 +829,7 @@ Other strategies are:
 - `cpp`
 - `pascal`
 - `java`
+- `go`
 - `make`
 - `cargo`
 
