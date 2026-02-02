@@ -94,17 +94,22 @@ def _to_values(config_values_dict: ConfigValuesDict) -> ValuesDict:
 
 def _validate_program_name(key: str, value: str) -> str:
     error_key = key.lower().replace(" ", "_")
-    for banned_char in "[]":
-        if banned_char in value:
-            raise PydanticCustomError(
-                f"invalid_{error_key}",
-                f"{key.capitalize()} must not contain '{banned_char}'",
-            )
-    if value.startswith("_"):
+    if len(value) == 0:
         raise PydanticCustomError(
             f"invalid_{error_key}",
-            f"{key.capitalize()} must not start with '_'",
+            f"{key.capitalize()} must be non-empty",
         )
+    if not re.fullmatch("[A-Za-z]", value[0]):
+        raise PydanticCustomError(
+            f"invalid_{error_key}",
+            f"{key.capitalize()} must start with a letter",
+        )
+    for char in value:
+        if not re.fullmatch("[A-Za-z0-9/_-]", char):
+            raise PydanticCustomError(
+                f"invalid_{error_key}",
+                f"{key.capitalize()} must not contain '{char}'",
+            )
     return value
 
 
