@@ -210,7 +210,7 @@ class TaskConfig(BaseEnv):
 
         args["solutions"] = solutions = {}
         for section in section_names:
-            if m := re.fullmatch(r"solution_(.+)", section.value):
+            if m := re.fullmatch(r"solution_(.*)", section.value):
                 solutions[m[1]] = SolutionSection.load_dict(
                     ConfigValue(m[1], section.config, section.section, None), configs
                 )
@@ -455,6 +455,20 @@ class TestsSection(BaseEnv):
                 "no_validator_type",
                 "Missing validator_type",
                 {"validator": self.validator.name, "validator_type": ""},
+            )
+
+        if self.out_check == OutCheck.judge and self.out_judge is None:
+            raise PydanticCustomError(
+                "no_out_judge",
+                "Missing out_judge",
+                {"out_check": self.out_check.name, "out_judge": ""},
+            )
+
+        if self.out_judge is not None and self.judge_type is None:
+            raise PydanticCustomError(
+                "no_out_judge_type",
+                "Missing judge_type",
+                {"out_judge": self.out_judge.name, "judge_type": ""},
             )
 
         if (self.tokens_float_abs_error is not None) != (
