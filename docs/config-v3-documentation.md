@@ -53,8 +53,8 @@ These can be basic:
     - False values: `0`, `False`, `false`, `f`, `no`, `n`, `off`
 - enum — One of the values specified in the key description.
 - 'string literal'
-- run_ref — String referencing a [`[run]`](#run) section. Cannot start with an `_`. If this section doesn't exist, it will be auto-generated.
-- build_ref — String referencing a [`[build]`](#build) section. Cannot start with an `_`. If this section doesn't exist, it will be auto-generated.
+- run_ref — String referencing a [`[run]`](#run) section. Must match the regex `[A-Za-z][A-Za-z0-9/_-]*`.
+- build_ref — String referencing a [`[build]`](#build) section. Must match the regex `[A-Za-z][A-Za-z0-9/_-]*`.
 
 !!! info
     Through auto-expansion and auto-generation run_ref and build_ref values can interpreted as paths.
