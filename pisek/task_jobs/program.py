@@ -18,7 +18,7 @@ from contextlib import ExitStack
 from dataclasses import dataclass, field
 from decimal import Decimal
 import os
-from tempfile import NamedTemporaryFile, TemporaryDirectory, TemporaryFile
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import Optional, Any, Union, Callable
 import signal
 import subprocess
@@ -340,37 +340,3 @@ class ProgramsJob(TaskJob):
             env=env,
         )
         return self._run_programs()[0]
-
-    def _create_program_failure(self, msg: str, res: RunResult, **kwargs):
-        """Create PipelineItemFailure that nicely formats RunResult"""
-        return PipelineItemFailure(
-            f"{msg}\n{tab(self._format_run_result(res, **kwargs))}"
-        )
-
-    def _format_run_result(
-        self,
-        res: RunResult,
-        status: bool = True,
-        stdin: bool = True,
-        stdin_force_content: bool = False,
-        stdout: bool = True,
-        stdout_force_content: bool = False,
-        stderr: bool = True,
-        stderr_force_content: bool = False,
-        time: bool = False,
-    ):
-        """Formats RunResult."""
-        program_msg = ""
-        if status:
-            program_msg += f"status: {res.status}\n"
-
-        if stdin and isinstance(res.stdin_file, TaskPath):
-            program_msg += f"stdin: {self._quote_file_with_name(res.stdin_file, force_content=stdin_force_content)}"
-        if stdout and isinstance(res.stdout_file, TaskPath):
-            program_msg += f"stdout: {self._quote_file_with_name(res.stdout_file, force_content=stdout_force_content)}"
-        if stderr and isinstance(res.stderr_file, TaskPath):
-            program_msg += f"stderr: {self._quote_file_with_name(res.stderr_file, force_content=stderr_force_content, style='ht')}"
-        if time:
-            program_msg += f"time: {res.time}\n"
-
-        return program_msg.removesuffix("\n")
