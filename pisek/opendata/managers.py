@@ -1,11 +1,24 @@
+# pisek  - Tool for developing tasks for programming competitions.
+#
+# Copyright (c)   2026        Daniel Skýpala <skipy@kam.mff.cuni.cz>
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 from pisek.jobs.jobs import Job
-from pisek.jobs.status import StatusJobManager
+from pisek.task_jobs.task_manager import TaskJobManager
 from pisek.jobs.job_pipeline import JobPipeline
 from pisek.utils.paths import IInputPath, IOutputPath, IRawPath
 
 from pisek.task_jobs.tools import sanitize_job, sanitize_job_direct
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
 from pisek.task_jobs.data.data import LinkData
+from pisek.task_jobs.run_result import RunResultKind
 from pisek.task_jobs.generator.generator_manager import generate_input_direct
 from pisek.task_jobs.solution.solution import RunBatchSolution
 from pisek.task_jobs.checker.checker import checker_job
@@ -51,7 +64,7 @@ class OpendataPipeline(JobPipeline):
         return self._checker_man.judging_result
 
 
-class InputManager(StatusJobManager):
+class InputManager(TaskJobManager):
     def __init__(self, input_: IInputPath, info: TestcaseInfo, seed: int | None):
         super().__init__(f"Generate input {input_:n}")
         self._input = input_
@@ -78,7 +91,7 @@ class InputManager(StatusJobManager):
         return jobs
 
 
-class OutputManager(StatusJobManager):
+class OutputManager(TaskJobManager):
     def __init__(self, input_: IInputPath, info: TestcaseInfo, output: IOutputPath):
         self._input = input_
         self._info = info
@@ -86,6 +99,7 @@ class OutputManager(StatusJobManager):
         super().__init__(f"Generate output {self._output:n}")
 
     def _get_jobs(self) -> list[Job]:
+        self._solve: RunBatchSolution | None = None
         jobs: list[Job] = []
         if self._info.generation_mode == TestcaseGenerationMode.static:
             jobs.append(
@@ -94,24 +108,31 @@ class OutputManager(StatusJobManager):
                 )
             )
         else:
-            jobs.append(
-                solve := RunBatchSolution(
-                    self._env,
-                    self._env.config.solutions[self._env.config.primary_solution].run,
-                    True,
-                    self._input,
-                    self._output,
-                )
+            self._solve = RunBatchSolution(
+                self._env,
+                self._env.config.solutions[self._env.config.primary_solution].run,
+                True,
+                self._input,
+                self._output,
             )
+            jobs.append(self._solve)
             sanitize = sanitize_job(self._env, self._output, False)
             if sanitize is not None:
                 jobs.append(sanitize)
-                sanitize.add_prerequisite(solve, name="create-source")
+                sanitize.add_prerequisite(self._solve, name="create-source")
 
         return jobs
 
+    def _evaluate(self):
+        if self._solve is not None and self._solve.solution_rr.kind != RunResultKind.OK:
+            raise self._create_program_failure(
+                "Primary solution failed",
+                self._solve.solution_rr,
+                stderr_force_content=True,
+            )
 
-class CheckerManager(StatusJobManager):
+
+class CheckerManager(TaskJobManager):
     def __init__(
         self,
         input_: IInputPath,

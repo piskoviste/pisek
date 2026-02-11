@@ -4,7 +4,7 @@
 # Copyright (c)   2019 - 2022 Jiří Beneš <mail@jiribenes.com>
 # Copyright (c)   2020 - 2022 Michal Töpfer <michal.topfer@gmail.com>
 # Copyright (c)   2022        Jiří Kalvoda <jirikalvoda@kam.mff.cuni.cz>
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,7 +35,8 @@ from pisek.utils.terminal import MSG_LEN
 from pisek.env.env import Env
 from pisek.utils.paths import TaskPath
 from pisek.utils.text import tab
-from pisek.jobs.jobs import State, Job, PipelineItemAbort
+from pisek.jobs.jobs import State, Job, PipelineItemFailure, PipelineItemAbort
+from pisek.task_jobs.run_result import RunResult
 
 T = TypeVar("T")
 P = ParamSpec("P")
@@ -132,6 +133,63 @@ class TaskHelper:
         if dirname:
             os.makedirs(dirname, exist_ok=exist_ok)
 
+    @staticmethod
+    def _open_file(filename: TaskPath, mode="r", **kwargs):
+        if "w" in mode:
+            TaskHelper.make_filedirs(filename)
+        return open(filename.path, mode, **kwargs)
+
+    def _quote_file(self, file: TaskPath, **kwargs) -> str:
+        """Get shortened file contents"""
+        with self._open_file(file) as f:
+            return self._short_text(f.read().strip(), **kwargs)
+
+    def _quote_file_with_name(
+        self, file: TaskPath, force_content: bool = False, **kwargs
+    ) -> str:
+        """
+        Get file name (with its shortened content if env.file_contents or force_content)
+        for printing into terminal
+        """
+        if force_content or self._env.file_contents:
+            return f"{file.col(self._env)}\n{self._env.colored(tab(self._quote_file(file, **kwargs)), 'yellow')}\n"
+        else:
+            return f"{file.col(self._env)}\n"
+
+    def _create_program_failure(self, msg: str, res: RunResult, **kwargs):
+        """Create PipelineItemFailure that nicely formats RunResult"""
+        return PipelineItemFailure(
+            f"{msg}\n{tab(self._format_run_result(res, **kwargs))}"
+        )
+
+    def _format_run_result(
+        self,
+        res: RunResult,
+        status: bool = True,
+        stdin: bool = True,
+        stdin_force_content: bool = False,
+        stdout: bool = True,
+        stdout_force_content: bool = False,
+        stderr: bool = True,
+        stderr_force_content: bool = False,
+        time: bool = False,
+    ):
+        """Formats RunResult."""
+        program_msg = ""
+        if status:
+            program_msg += f"status: {res.status}\n"
+
+        if stdin and isinstance(res.stdin_file, TaskPath):
+            program_msg += f"stdin: {self._quote_file_with_name(res.stdin_file, force_content=stdin_force_content)}"
+        if stdout and isinstance(res.stdout_file, TaskPath):
+            program_msg += f"stdout: {self._quote_file_with_name(res.stdout_file, force_content=stdout_force_content)}"
+        if stderr and isinstance(res.stderr_file, TaskPath):
+            program_msg += f"stderr: {self._quote_file_with_name(res.stderr_file, force_content=stderr_force_content, style='ht')}"
+        if time:
+            program_msg += f"time: {res.time}\n"
+
+        return program_msg.removesuffix("\n")
+
 
 class TaskJob(Job, TaskHelper):
     """Job class that implements useful methods"""
@@ -160,9 +218,7 @@ class TaskJob(Job, TaskHelper):
 
     @_file_access(1)
     def _open_file(self, filename: TaskPath, mode="r", **kwargs):
-        if "w" in mode:
-            self.make_filedirs(filename)
-        return open(filename.path, mode, **kwargs)
+        return super()._open_file(filename, mode, **kwargs)
 
     @_file_access(1)
     def _read_file(self, filename: TaskPath) -> str:
@@ -258,23 +314,6 @@ class TaskJob(Job, TaskHelper):
     ) -> list[TaskPath]:
         self._accessed_globs |= set(os.path.join(directory.path, g) for g in globs)
         return super()._globs_to_files(globs, directory)
-
-    def _quote_file(self, file: TaskPath, **kwargs) -> str:
-        """Get shortened file contents"""
-        with self._open_file(file) as f:
-            return self._short_text(f.read().strip(), **kwargs)
-
-    def _quote_file_with_name(
-        self, file: TaskPath, force_content: bool = False, **kwargs
-    ) -> str:
-        """
-        Get file name (with its shortened content if env.file_contents or force_content)
-        for printing into terminal
-        """
-        if force_content or self._env.file_contents:
-            return f"{file.col(self._env)}\n{self._colored(tab(self._quote_file(file, **kwargs)), 'yellow')}\n"
-        else:
-            return f"{file.col(self._env)}\n"
 
     def _run_subprocess(self, *args, **kwargs) -> subprocess.Popen:
         process = subprocess.Popen(*args, **kwargs)
