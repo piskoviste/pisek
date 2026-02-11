@@ -33,6 +33,9 @@ tests=11T
 [solution_solve_0b]
 tests=1WW
 
+[solution_solve_crash]
+tests=!!!
+
 [run_solution]
 # Time limit (seconds) for solutions
 time_limit=0.2

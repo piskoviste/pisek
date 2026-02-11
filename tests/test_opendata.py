@@ -11,7 +11,7 @@ import os
 import shutil
 import unittest
 
-from util import TestFixture, modify_config
+from util import TestFixture, overwrite_file, modify_config
 
 from pisek.user_errors import UserError
 from pisek.task_jobs.data.testcase_info import TestcaseGenerationMode
@@ -231,6 +231,33 @@ class TestSumKasiopeaStaticTestcase(TestSumKasiopeaOpendataBuild):
             self.testcase.check(os.path.join(self.task_dir, self.contestant_path)),
             OpendataVerdict(Verdict.ok, "OK", Decimal(0), None, None),
         )
+
+
+class TestSumKasiopeaOpendataPrimarySolutionCrash(TestSumKasiopeaOpendataBuild):
+    def expecting_success(self) -> bool:
+        return False
+
+    def modify_task(self) -> None:
+        overwrite_file(self.task_dir, "solve.py", "solve_crash.py", "solve.py")
+
+    def run_opendata_test(self) -> None:
+        self.init_testcase("01", 1)
+        self.testcase.gen_output()
+
+
+class TestSumKasiopeaOpendataPrimarySolutionSlow(TestSumKasiopeaOpendataBuild):
+    def expecting_success(self) -> bool:
+        return False
+
+    def created_files(self) -> list[str]:
+        return super().created_files() + ["solve.cpp"]
+
+    def modify_task(self) -> None:
+        overwrite_file(self.task_dir, "solve.py", "solve_slow_4b.cpp", "solve.cpp")
+
+    def run_opendata_test(self) -> None:
+        self.init_testcase("02", 2)
+        self.testcase.gen_output()
 
 
 if __name__ == "__main__":
