@@ -17,11 +17,14 @@
 from contextlib import ExitStack
 from dataclasses import dataclass, field
 from decimal import Decimal
+from math import ceil
 import os
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import Optional, Any, Union, Callable
 import signal
 import subprocess
+from tempfile import NamedTemporaryFile, TemporaryDirectory
+from typing import assert_never, Optional, Any, Union, Callable
 
 from pisek.config.task_config import ProgramRole, RunSection
 from pisek.env.env import Env
@@ -195,16 +198,26 @@ class ProgramsJob(TaskJob):
     ) -> RunResult:
         assert process.stderr is not None  # To make mypy happy
 
+        if process.returncode not in (0, 1):
+            raise PipelineItemFailure(
+                f"Minibox error:\n{tab(process.stderr.read().decode())}"
+            )
+
         with open(meta_file) as f:
             meta_raw = f.read().strip().split("\n")
-
         meta = {key: val for key, val in map(lambda x: x.split(":", 1), meta_raw)}
+
+        time = Decimal(meta["time"])
+        wall_time = Decimal(meta["time-wall"])
+        memory = ceil(int(meta["max-rss"]) / 1024)
+
         if process.returncode == 0:
             return RunResult(
                 RunResultKind.OK,
                 0,
-                Decimal(meta["time"]),
-                Decimal(meta["time-wall"]),
+                time,
+                wall_time,
+                memory,
                 pool_item.stdin,
                 pool_item.stdout,
                 pool_item.stderr,
@@ -212,7 +225,6 @@ class ProgramsJob(TaskJob):
             )
 
         elif process.returncode == 1:
-            t, wt = Decimal(meta["time"]), Decimal(meta["time-wall"])
             if meta["status"] in ("RE", "SG"):
                 if meta["status"] == "RE":
                     return_code = int(meta["exitcode"])
@@ -223,8 +235,9 @@ class ProgramsJob(TaskJob):
                 return RunResult(
                     RunResultKind.RUNTIME_ERROR,
                     return_code,
-                    t,
-                    wt,
+                    time,
+                    wall_time,
+                    memory,
                     pool_item.stdin,
                     pool_item.stdout,
                     pool_item.stderr,
@@ -234,14 +247,15 @@ class ProgramsJob(TaskJob):
             elif meta["status"] == "TO":
                 time_limit = (
                     f"{pool_item.time_limit}s"
-                    if t > pool_item.time_limit
+                    if time > pool_item.time_limit
                     else f"{pool_item.clock_limit}ws"
                 )
                 return RunResult(
                     RunResultKind.TIMEOUT,
                     -1,
-                    t,
-                    wt,
+                    time,
+                    wall_time,
+                    memory,
                     pool_item.stdin,
                     pool_item.stdout,
                     pool_item.stderr,
@@ -249,10 +263,8 @@ class ProgramsJob(TaskJob):
                 )
             else:
                 raise RuntimeError(f"Unknown minibox status {meta['message']}.")
-        else:
-            raise PipelineItemFailure(
-                f"Minibox error:\n{tab(process.stderr.read().decode())}"
-            )
+
+        assert False
 
     def _run_programs(self) -> list[RunResult]:
         """Runs all programs in execution pool."""

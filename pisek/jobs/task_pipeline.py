@@ -43,6 +43,7 @@ from pisek.task_jobs.solution.ui_managers import EmptyLineManager, TestsHeaderMa
 from pisek.task_jobs.solution.solution_manager import SolutionManager
 from pisek.task_jobs.testing_log import CreateTestingLog
 from pisek.task_jobs.completeness_check import CompletenessCheck
+from pisek.task_jobs.resource_statistics import ResourceStatistics
 
 
 class TaskPipeline(JobPipeline):
@@ -142,6 +143,10 @@ class TaskPipeline(JobPipeline):
             completeness_check[0].add_prerequisite(*fuzz_judge)
             for solution in solutions:
                 completeness_check[0].add_prerequisite(*solution)
+        
+        named_pipeline.append(resource_statistics := (ResourceStatistics(), ""))
+        for solution in solutions:
+            resource_statistics[0].add_prerequisite(*solution)
 
         return named_pipeline
 
