@@ -99,13 +99,14 @@ def _validate_program_name(key: str, value: str) -> str:
             f"invalid_{error_key}",
             f"{key.capitalize()} must be non-empty",
         )
-    if not re.fullmatch("[A-Za-z]", value[0]):
+    if not re.fullmatch("[A-Za-z0-9]", value[0]):
         raise PydanticCustomError(
             f"invalid_{error_key}",
             f"{key.capitalize()} must start with a letter",
         )
     for char in value:
-        if not re.fullmatch("[A-Za-z0-9/_-]", char):
+        # Be careful, the hyphen has to be last
+        if not re.fullmatch("[A-Za-z0-9./_-]", char):
             raise PydanticCustomError(
                 f"invalid_{error_key}",
                 f"{key.capitalize()} must not contain '{char}'",
