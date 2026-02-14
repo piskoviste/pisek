@@ -57,14 +57,7 @@ class RunDiffChecker(RunBatchChecker):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
-        # XXX: Okay, it didn't finish in no time, but this is not meant to be used
-        rr = RunResult(
-            RunResultKind.OK,
-            diff.returncode,
-            Decimal(0),
-            Decimal(0),
-            status=f"Exited with return code {diff.returncode}",
-        )
+
         if diff.returncode == 0:
             return RelativeSolutionResult(
                 verdict=Verdict.ok,
