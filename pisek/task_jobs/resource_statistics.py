@@ -31,19 +31,23 @@ class ResourceStatistics(StatusJobManager):
         return []
 
     def get_status(self) -> str:
-        def format_stat[T: int | Decimal](
-            run_results: list[RunResult], limit: T, attr: str, dec_places: int = 0
+        def format_stat(
+            run_results: list[RunResult],
+            limit: Decimal | int,
+            attr: str,
+            dec_places: int = 0,
         ) -> list[str]:
-            value: T = max(map(lambda rr: getattr(rr, attr), run_results))
+            value = max(map(lambda rr: getattr(rr, attr), run_results))
             str_value = f"{value:.{dec_places}f}"
 
-            if value <= limit:  # type: ignore[operator]
-                if Decimal("0.9") * limit <= value:
-                    color = "red"
-                elif Decimal("0.5") * limit <= value:
-                    color = "yellow"
-                else:
-                    color = "green"
+            if limit == 0:
+                color = "green"
+            elif value < Decimal("0.5") * limit:
+                color = "green"
+            elif value < Decimal("0.9") * limit:
+                color = "yellow"
+            elif value <= limit:
+                color = "red"
             else:
                 color = "white"
 
