@@ -305,7 +305,7 @@ class TestcaseInfoMixin(JobManager):
             "input_dataset": list(sorted(self.input_dataset, key=lambda i: i.name)),
             "inputs": {i: (list(sorted(t)), s) for i, (t, s) in self.inputs.items()},
             "generator_run_results": [
-                j.run_result for j in self._gen_inputs_job.values()
+                j.run_result for j in self._jobs if isinstance(j, GenerateInput)
             ],
         }
 
