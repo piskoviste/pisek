@@ -1,7 +1,7 @@
 # pisek  - Tool for developing tasks for programming competitions.
 #
 # Copyright (c)   2024        Antonín Maloň  <git@tonyl.eu>
-# Copyright (c)   2024        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2024        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -11,14 +11,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Any, NoReturn, Optional
+from typing import NoReturn, Optional
 
 from pisek.utils.text import tab
 from pisek.env.env import Env
 from pisek.config.config_types import ProgramRole
 from pisek.config.task_config import RunSection
 from pisek.utils.paths import TaskPath, IInputPath, LogPath
-from pisek.task_jobs.program import ProgramsJob, RunResultKind
+from pisek.task_jobs.run_result import RunResultKind, RunResult
+from pisek.task_jobs.program import ProgramsJob
 from pisek.task_jobs.data.testcase_info import TestcaseInfo
 
 from .base_classes import GeneratorListInputs, GenerateInput, GeneratorTestDeterminism
@@ -90,6 +91,7 @@ class PisekV1GeneratorJob(ProgramsJob):
     seed: Optional[int]
     testcase_info: TestcaseInfo
     input_path: IInputPath
+    run_result: RunResult | None
 
     def __init__(self, env: Env, *, name: str = "", **kwargs) -> None:
         super().__init__(env=env, name=name, **kwargs)
@@ -103,18 +105,18 @@ class PisekV1GeneratorJob(ProgramsJob):
                 raise ValueError(f"seed {self.seed} is negative")
             args.append(f"{self.seed:016x}")
 
-        result = self._run_program(
+        self.run_result = self._run_program(
             ProgramRole.gen,
             self.generator,
             args=args,
             stdout=self.input_path.to_raw(self._env.config.tests.in_format),
             stderr=self.input_path.to_log(self.generator.name),
         )
-        if result.kind != RunResultKind.OK:
+        if self.run_result.kind != RunResultKind.OK:
             raise self._create_program_failure(
                 f"{self.generator.name} failed on input {self.testcase_info.name}"
                 + (":" if self.seed is None else f", seed {self.seed:016x}:"),
-                result,
+                self.run_result,
                 stderr_force_content=True,
             )
 
