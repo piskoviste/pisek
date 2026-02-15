@@ -4,7 +4,7 @@
 # Copyright (c)   2019 - 2022 Jiří Beneš <mail@jiribenes.com>
 # Copyright (c)   2020 - 2022 Michal Töpfer <michal.topfer@gmail.com>
 # Copyright (c)   2022        Jiří Kalvoda <jirikalvoda@kam.mff.cuni.cz>
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -304,6 +304,9 @@ class TestcaseInfoMixin(JobManager):
         return {
             "input_dataset": list(sorted(self.input_dataset, key=lambda i: i.name)),
             "inputs": {i: (list(sorted(t)), s) for i, (t, s) in self.inputs.items()},
+            "generator_run_results": [
+                j.run_result for j in self._gen_inputs_job.values()
+            ],
         }
 
 
