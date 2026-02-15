@@ -264,8 +264,7 @@ class ProgramsJob(TaskJob):
             else:
                 raise RuntimeError(f"Unknown minibox status {meta['message']}.")
 
-        else:
-            assert_never(process.returncode)
+        assert False
 
     def _run_programs(self) -> list[RunResult]:
         """Runs all programs in execution pool."""
