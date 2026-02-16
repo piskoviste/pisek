@@ -88,5 +88,10 @@ class TestCLIExport(TestCLI):
         return ["exported-config"]
 
 
+class TestCLIStats(TestCLI):
+    def args(self) -> list[list[str]]:
+        return [["test", "--stats"]]
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

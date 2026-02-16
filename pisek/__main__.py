@@ -4,7 +4,7 @@
 # Copyright (c)   2019 - 2022 Jiří Beneš <mail@jiribenes.com>
 # Copyright (c)   2020 - 2022 Michal Töpfer <michal.topfer@gmail.com>
 # Copyright (c)   2022        Jiří Kalvoda <jirikalvoda@kam.mff.cuni.cz>
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 # Copyright (c)   2024        Benjamin Swart <benjaminswart@email.cz>
 
 # This program is free software: you can redistribute it and/or modify
@@ -224,6 +224,11 @@ def _main(argv: list[str]) -> None:
         "-T",
         action="store_true",
         help="write test results to testing_log.json",
+    )
+    parser_test.add_argument(
+        "--stats",
+        action="store_true",
+        help="show resource usage statistics",
     )
 
     # ------------------------------- pisek clean -------------------------------

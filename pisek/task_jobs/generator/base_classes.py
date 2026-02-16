@@ -1,6 +1,6 @@
 # pisek  - Tool for developing tasks for programming competitions.
 #
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@ from pisek.jobs.jobs import PipelineItemFailure
 from pisek.config.task_config import RunSection
 from pisek.utils.paths import IInputPath
 from pisek.task_jobs.task_job import TaskJob
+from pisek.task_jobs.run_result import RunResult
 from pisek.task_jobs.program import ProgramsJob
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
 
@@ -59,6 +60,9 @@ class GenerateInput(ProgramsJob):
         super().__init__(
             env=env, name=name or f"Generate {self.input_path.name}", **kwargs
         )
+
+        self.run_result: RunResult | None = None
+        self._register_cached_attribute("run_result")
 
     def _run(self) -> None:
         self._gen()

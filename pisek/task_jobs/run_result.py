@@ -34,6 +34,7 @@ class RunResult:
     returncode: int
     time: Decimal
     wall_time: Decimal
+    memory: int
     stdin_file: TaskPath | int | None = None
     stdout_file: TaskPath | int | None = None
     stderr_file: Optional[TaskPath] = None

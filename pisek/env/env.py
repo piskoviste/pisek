@@ -4,7 +4,7 @@
 # Copyright (c)   2019 - 2022 Jiří Beneš <mail@jiribenes.com>
 # Copyright (c)   2020 - 2022 Michal Töpfer <michal.topfer@gmail.com>
 # Copyright (c)   2022        Jiří Kalvoda <jirikalvoda@kam.mff.cuni.cz>
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -53,6 +53,7 @@ class Env(BaseEnv):
         solutions: List of all solutions to be tested
         time_limit: Time limit for solutions in seconds. Overrides task config if specified. (Must be >= 0)
         all_inputs: Finish testing all inputs of a solution
+        stats: Whether to show resource usage statistics
         repeat: Test task REPEAT times giving generator different seeds. (Changes seeded inputs only.)
         iteration: Current iteration of task testing. (0 <= iteration < repeat)
     """
@@ -70,6 +71,7 @@ class Env(BaseEnv):
     solutions: list[str]
     time_limit: Decimal | None = Field(ge=0)
     all_inputs: bool
+    stats: bool
     repeat: int = Field(ge=1)
     iteration: int = Field(ge=0)
 
@@ -88,6 +90,7 @@ class Env(BaseEnv):
         testing_log: bool = False,
         solutions: Optional[list[str]] = None,
         time_limit: Decimal | None = None,
+        stats: bool = False,
         repeat: int = 1,
         iteration: int = 0,
         pisek_dir: Optional[str] = None,
@@ -131,6 +134,7 @@ class Env(BaseEnv):
             solutions=expanded_solutions,
             time_limit=time_limit,
             all_inputs=all_inputs,
+            stats=stats,
             repeat=repeat,
             iteration=iteration,
         )

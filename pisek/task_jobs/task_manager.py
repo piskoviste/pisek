@@ -1,6 +1,6 @@
 # pisek  - Tool for developing tasks for programming competitions.
 #
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@ from pisek.task_jobs.data.testcase_info import TestcaseInfo
 
 TOOLS_MAN_CODE = "tools"
 GENERATOR_MAN_CODE = "generator"
+GENERATE_INPUTS_MAN_CODE = "generate"
 INPUTS_MAN_CODE = "inputs"
 BUILD_MAN_CODE = "build"
 SOLUTION_MAN_CODE = "solution_"

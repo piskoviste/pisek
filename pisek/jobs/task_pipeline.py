@@ -4,7 +4,7 @@
 # Copyright (c)   2019 - 2022 Jiří Beneš <mail@jiribenes.com>
 # Copyright (c)   2020 - 2022 Michal Töpfer <michal.topfer@gmail.com>
 # Copyright (c)   2022        Jiří Kalvoda <jirikalvoda@kam.mff.cuni.cz>
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ from pisek.task_jobs.task_manager import (
     INPUTS_MAN_CODE,
     BUILD_MAN_CODE,
     GENERATOR_MAN_CODE,
+    GENERATE_INPUTS_MAN_CODE,
     FUZZ_MAN_CODE,
     SOLUTION_MAN_CODE,
 )
@@ -43,6 +44,7 @@ from pisek.task_jobs.solution.ui_managers import EmptyLineManager, TestsHeaderMa
 from pisek.task_jobs.solution.solution_manager import SolutionManager
 from pisek.task_jobs.testing_log import CreateTestingLog
 from pisek.task_jobs.completeness_check import CompletenessCheck
+from pisek.task_jobs.resource_statistics import ResourceStatistics
 
 
 class TaskPipeline(JobPipeline):
@@ -142,6 +144,14 @@ class TaskPipeline(JobPipeline):
             completeness_check[0].add_prerequisite(*fuzz_judge)
             for solution in solutions:
                 completeness_check[0].add_prerequisite(*solution)
+
+        if env.stats:
+            named_pipeline.append(resource_statistics := (ResourceStatistics(), ""))
+            resource_statistics[0].add_prerequisite(
+                self.input_generator, GENERATE_INPUTS_MAN_CODE
+            )
+            for solution in solutions:
+                resource_statistics[0].add_prerequisite(*solution)
 
         return named_pipeline
 
