@@ -96,13 +96,10 @@ tests=
 [solutions]
 run=
 primary=
+tests=
 points=
 points_min=
 points_max=
-tests=
-subtasks=
-stub=
-headers=
 
 # -------------- runs --------------
 
