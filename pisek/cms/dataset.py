@@ -99,7 +99,7 @@ def create_dataset(
         )
 
     for num, test in config.test_sections.items():
-        check_key(f"[test{num:02d}] points", test.points, lambda p: p % 1 == 0)
+        check_key(f"[test{num:02d}] points", test.max_points, lambda p: p % 1 == 0)
 
     score_params = get_group_score_parameters(config)
 
@@ -206,7 +206,7 @@ def add_judge(session: Session, files: FileCacher, env: Env, dataset: Dataset):
     assert config.tests.out_judge is not None
 
     run_section = config.tests.out_judge
-    judge_path = TaskPath(BUILD_DIR, run_section.exec.path).path
+    judge_path = run_section.executable.path
 
     if path.isdir(judge_path):
         run_path = path.join(judge_path, "run")

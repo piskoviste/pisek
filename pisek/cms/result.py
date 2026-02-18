@@ -170,6 +170,7 @@ def check_results(session: Session, env: Env, dataset: Dataset) -> None:
                     "W",
                     "T",
                     "!",
+                    "N",
                 ), f"Unknown expected result '{target}'"
 
                 target_name = "wrong"
