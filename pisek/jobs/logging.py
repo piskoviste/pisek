@@ -76,9 +76,11 @@ class _CallbackHandler(logging.Handler):
 
     def emit(self, record):
         try:
-            self.__callback(
-                LogEntry(record.scope, record.levelname.lower(), record.msg)
-            )
+            if hasattr(record, "scope"):
+                scope = record.scope
+            else:
+                scope = "unknown"
+            self.__callback(LogEntry(scope, record.levelname.lower(), record.msg))
         except Exception:
             self.handleError(record)
 
