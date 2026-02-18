@@ -164,6 +164,12 @@ def check_results(session: Session, env: Env, dataset: Dataset) -> None:
             elif target == "P":
                 target_name = "partially correct"
                 correct = 0.0 < fraction < 1.0
+            elif target == "S":
+                target_name = "superoptimal"
+                correct = fraction > 1.0
+            elif target == "A":
+                target_name = "correct or superoptimal"
+                correct = fraction >= 1.0
             else:
                 assert target in (
                     "0",
