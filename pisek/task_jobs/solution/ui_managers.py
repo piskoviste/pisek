@@ -1,4 +1,4 @@
-from pisek.jobs.jobs import Job
+from pisek.jobs.jobs import Job, State
 from pisek.task_jobs.task_manager import TaskJobManager
 from pisek.task_jobs.data.data_manager import TEST_SEED
 
@@ -22,6 +22,9 @@ class TestsHeaderManager(TaskJobManager):
         return []
 
     def get_status(self):
+        if self.state == State.cancelled:
+            return ""
+
         test_header = " " * len(self._solution_header_verbosity0("", 0, 0))
         for num, test in self._env.config.test_sections.items():
             length = sum(
