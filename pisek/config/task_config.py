@@ -4,7 +4,7 @@
 # Copyright (c)   2019 - 2022 Jiří Beneš <mail@jiribenes.com>
 # Copyright (c)   2020 - 2022 Michal Töpfer <michal.topfer@gmail.com>
 # Copyright (c)   2022        Jiří Kalvoda <jirikalvoda@kam.mff.cuni.cz>
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 # Copyright (c)   2024        Benjamin Swart <benjaminswart@email.cz>
 
 # This program is free software: you can redistribute it and/or modify
@@ -21,17 +21,17 @@ from functools import cached_property
 import os
 from pydantic_core import PydanticCustomError, ErrorDetails
 from pydantic import (
-    Field,
-    computed_field,
-    field_validator,
     BeforeValidator,
+    computed_field,
+    Field,
+    field_validator,
+    model_validator,
     TypeAdapter,
     ValidationError,
     ValidationInfo,
-    model_validator,
 )
 import re
-from typing import Any, Annotated, ClassVar, Literal, Mapping, Optional, TypeVar, Union
+from typing import Any, Annotated, ClassVar, Literal, Mapping, Optional, Union
 
 from pisek.utils.paths import TaskPath
 from pisek.utils.text import tab
@@ -57,8 +57,7 @@ from pisek.env.context import init_context
 from pisek.task_jobs.solution.solution_result import TEST_SPEC
 from pisek.task_jobs.builder.strategies import ALL_STRATEGIES
 
-T = TypeVar("T")
-Maybe = Annotated[T | None, BeforeValidator(lambda t: t or None)]
+type Maybe[T] = Annotated[T | None, BeforeValidator(lambda t: t or None)]
 
 
 MaybeInt = Annotated[
@@ -283,7 +282,7 @@ class TaskConfig(BaseEnv):
             assert isinstance(exp, int)
             return -exp
 
-        def check_precision(name: str, d: Decimal | T) -> None:
+        def check_precision[T](name: str, d: Decimal | T) -> None:
             if isinstance(d, Decimal):
                 if decimal_digits(d) > self.task.score_precision:
                     raise PydanticCustomError(
@@ -838,7 +837,7 @@ class BuildSection(BaseEnv):
     build_type: str
     program_name: str
 
-    sources: ListTaskPathFromStr
+    sources: ListTaskPathFromStr = Field(min_length=1)
     comp_args: ListStr
     extras: ListTaskPathFromStr
     strategy: BuildStrategyName
