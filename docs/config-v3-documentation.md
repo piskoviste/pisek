@@ -787,7 +787,7 @@ Build sections must have different `{program}` suffixes. For multi-role programs
 <!-- md:type list[path] -->
 <!-- md:default @auto -->
 
-List of sources needed for building the executable.
+Non-empty list of sources needed for building the executable.
 
 `@auto` expands to `{program}`.
 
