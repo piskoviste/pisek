@@ -160,9 +160,23 @@ class Build(TaskJob):
         workdir = os.path.join(BUILD_DIR, f"{WORKING_DIR_BASE}_{uuid.uuid4()}")
         os.makedirs(workdir)
 
-        for path in sources | extras:
+        for path in sources:
             # Intentionally avoiding caching results
             dst = os.path.join(workdir, path.name)
+            if self._is_dir(path):
+                shutil.copytree(path.path, dst)
+                self._access_dir(path)
+                subdir = dst
+            elif self._is_file(path):
+                shutil.copy(path.path, dst)
+                self._access_file(path)
+                subdir = workdir
+            else:
+                raise PipelineItemFailure(f"No path {path.col(self._env)} exists.")
+
+        for path in extras:
+            # Intentionally avoiding caching results
+            dst = os.path.join(subdir, path.name)
             if os.path.exists(dst):
                 raise PipelineItemFailure(
                     f"Duplicate filename / dirname: '{path.name}'"
