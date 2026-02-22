@@ -106,7 +106,7 @@ def _validate_program_name(key: str, value: str) -> str:
         )
     for char in value:
         # Be careful, the hyphen has to be last
-        if not re.fullmatch("[A-Za-z0-9./_-]", char):
+        if not re.fullmatch("[A-Za-z0-9./_^+-]", char):
             raise PydanticCustomError(
                 f"invalid_{error_key}",
                 f"{key.capitalize()} must not contain '{char}'",
