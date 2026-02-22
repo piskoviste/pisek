@@ -4,7 +4,7 @@
 # Copyright (c)   2019 - 2022 Jiří Beneš <mail@jiribenes.com>
 # Copyright (c)   2020 - 2022 Michal Töpfer <michal.topfer@gmail.com>
 # Copyright (c)   2022        Jiří Kalvoda <jirikalvoda@kam.mff.cuni.cz>
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -114,6 +114,9 @@ class TaskPath:
     @staticmethod
     def generated_path(*path: str) -> "TaskPath":
         return TaskPath.data_path(GENERATED_SUBDIR, *path)
+
+    def is_prefix(self, task_path: "TaskPath") -> bool:
+        return os.path.commonpath([self.abspath, task_path.abspath]) == self.abspath
 
 
 # ----- interfaces -----
