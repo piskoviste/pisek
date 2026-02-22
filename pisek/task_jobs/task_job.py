@@ -32,9 +32,11 @@ from typing import (
 import subprocess
 from pisek.utils.text import pad, pad_left
 from pisek.utils.terminal import MSG_LEN
+from pisek.utils.util import globs_to_files
 from pisek.env.env import Env
 from pisek.utils.paths import TaskPath
 from pisek.utils.text import tab
+from pisek.jobs.cache import GlobsToFilesArgs
 from pisek.jobs.jobs import State, Job, PipelineItemFailure, PipelineItemAbort
 from pisek.task_jobs.run_result import RunResult
 
@@ -46,16 +48,10 @@ class TaskHelper:
     _env: Env
 
     def _globs_to_files(
-        self, globs: Iterable[str], directory: TaskPath
+        self, globs: Iterable[str], directory: TaskPath, exclude: Iterable[str] = ()
     ) -> list[TaskPath]:
         """Get files in given directory that match any glob."""
-        files_per_glob = [
-            glob.glob(g, root_dir=directory.path, recursive=True, include_hidden=True)
-            for g in globs
-        ]
-        files: list[str] = sum(files_per_glob, start=[])
-        files = list(sorted(set(files)))
-        return [TaskPath.from_abspath(directory.path, file) for file in files]
+        return globs_to_files(globs, directory, exclude)
 
     def _format_points(self, points: Decimal | int | None) -> str:
         precision = self._env.config.task.score_precision
@@ -194,8 +190,8 @@ class TaskHelper:
 class TaskJob(Job, TaskHelper):
     """Job class that implements useful methods"""
 
-    def _access_dir(self, dirname: TaskPath) -> None:
-        for file in self._globs_to_files(["**"], dirname):
+    def _access_dir(self, dirname: TaskPath, exclude_paths: Iterable[str] = ()) -> None:
+        for file in self._globs_to_files(["**"], dirname, exclude=exclude_paths):
             self._access_file(file)
 
     @staticmethod
@@ -310,10 +306,10 @@ class TaskJob(Job, TaskHelper):
         return filecmp.cmp(file_a.path, file_b.path, shallow=False)
 
     def _globs_to_files(
-        self, globs: Iterable[str], directory: TaskPath
+        self, globs: Iterable[str], directory: TaskPath, exclude: Iterable[str] = ()
     ) -> list[TaskPath]:
-        self._accessed_globs |= set(os.path.join(directory.path, g) for g in globs)
-        return super()._globs_to_files(globs, directory)
+        self._accessed_globs.add(GlobsToFilesArgs(globs, directory, exclude))
+        return super()._globs_to_files(globs, directory, exclude)
 
     def _run_subprocess(self, *args, **kwargs) -> subprocess.Popen:
         process = subprocess.Popen(*args, **kwargs)

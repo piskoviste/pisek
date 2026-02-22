@@ -4,7 +4,7 @@
 # Copyright (c)   2019 - 2022 Jiří Beneš <mail@jiribenes.com>
 # Copyright (c)   2020 - 2022 Michal Töpfer <michal.topfer@gmail.com>
 # Copyright (c)   2022        Jiří Kalvoda <jirikalvoda@kam.mff.cuni.cz>
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ import pickle
 from pisek.version import __version__
 from pisek.utils.text import eprint
 from pisek.utils.colors import color_settings
-from pisek.utils.paths import INTERNALS_DIR
+from pisek.utils.paths import INTERNALS_DIR, TaskPath
 from pisek.jobs.logging import LogEntry
 
 CACHE_VERSION_FILE = os.path.join(INTERNALS_DIR, "cache_version")
@@ -32,6 +32,21 @@ CACHE_CONTENT_FILE = os.path.join(INTERNALS_DIR, "cache")
 HASH_INDEX_FILE = os.path.join(INTERNALS_DIR, "hash_index")
 SAVED_LAST_SIGNATURES = 5
 CACHE_SAVE_INTERVAL = 1  # seconds
+
+
+@dataclass(frozen=True, order=True)
+class GlobsToFilesArgs:
+    globs: tuple[str, ...]
+    directory: TaskPath
+    exclude: tuple[str, ...]
+
+    def __init__(
+        self, globs: Iterable[str], directory: TaskPath, exclude: Iterable[str]
+    ) -> None:
+        # Sigh, frozen dataclasses
+        object.__setattr__(self, "globs", tuple(sorted(globs)))
+        object.__setattr__(self, "directory", directory)
+        object.__setattr__(self, "exclude", tuple(sorted(exclude)))
 
 
 @dataclass
@@ -44,7 +59,7 @@ class CacheEntry:
     prerequisites_results: list[str]
     envs: list[tuple[str, ...]]
     files: list[str]
-    globs: list[str]
+    globs: list[GlobsToFilesArgs]
     output: list[tuple[str, bool]]
     logs: list[LogEntry]
 
@@ -55,7 +70,7 @@ class CacheEntry:
         cached_attributes: dict[str, Any],
         envs: Iterable[tuple[str, ...]],
         files: Iterable[str],
-        globs: Iterable[str],
+        globs: Iterable[GlobsToFilesArgs],
         prerequisites_results: Iterable[str],
         output: list[tuple[str, bool]],
         logs: list[LogEntry],
@@ -63,10 +78,10 @@ class CacheEntry:
         self.name = name
         self.signature = signature
         self.cached_attributes = dict(sorted(cached_attributes.items()))
-        self.prerequisites_results = list(sorted(prerequisites_results))
-        self.envs = list(sorted(envs))
-        self.files = list(sorted(files))
-        self.globs = list(sorted(globs))
+        self.prerequisites_results = sorted(prerequisites_results)
+        self.envs = sorted(envs)
+        self.files = sorted(files)
+        self.globs = sorted(globs)
         self.output = output
         self.logs = logs
 

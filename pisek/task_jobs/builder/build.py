@@ -1,6 +1,6 @@
 # pisek  - Tool for developing tasks for programming competitions.
 #
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 # Copyright (c)   2024        Benjamin Swart <benjaminswart@email.cz>
 
 # This program is free software: you can redistribute it and/or modify
@@ -165,7 +165,12 @@ class Build(TaskJob):
             dst = os.path.join(workdir, path.name)
             if self._is_dir(path):
                 shutil.copytree(path.path, dst)
-                self._access_dir(path)
+                for exclude_path in strategy_cls.exclude_paths:
+                    fullpath = os.path.join(dst, exclude_path)
+                    if os.path.exists(fullpath):
+                        shutil.rmtree(fullpath)
+
+                self._access_dir(path, exclude_paths=strategy_cls.exclude_paths)
                 subdir = dst
             elif self._is_file(path):
                 shutil.copy(path.path, dst)

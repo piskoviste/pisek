@@ -1,6 +1,6 @@
 # pisek  - Tool for developing tasks for programming competitions.
 #
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 # Copyright (c)   2024        Benjamin Swart <benjaminswart@email.cz>
 # Copyright (c)   2025        Antonín Maloň <git@tonyl.eu>
 
@@ -61,6 +61,7 @@ class BuildStrategy(ABC):
     name: BuildStrategyName
     extra_sources: Optional[str] = None
     extra_nonsources: Optional[str] = None
+    exclude_paths: list[str] = []
 
     def __init__(
         self,
@@ -467,6 +468,7 @@ class Cargo(BuildStrategy):
     name = BuildStrategyName.cargo
     _target_subdir: str = "target"
     _artifact_dir: str = ".pisek-executables"
+    exclude_paths: list[str] = [_target_subdir]
 
     @classmethod
     def applicable_on_files(cls, build: "BuildSection", sources: list[str]) -> bool:
@@ -479,10 +481,7 @@ class Cargo(BuildStrategy):
     def _build(self) -> str:
         directory = self._listdir()[0]
         with FakeChangedCWD(self, directory):
-            if self._exists(self._target_subdir):
-                raise PipelineItemFailure(
-                    f"Cargo strategy: '{self._target_subdir}' already exists"
-                )
+            assert not self._exists(self._target_subdir)
 
             args = [
                 "--release",

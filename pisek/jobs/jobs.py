@@ -4,7 +4,7 @@
 # Copyright (c)   2019 - 2022 Jiří Beneš <mail@jiribenes.com>
 # Copyright (c)   2020 - 2022 Michal Töpfer <michal.topfer@gmail.com>
 # Copyright (c)   2022        Jiří Kalvoda <jirikalvoda@kam.mff.cuni.cz>
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ from typing import (
     AbstractSet,
     Any,
     Callable,
+    Iterable,
     MutableSet,
     NamedTuple,
     Optional,
@@ -35,8 +36,9 @@ from typing import (
 )
 
 from pisek.jobs.logging import log, LogLevel, LogEntry
-from pisek.jobs.cache import Cache, CacheEntry
+from pisek.jobs.cache import Cache, CacheEntry, GlobsToFilesArgs
 from pisek.utils.paths import TaskPath
+from pisek.utils.util import globs_to_files
 
 if TYPE_CHECKING:
     from pisek.env.env import Env
@@ -197,7 +199,7 @@ class Job(PipelineItem, CaptureInitParams):
         self._cached_attributes: list[str] = ["result"]
         self._env = env
         self._accessed_envs: MutableSet[tuple[str, ...]] = set()
-        self._accessed_globs: MutableSet[str] = set()
+        self._accessed_globs: MutableSet[GlobsToFilesArgs] = set()
         self._accessed_files: MutableSet[str] = set()
         self._logs: list[LogEntry] = []
         self.name = name
@@ -225,24 +227,24 @@ class Job(PipelineItem, CaptureInitParams):
         self,
         envs: AbstractSet[tuple[str, ...]],
         paths: AbstractSet[str],
-        globs: AbstractSet[str],
+        globs: AbstractSet[GlobsToFilesArgs],
         results: dict[str, Any],
         cache: Cache,
-    ) -> tuple[Optional[str], Optional[str]]:
+    ) -> tuple[str | None, str | None]:
         """Compute a signature (i.e. hash) of given envs, files and prerequisites results."""
         sign = hashlib.sha256()
-        sign.update(f"{self.__class__.__name__}\n".encode())
+        sign.update(f"{self.__class__.__name__}\00".encode())
         for i, arg in enumerate(self._args):
-            sign.update(f"{i}={arg}\n".encode())
+            sign.update(f"{i}={arg}\00".encode())
         for key, val in self._kwargs.items():
-            sign.update(f"{key}={val}\n".encode())
+            sign.update(f"{key}={val}\00".encode())
 
         for env_key in sorted(envs):
             try:
                 value = self._env.get_compound(env_key)
             except (AttributeError, TypeError, ValueError, KeyError):
                 return (None, f"Key nonexistent: {env_key}")
-            sign.update(f"{env_key}={value}\n".encode())
+            sign.update(f"{env_key}={value}\00".encode())
 
         for path in sorted(paths):
             while os.path.islink(path):
@@ -251,17 +253,15 @@ class Job(PipelineItem, CaptureInitParams):
                 )
 
             if os.path.isfile(path):
-                sign.update(f"{path}={cache.file_hash(path)}\n".encode())
+                sign.update(f"{path}={cache.file_hash(path)}\00".encode())
             elif os.path.isdir(path):
-                sign.update(f"{path} is directory\n".encode())
+                sign.update(f"{path} is directory\00".encode())
             else:
                 return (None, f"File nonexistent: {path}")
 
-        for g in sorted(globs):
-            glob_sign = f"{g} -> " + " ".join(
-                glob.glob(g, recursive=True, include_hidden=True)
-            )
-            sign.update(glob_sign.encode())
+        for args in sorted(globs):
+            files = globs_to_files(args.globs, args.directory, args.exclude)
+            sign.update(f"{args.globs}\n{args.exclude}\n{files}\00".encode())
 
         for name, result in sorted(results.items()):
             # Trying to prevent hashing object.__str__ which is non-deterministic

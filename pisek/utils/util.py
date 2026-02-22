@@ -14,10 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import glob
 import os
 import shutil
+from typing import Iterable
 
-from pisek.utils.paths import BUILD_DIR, TESTS_DIR, INTERNALS_DIR
+from pisek.utils.paths import BUILD_DIR, TESTS_DIR, INTERNALS_DIR, TaskPath
 
 
 class ChangedCWD:
@@ -48,3 +50,18 @@ def clean_non_relevant_files(accessed_files: set[str]) -> None:
             path = os.path.join(root, file)
             if root in accessed_dirs and path not in accessed_files:
                 os.remove(path)
+
+
+def globs_to_files(
+    globs: Iterable[str], directory: TaskPath, exclude: Iterable[str] = ()
+) -> list[TaskPath]:
+    files_per_glob = [
+        glob.glob(g, root_dir=directory.path, recursive=True, include_hidden=True)
+        for g in globs
+    ]
+    files = sorted(set(sum(files_per_glob, start=[])))
+    task_paths = [TaskPath.from_abspath(directory.path, file) for file in files]
+    exclude_tp = [TaskPath.from_abspath(directory.path, path) for path in exclude]
+    return sorted(
+        tp for tp in task_paths if all(not exc_p.is_prefix(tp) for exc_p in exclude_tp)
+    )
