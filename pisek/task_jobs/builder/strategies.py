@@ -14,10 +14,11 @@
 
 from abc import ABC, abstractmethod
 import inspect
-import subprocess
-import os
 import json
+import os
 import shutil
+import subprocess
+from tempfile import NamedTemporaryFile, _TemporaryFileWrapper
 from typing import Any, IO, Optional, Protocol, TYPE_CHECKING
 
 from pisek.utils.text import tab
@@ -47,7 +48,12 @@ class FakeChangedCWD:
 
 class RunPopen(Protocol):
     def __call__(
-        self, args: list[str], stdout: int, stderr: int, text: bool, cwd: str | None
+        self,
+        args: list[str],
+        stdout: _TemporaryFileWrapper,
+        stderr: _TemporaryFileWrapper,
+        text: bool,
+        cwd: str | None,
     ) -> subprocess.Popen: ...
 
 
@@ -195,30 +201,34 @@ class BuildStrategy(ABC):
         self._check_tool(args[0])
 
         self._log("debug", "Building '" + " ".join(args) + "'", bypass_cache=True)
-        comp = self._run_popen(
-            args,
-            **kwargs,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            cwd=self.workdir,
-        )
+        with NamedTemporaryFile(prefix="pisek_", delete_on_close=False) as stdout_file:
+            with NamedTemporaryFile(
+                prefix="pisek_", delete_on_close=False
+            ) as stderr_file:
+                comp = self._run_popen(
+                    args,
+                    **kwargs,
+                    stdout=stdout_file,
+                    stderr=stderr_file,
+                    text=True,
+                    cwd=self.workdir,
+                )
 
-        assert comp.stderr is not None
-        assert comp.stdout is not None
+                stdout_file.seek(0)
+                stderr_file.seek(0)
 
-        stderr: str = comp.stderr.read()
-        if stderr.strip():
-            self._print_stderr(stderr)
+                stderr: str = stderr_file.read().decode()
+                if stderr.strip():
+                    self._print_stderr(stderr)
 
-        if comp.returncode != 0:
-            raise PipelineItemFailure(
-                f"Build of {self._build_section.program_name} failed.\n"
-                + tab(self._env.colored("> " + " ".join(args), "magenta"))
-                + "\n"
-                + tab(self._env.colored(stderr, "yellow"))
-            )
-        return comp.stdout.read()
+                if comp.returncode != 0:
+                    raise PipelineItemFailure(
+                        f"Build of {self._build_section.program_name} failed.\n"
+                        + tab(self._env.colored("> " + " ".join(args), "magenta"))
+                        + "\n"
+                        + tab(self._env.colored(stderr, "yellow"))
+                    )
+                return stdout_file.read().decode()
 
     def _get_entrypoint(self, file_extension: str) -> str:
         assert file_extension[0] == "."
