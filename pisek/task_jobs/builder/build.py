@@ -11,6 +11,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import glob
 import os
 import shutil
 from typing import Optional
@@ -99,10 +100,12 @@ class Build(TaskJob):
         super().__init__(env=env, name=f"Build {build_section.program_name}", **kwargs)
         self.build_section = build_section
 
-    def _resolve_program(self, glob: TaskPath) -> set[TaskPath]:
-        result = self._globs_to_files([f"{glob.path}.*", glob.path], TaskPath("."))
+    def _resolve_program(self, program: TaskPath) -> set[TaskPath]:
+        result = self._globs_to_files(
+            [f"{glob.escape(program.path)}.*", glob.escape(program.path)], TaskPath(".")
+        )
         if len(result) == 0:
-            raise PipelineItemFailure(f"No paths found for {glob.col(self._env)}.")
+            raise PipelineItemFailure(f"No paths found for {program.col(self._env)}.")
         return set(result)
 
     def _check_valid_sources(self, sources: set[TaskPath]) -> None:
