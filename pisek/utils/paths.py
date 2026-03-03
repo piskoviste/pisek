@@ -16,6 +16,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from glob import escape
 import os
 from typing import TYPE_CHECKING
 from pisek.config.config_types import DataFormat
@@ -57,6 +58,10 @@ class TaskPath:
     @property
     def abspath(self) -> str:
         return os.path.abspath(self.path)
+
+    @property
+    def escaped_path(self) -> str:
+        return escape(self.path)
 
     def __format__(self, __format_spec: str) -> str:
         match __format_spec:

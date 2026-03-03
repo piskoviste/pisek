@@ -100,7 +100,9 @@ class Build(TaskJob):
         self.build_section = build_section
 
     def _resolve_program(self, glob: TaskPath) -> set[TaskPath]:
-        result = self._globs_to_files([f"{glob.path}.*", glob.path], TaskPath("."))
+        result = self._globs_to_files(
+            [f"{glob.escaped_path}.*", glob.escaped_path], TaskPath(".")
+        )
         if len(result) == 0:
             raise PipelineItemFailure(f"No paths found for {glob.col(self._env)}.")
         return set(result)
