@@ -100,13 +100,18 @@ class Build(TaskJob):
         super().__init__(env=env, name=f"Build {build_section.program_name}", **kwargs)
         self.build_section = build_section
 
-    def _resolve_program(self, program: TaskPath) -> set[TaskPath]:
+    def _resolve_program(self, program: TaskPath) -> TaskPath:
         result = self._globs_to_files(
             [f"{glob.escape(program.path)}.*", glob.escape(program.path)], TaskPath(".")
         )
         if len(result) == 0:
             raise PipelineItemFailure(f"No paths found for {program.col(self._env)}.")
-        return set(result)
+        if len(result) > 1:
+            raise PipelineItemFailure(
+                f"Multiple paths found for {program.col(self._env)}:\n"
+                + "\n".join(tab(path.col(self._env)) for path in result)
+            )
+        return result[0]
 
     def _check_valid_sources(self, sources: set[TaskPath]) -> None:
         """Checks that sources are one directory or multiple files."""
@@ -129,7 +134,7 @@ class Build(TaskJob):
         new_sources = set()
         if strategy.extra_sources is not None:
             for part in getattr(self.build_section, strategy.extra_sources):
-                new_sources |= self._resolve_program(part)
+                new_sources.add(self._resolve_program(part))
         return sources | new_sources
 
     def _strategy_extras(
@@ -144,7 +149,7 @@ class Build(TaskJob):
         sources: set[TaskPath] = set()
         extras: set[TaskPath] = set(self.build_section.extras)
         for part in self.build_section.sources:
-            sources |= self._resolve_program(part)
+            sources.add(self._resolve_program(part))
 
         # We need to check valid sources twice:
         # - First in order to report correct error
