@@ -16,7 +16,6 @@
 
 from decimal import Decimal
 import filecmp
-import glob
 from math import ceil
 import os
 import shutil

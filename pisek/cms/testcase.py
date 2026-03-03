@@ -13,11 +13,7 @@
 from cms.db.task import Dataset, Testcase
 from cms.db.filecacher import FileCacher
 from sqlalchemy.orm import Session
-from glob import glob
-from itertools import chain
 
-from pisek.env.env import Env
-from pisek.config.config_types import TaskType
 from pisek.utils.paths import TaskPath
 
 
