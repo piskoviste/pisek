@@ -103,7 +103,8 @@ env_TASK=max
 env_DBG=${DEBUG}_${DEBUG}
 
 [build_gen:gen]
-sources=gen/gen gen/random
+sources=gen/gen gen/random.cpp
+headers_cpp=gen/random.hpp
 
 [build_solution:solve_cpp]
 sources=solve_cpp/solve.cpp solve_cpp/max.hpp
