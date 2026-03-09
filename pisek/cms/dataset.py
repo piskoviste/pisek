@@ -115,7 +115,11 @@ def create_dataset(
         )
     elif config.task.task_type == TaskType.interactive:
         task_type = "Communication"
-        task_params = (1, "stub" if config.cms.stubs else "alone", "std_io")
+        task_params = (
+            config.task.processes,
+            "stub" if config.cms.stubs else "alone",
+            "std_io",
+        )
     else:
         assert_never(config.task.task_type)
 

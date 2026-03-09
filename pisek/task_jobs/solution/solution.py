@@ -11,6 +11,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import dataclasses
+from decimal import Decimal
 import os
 import tempfile
 import time
@@ -123,19 +125,33 @@ class RunInteractive(RunCMSJudge, RunSolution):
     @override
     def _get_solution_run_res_kind(self) -> RunResultKind:
         with tempfile.TemporaryDirectory() as fifo_dir:
-            fifo_from_solution = os.path.join(fifo_dir, "solution-to-manager")
-            fifo_to_solution = os.path.join(fifo_dir, "manager-to-solution")
+            pipes: list[int] = []
+            judge_args: list[str] = []
 
-            os.mkfifo(fifo_from_solution)
-            os.mkfifo(fifo_to_solution)
+            for i in range(self._env.config.task.processes):
+                fifo_from_solution = os.path.join(fifo_dir, f"solution-to-manager-{i}")
+                fifo_to_solution = os.path.join(fifo_dir, f"manager-to-solution-{i}")
 
-            pipes = [
-                os.open(fifo_from_solution, os.O_RDWR),
-                os.open(fifo_to_solution, os.O_RDWR),
-                # Open fifos to prevent blocking on future opens
-                fd_from_solution := os.open(fifo_from_solution, os.O_WRONLY),
-                fd_to_solution := os.open(fifo_to_solution, os.O_RDONLY),
-            ]
+                os.mkfifo(fifo_from_solution)
+                os.mkfifo(fifo_to_solution)
+
+                pipes += [
+                    os.open(fifo_from_solution, os.O_RDWR),
+                    os.open(fifo_to_solution, os.O_RDWR),
+                    # Open fifos to prevent blocking on future opens
+                    fd_from_solution := os.open(fifo_from_solution, os.O_WRONLY),
+                    fd_to_solution := os.open(fifo_to_solution, os.O_RDONLY),
+                ]
+
+                self._load_program(
+                    self._solution_type(),
+                    self.solution,
+                    stdin=fd_to_solution,
+                    stdout=fd_from_solution,
+                    stderr=self.sol_log_file,
+                )
+
+                judge_args += [fifo_from_solution, fifo_to_solution]
 
             self._load_program(
                 ProgramRole.judge,
@@ -143,15 +159,7 @@ class RunInteractive(RunCMSJudge, RunSolution):
                 stdin=self.input,
                 stdout=self.points_file,
                 stderr=self.checker_log_file,
-                args=[fifo_from_solution, fifo_to_solution],
-            )
-
-            self._load_program(
-                self._solution_type(),
-                self.solution,
-                stdin=fd_to_solution,
-                stdout=fd_from_solution,
-                stderr=self.sol_log_file,
+                args=judge_args,
             )
 
             def close_pipes(_):
@@ -160,9 +168,27 @@ class RunInteractive(RunCMSJudge, RunSolution):
                     os.close(pipe)
 
             self._load_callback(close_pipes)
-            self.checker_rr, self.solution_rr = self._run_programs()
+
+            run_results = self._run_programs()
+            self.checker_rr = run_results.pop()
+            self.solution_rr = self._combine_run_results(run_results)
 
             return self.solution_rr.kind
+
+    def _combine_run_results(self, run_results: list[RunResult]) -> RunResult:
+        PRIORITY = [
+            RunResultKind.RUNTIME_ERROR,
+            RunResultKind.TIMEOUT,
+            RunResultKind.OK,
+        ]
+        main = min(run_results, key=lambda r: PRIORITY.index(r.kind))
+
+        return dataclasses.replace(
+            main,
+            time=sum((r.time for r in run_results), start=Decimal(0)),
+            wall_time=sum((r.wall_time for r in run_results), start=Decimal(0)),
+            memory=sum(r.memory for r in run_results),
+        )
 
     @override
     def _check(self) -> SolutionResult:
