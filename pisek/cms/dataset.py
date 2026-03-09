@@ -26,9 +26,11 @@ from pisek.cms.testcase import create_testcase
 from pisek.env.env import Env
 from pisek.config.task_config import TaskConfig
 from pisek.config.config_types import JudgeType, OutCheck, TaskType, DataFormat
-from pisek.utils.paths import TaskPath, InputPath, BUILD_DIR
+from pisek.utils.paths import TaskPath, InputPath
 
 T = TypeVar("T")
+
+INVALID_CODENAME_CHARACTERS = re.compile(r"[^A-Za-z0-9_-]")
 
 
 def check_key(name: str, value: T, condition: Callable[[T], bool]):
@@ -143,6 +145,7 @@ def create_dataset(
 
     for input_ in testcases:
         name = input_.name.removesuffix(".in")
+        name = escape_codename(name)
         output: TaskPath | None = None
 
         if outputs_needed:
@@ -183,6 +186,8 @@ def glob_char_to_regex(c: str) -> str:
         return "."
     elif c == "*":
         return ".*"
+    elif INVALID_CODENAME_CHARACTERS.fullmatch(c):
+        return "_"
     else:
         return re.escape(c)
 
@@ -195,6 +200,10 @@ def globs_to_regex(globs: Iterator[str]) -> str:
         patterns.append(f"({pattern})")
 
     return f"^{'|'.join(patterns)}$"
+
+
+def escape_codename(codename: str) -> str:
+    return INVALID_CODENAME_CHARACTERS.sub("_", codename)
 
 
 def add_judge(session: Session, files: FileCacher, env: Env, dataset: Dataset):
