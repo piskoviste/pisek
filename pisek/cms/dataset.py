@@ -103,7 +103,7 @@ def create_dataset(
     for num, test in config.test_sections.items():
         check_key(f"[test{num:02d}] points", test.max_points, lambda p: p % 1 == 0)
 
-    score_params = get_group_score_parameters(config)
+    score_params = get_group_score_parameters(config, testcases)
 
     task_type: str
     task_params: Any
@@ -163,13 +163,24 @@ def create_dataset(
     return dataset
 
 
-def get_group_score_parameters(config: TaskConfig) -> list[tuple[int, str]]:
+def get_group_score_parameters(
+    config: TaskConfig, testcases: list[InputPath]
+) -> list[tuple[int, str]]:
     params = []
 
     for subtask in config.test_sections.values():
         globs = map(strip_input_extention, subtask.all_globs)
+        regex = globs_to_regex(globs)
+
+        for input_ in testcases:
+            name = input_.name.removesuffix(".in")
+            name = escape_codename(name)
+            assert (re.fullmatch(regex, name) is not None) == subtask.in_test(
+                input_.name
+            )
+
         # CMS supports only relative points therefore we convert 'unscored' to 0
-        params.append((int(subtask.max_points), globs_to_regex(globs)))
+        params.append((int(subtask.max_points), regex))
 
     return params
 
