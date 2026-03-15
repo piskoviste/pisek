@@ -160,15 +160,14 @@ class RunInteractive(RunCMSJudge, RunSolution):
                     os.close(pipe)
 
             self._load_callback(close_pipes)
-
-            judge_res, self.solution_rr = self._run_programs()
-            self._judge_run_result = judge_res
+            self.checker_rr, self.solution_rr = self._run_programs()
 
             return self.solution_rr.kind
 
     @override
     def _check(self) -> SolutionResult:
-        return self._load_solution_result(self._judge_run_result)
+        assert self.checker_rr is not None, "checker_rr should be calculated already"
+        return self._load_solution_result(self.checker_rr)
 
     @override
     def _checking_message(self) -> str:
