@@ -85,6 +85,11 @@ class TaskPath:
             self.path + ("/" if os.path.isdir(self.path) else ""), "magenta"
         )
 
+    def col_name(self, env: "Env") -> str:
+        return env.colored(
+            self.name + ("/" if os.path.isdir(self.path) else ""), "magenta"
+        )
+
     def replace_suffix(self, new_suffix: str) -> "TaskPath":
         path = os.path.splitext(self.path)[0] + new_suffix
         return TaskPath(path)
