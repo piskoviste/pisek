@@ -4,7 +4,7 @@
 # Copyright (c)   2019 - 2022 Jiří Beneš <mail@jiribenes.com>
 # Copyright (c)   2020 - 2022 Michal Töpfer <michal.topfer@gmail.com>
 # Copyright (c)   2022        Jiří Kalvoda <jirikalvoda@kam.mff.cuni.cz>
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -312,9 +312,20 @@ class ProgramsJob(TaskJob):
                     self._read_run_result(pool_item, process, meta_file_path)
                 )
 
-                if os.listdir(tmp_dir.name):
+                created_paths = self._listdir(TaskPath(tmp_dir.name))
+                if created_paths:
+                    file_list = "".join(
+                        [
+                            (
+                                self._quote_file_with_name(p)
+                                if self._is_file(p)
+                                else p.col_name(self._env) + "\n"
+                            )
+                            for p in created_paths
+                        ]
+                    ).removesuffix("\n")
                     raise PipelineItemFailure(
-                        f"'{pool_item.name}' created a file in cwd."
+                        f"'{pool_item.name}' created paths in cwd:\n" + tab(file_list)
                     )
 
         return run_results

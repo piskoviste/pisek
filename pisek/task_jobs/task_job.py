@@ -83,6 +83,9 @@ class TaskHelper:
 
         return f"{pad(msg, max(MSG_LEN-1, max_label_len))} {points_str}  {time_str}  "
 
+    def _listdir(self, dir: TaskPath) -> list[TaskPath]:
+        return self._globs_to_files("*", dir)
+
     def _path_list(self, paths: list[TaskPath]) -> str:
         return "\n".join(path.col(self._env) for path in paths)
 
@@ -139,7 +142,7 @@ class TaskHelper:
         with self._open_file(file) as f:
             return self._short_text(f.read().strip(), **kwargs)
 
-    def _quote_file_with_name(
+    def _quote_file_with_path(
         self, file: TaskPath, force_content: bool = False, **kwargs
     ) -> str:
         """
@@ -150,6 +153,14 @@ class TaskHelper:
             return f"{file.col(self._env)}\n{self._env.colored(tab(self._quote_file(file, **kwargs)), 'yellow')}\n"
         else:
             return f"{file.col(self._env)}\n"
+
+    def _quote_file_with_name(
+        self, file: TaskPath, force_content: bool = False, **kwargs
+    ) -> str:
+        if force_content or self._env.file_contents:
+            return f"{file.col_name(self._env)}\n{self._env.colored(tab(self._quote_file(file, **kwargs)), 'yellow')}\n"
+        else:
+            return f"{file.col_name(self._env)}\n"
 
     def _create_program_failure(self, msg: str, res: RunResult, **kwargs):
         """Create PipelineItemFailure that nicely formats RunResult"""
@@ -175,11 +186,11 @@ class TaskHelper:
             program_msg += f"status: {res.status}\n"
 
         if stdin and isinstance(res.stdin_file, TaskPath):
-            program_msg += f"stdin: {self._quote_file_with_name(res.stdin_file, force_content=stdin_force_content)}"
+            program_msg += f"stdin: {self._quote_file_with_path(res.stdin_file, force_content=stdin_force_content)}"
         if stdout and isinstance(res.stdout_file, TaskPath):
-            program_msg += f"stdout: {self._quote_file_with_name(res.stdout_file, force_content=stdout_force_content)}"
+            program_msg += f"stdout: {self._quote_file_with_path(res.stdout_file, force_content=stdout_force_content)}"
         if stderr and isinstance(res.stderr_file, TaskPath):
-            program_msg += f"stderr: {self._quote_file_with_name(res.stderr_file, force_content=stderr_force_content, style='ht')}"
+            program_msg += f"stderr: {self._quote_file_with_path(res.stderr_file, force_content=stderr_force_content, style='ht')}"
         if time:
             program_msg += f"time: {res.time}\n"
 

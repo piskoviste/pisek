@@ -131,9 +131,9 @@ class RunChecker(ProgramsJob):
         if self.result is None:
             raise RuntimeError(f"Job {self.name} has not finished yet.")
 
-        text = f"input: {self._quote_file_with_name(self.input)}"
+        text = f"input: {self._quote_file_with_path(self.input)}"
         if isinstance(self, RunBatchChecker):
-            text += f"correct output: {self._quote_file_with_name(self.correct_output)}"
+            text += f"correct output: {self._quote_file_with_path(self.correct_output)}"
         text += f"result: {self.result.verdict.name}\n"
         if self.result.message is not None:
             text += f"message: {self.result.message}\n"
