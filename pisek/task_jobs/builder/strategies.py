@@ -406,7 +406,9 @@ class Java(BuildStrategy):
         self._check_tool("/bin/sh")
 
         entry_class = self._get_entrypoint(".java").rstrip(".java")
-        arguments = ["javac", "-d", self.target] + self.sources
+        arguments = (
+            ["javac", "-d", self.target] + self._build_section.comp_args + self.sources
+        )
         self._run_subprocess(arguments)
         self._check_no_run()
         run_path = os.path.join(self.target, "run")
