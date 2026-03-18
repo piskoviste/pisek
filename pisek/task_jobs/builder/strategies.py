@@ -403,7 +403,7 @@ class Java(BuildStrategy):
     def _build(self):
         self._check_tool("java")
         self._check_tool("javac")
-        self._check_tool("/usr/bin/bash")
+        self._check_tool("/bin/sh")
 
         entry_class = self._get_entrypoint(".java").rstrip(".java")
         arguments = ["javac", "-d", self.target] + self.sources
@@ -412,8 +412,7 @@ class Java(BuildStrategy):
         run_path = os.path.join(self.target, "run")
         with self._open(run_path, "w") as run_file:
             run_file.write(
-                "#!/usr/bin/bash\n"
-                + f"exec java --class-path ${{0%/run}} {entry_class} $@\n"
+                "#!/bin/sh\n" + f"exec java --class-path ${{0%/run}} {entry_class} $@\n"
             )
         st = self._stat(run_path)
         self._chmod(run_path, st.st_mode | 0o111)
