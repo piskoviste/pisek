@@ -229,9 +229,14 @@ class Build(TaskJob):
         if os.path.isdir(executable):
             shutil.copytree(executable, target.path, symlinks=True)
             self._access_dir(target)
-        else:
+        elif os.path.isfile(executable):
             shutil.copy(executable, target.path)
             self._access_file(target)
+        else:
+            raise PipelineItemFailure(
+                f"Build didn't produce expected {os.path.basename(executable)}:\n"
+                + tab(strategy.stderr_output.strip())
+            )
 
         shutil.rmtree(workdir)
 
