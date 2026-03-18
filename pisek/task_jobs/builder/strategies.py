@@ -205,6 +205,7 @@ class BuildStrategy(ABC):
             with NamedTemporaryFile(
                 prefix="pisek_", delete_on_close=False
             ) as stderr_file:
+                command = self._env.colored("> " + " ".join(args), "cyan")
                 comp = self._run_popen(
                     args,
                     **kwargs,
@@ -217,15 +218,16 @@ class BuildStrategy(ABC):
                 stdout_file.seek(0)
                 stderr_file.seek(0)
 
-                stderr: str = stderr_file.read().decode()
+                stderr: str = stderr_file.read().decode().strip()
+                if self._env.verbosity >= 1 or stderr.strip():
+                    self._print_stderr(command)
                 if stderr.strip():
                     self._print_stderr(stderr)
 
                 if comp.returncode != 0:
                     raise PipelineItemFailure(
                         f"Build of {self._build_section.program_name} failed.\n"
-                        + tab(self._env.colored("> " + " ".join(args), "magenta"))
-                        + "\n"
+                        + f"{tab(command)}\n"
                         + tab(self._env.colored(stderr, "yellow"))
                     )
                 return stdout_file.read().decode()
