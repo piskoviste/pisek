@@ -67,8 +67,9 @@ def generate_testcases(env: Env) -> list[InputPath]:
     env.target = TestingTarget.solutions
 
     pipeline = TaskPipeline(env)
+    cache = Cache.load()
 
-    if pipeline.run_jobs(Cache(), env) != 0:
+    if pipeline.run_jobs(cache, env) != 0:
         raise RuntimeError("Failed to test primary solution, cannot upload to CMS")
     clean_non_relevant_files(pipeline.all_accessed_files)
 
