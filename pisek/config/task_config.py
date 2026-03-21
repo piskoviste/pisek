@@ -409,8 +409,8 @@ class TestsSection(BaseEnv):
         OUT_CHECK_SPECIFIC_KEYS = [
             ((None, "judge"), "out_judge", ""),
             ((None, "judge"), "judge_type", ""),
-            ((TaskType.batch, "judge"), "judge_needs_in", "0"),
-            ((TaskType.batch, "judge"), "judge_needs_out", "1"),
+            ((TaskType.batch, "judge"), "judge_needs_in", "1"),
+            ((TaskType.batch, "judge"), "judge_needs_out", "0"),
             ((None, "tokens"), "tokens_ignore_newlines", "0"),
             ((None, "tokens"), "tokens_ignore_case", "0"),
             ((None, "tokens"), "tokens_float_rel_error", ""),
