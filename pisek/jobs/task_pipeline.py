@@ -22,10 +22,10 @@ from pisek.config.config_types import TaskType, OutCheck
 from pisek.utils.paths import InputPath
 from pisek.task_jobs.task_manager import (
     TOOLS_MAN_CODE,
-    INPUTS_MAN_CODE,
+    DATA_MAN_CODE,
     BUILD_MAN_CODE,
-    GENERATOR_MAN_CODE,
-    GENERATE_INPUTS_MAN_CODE,
+    PREPARE_GENERATOR_CODE,
+    RUN_GENERATOR_CODE,
     FUZZ_MAN_CODE,
     SOLUTION_MAN_CODE,
 )
@@ -61,9 +61,11 @@ class TaskPipeline(JobPipeline):
         ]
         build[0].add_prerequisite(*tools)
         if env.config.tests.in_gen is not None:
-            named_pipeline.append(generator := (PrepareGenerator(), GENERATOR_MAN_CODE))
+            named_pipeline.append(
+                generator := (PrepareGenerator(), PREPARE_GENERATOR_CODE)
+            )
             generator[0].add_prerequisite(*build)
-        named_pipeline.append(inputs := (DataManager(), INPUTS_MAN_CODE))
+        named_pipeline.append(inputs := (DataManager(), DATA_MAN_CODE))
 
         inputs[0].add_prerequisite(*build)
         if env.config.tests.in_gen is not None:
@@ -148,7 +150,7 @@ class TaskPipeline(JobPipeline):
         if env.stats:
             named_pipeline.append(resource_statistics := (ResourceStatistics(), ""))
             resource_statistics[0].add_prerequisite(
-                self.input_generator, GENERATE_INPUTS_MAN_CODE
+                self.input_generator, RUN_GENERATOR_CODE
             )
             for solution in solutions:
                 resource_statistics[0].add_prerequisite(*solution)

@@ -1,6 +1,6 @@
 # pisek  - Tool for developing tasks for programming competitions.
 #
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -10,20 +10,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Any, Iterable
+from typing import Iterable
 
 from pisek.utils.paths import TaskPath, InputPath, OutputPath
 from pisek.jobs.jobs import Job, PipelineItemFailure
 from pisek.config.config_types import TaskType
-from pisek.task_jobs.task_manager import TaskJobManager, GENERATOR_MAN_CODE
+from pisek.task_jobs.task_manager import (
+    TaskJobManager,
+    PREPARE_GENERATOR_CODE,
+)
+from pisek.task_jobs.manager_results import PrepareGeneratorResult, DataManagerResult
 from pisek.task_jobs.tools import sanitize_job
 from pisek.task_jobs.data.testcase_info import (
     TestcaseInfo,
     TestcaseGenerationMode,
     ExportInputsList,
 )
-
-from .data import LinkData
+from pisek.task_jobs.data.data import LinkData
 
 TEST_SEED = 25265
 SHORTEN_INPUTS_CUTOFF = 3
@@ -55,10 +58,9 @@ class DataManager(TaskJobManager):
 
         all_testcase_infos = list(static_testcase_infos)
         if self._env.config.tests.in_gen is not None:
-            all_testcase_infos += self.prerequisites_results[GENERATOR_MAN_CODE][
-                "inputs"
-            ]
-
+            all_testcase_infos += self.prerequisite_result(
+                PREPARE_GENERATOR_CODE, PrepareGeneratorResult
+            ).inputs
         all_testcase_infos.sort(key=lambda info: info.name)
 
         # put inputs in tests
@@ -186,6 +188,5 @@ class DataManager(TaskJobManager):
             list(map(lambda inp: f"{inp.name}.in", inputs)), SHORTEN_INPUTS_CUTOFF
         )
 
-    def _compute_result(self) -> dict[str, Any]:
-        res = {"testcase_info": self._testcase_infos}
-        return res
+    def _compute_result(self) -> DataManagerResult:
+        return DataManagerResult(self._testcase_infos)

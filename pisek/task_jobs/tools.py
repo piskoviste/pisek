@@ -206,8 +206,8 @@ class SanitizeAbstract(TaskJob):
         super().__init__(env=env, **kwargs)
 
     def _run(self) -> SanitizationResult:
-        rr_kind = self.prerequisites_results.get("create_source", None)
-        if isinstance(rr_kind, RunResultKind) and rr_kind != RunResultKind.OK:
+        rr_kind = self.get_prerequisite_result("create_source", RunResultKind, None)
+        if rr_kind is not None and rr_kind != RunResultKind.OK:
             self._copy_file(self.input, self.output)
             return SanitizationResult(SanitizationResultKind.skipped)
 

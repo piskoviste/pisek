@@ -18,7 +18,7 @@ from pisek.utils.text import tab
 from pisek.utils.paths import IInputPath, IOutputPath, LogPath
 from pisek.env.env import Env
 from pisek.config.config_types import DataFormat
-from pisek.task_jobs.tools import SanitizationResultKind
+from pisek.task_jobs.tools import SanitizationResult, SanitizationResultKind
 from pisek.jobs.jobs import State, PipelineItemFailure
 from pisek.task_jobs.run_result import RunResult, RunResultKind
 from pisek.task_jobs.program import ProgramsJob
@@ -91,7 +91,7 @@ class RunChecker(ProgramsJob):
     def _get_solution_result(self, kind: RunResultKind) -> SolutionResult:
         if kind == RunResultKind.OK:
             out_form = self._env.config.tests.out_format
-            san_res = self.prerequisites_results.get("sanitize")
+            san_res = self.get_prerequisite_result("sanitize", SanitizationResult, None)
             if san_res is None:
                 pass
             elif san_res.kind == SanitizationResultKind.invalid:
@@ -210,11 +210,10 @@ class RunBatchChecker(RunChecker):
 
     @override
     def _get_solution_run_res_kind(self) -> RunResultKind:
-        if "run_solution" in self.prerequisites_results:
-            return self.prerequisites_results["run_solution"]
-        else:
-            # There is no solution (checking static tests against themselves)
-            return RunResultKind.OK
+        # If there is no solution (checking static tests against themselves), return ok
+        return self.get_prerequisite_result(
+            "run_solution", RunResultKind, RunResultKind.OK
+        )
 
     @override
     def _checking_message(self) -> str:

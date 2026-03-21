@@ -20,11 +20,11 @@ from decimal import Decimal
 from math import ceil
 import os
 from tempfile import NamedTemporaryFile, TemporaryDirectory
-from typing import Optional, Any, Union, Callable
+from typing import assert_never, Optional, Any, Union, Callable
 import signal
 import subprocess
 from tempfile import NamedTemporaryFile, TemporaryDirectory
-from typing import assert_never, Optional, Any, Union, Callable
+from typing import Optional, Any, Union, Callable
 
 from pisek.config.task_config import ProgramRole, RunSection
 from pisek.env.env import Env

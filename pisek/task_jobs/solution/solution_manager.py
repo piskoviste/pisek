@@ -4,7 +4,7 @@
 # Copyright (c)   2019 - 2022 Jiří Beneš <mail@jiribenes.com>
 # Copyright (c)   2020 - 2022 Michal Töpfer <michal.topfer@gmail.com>
 # Copyright (c)   2022        Jiří Kalvoda <jirikalvoda@kam.mff.cuni.cz>
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 # Copyright (c)   2024        Benjamin Swart <benjaminswart@email.cz>
 
 # This program is free software: you can redistribute it and/or modify
@@ -16,12 +16,12 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Optional
 
 from pisek.utils.text import pad, tab
 from pisek.utils.terminal import right_aligned_text
 from pisek.utils.colors import color_settings
-from pisek.utils.paths import IInputPath
+from pisek.utils.paths import TaskPath, IInputPath
 
 from pisek.jobs.jobs import State, Job, PipelineItemFailure
 from pisek.env.env import Env
@@ -31,6 +31,7 @@ from pisek.task_jobs.data.data import SymlinkData
 from pisek.task_jobs.solution.verdicts_eval import check_verdicts, compute_verdict
 from pisek.task_jobs.task_job import TaskHelper
 from pisek.task_jobs.task_manager import TaskJobManager
+from pisek.task_jobs.manager_results import SolutionManagerResult
 from pisek.task_jobs.tools import sanitize_job
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
 from pisek.task_jobs.generator.generator_manager import TestcaseInfoMixin
@@ -299,8 +300,8 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
                 f"Solution {self.solution_label} should have gotten at most {p_max} but got {self.solution_points} points."
             )
 
-    def _compute_result(self) -> dict[str, Any]:
-        result: dict[str, Any] = super()._compute_result()
+    def _compute_result(self) -> SolutionManagerResult:
+        run_gen_result = super()._compute_result()
 
         def add_checker_out(cj: RunChecker) -> None:
             if cj.result is None or cj.result.verdict not in (
@@ -310,21 +311,21 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
             ):
                 return
 
-            if isinstance(checker_job, RunCMSJudge):
-                result["checker_outs"].add(cj.points_file)
-            result["checker_outs"].add(cj.checker_log_file)
+            if isinstance(cj, RunCMSJudge):
+                checker_outs.add(cj.points_file)
+            checker_outs.add(cj.checker_log_file)
 
-        result["results"] = {}
-        result["checker_outs"] = set()
+        testcase_results: dict[IInputPath, SolutionResultDetail | None] = {}
+        checker_outs: set[TaskPath] = set()
 
         assert sorted(self._sols) == sorted(self._checkers)
         for inp, checker_job in self._checkers.items():
             solution_job = self._sols[inp]
             if checker_job.result is None:
-                result["results"][inp] = None
+                testcase_results[inp] = None
             else:
                 assert solution_job.solution_rr is not None
-                result["results"][inp] = SolutionResultDetail(
+                testcase_results[inp] = SolutionResultDetail(
                     solution_job.solution_rr,
                     checker_job.checker_rr,
                     checker_job.result,
@@ -334,9 +335,14 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
         for checker_job in self._static_out_checkers.values():
             add_checker_out(checker_job)
 
-        result["tests"] = self._tests_results
-
-        return result
+        return SolutionManagerResult(
+            input_dataset=run_gen_result.input_dataset,
+            inputs=run_gen_result.inputs,
+            generator_run_results=run_gen_result.generator_run_results,
+            testcase_results=testcase_results,
+            tests_results=self._tests_results,
+            checker_outs=checker_outs,
+        )
 
 
 class TestJobGroup(TaskHelper):

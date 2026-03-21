@@ -11,11 +11,11 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import random
-from typing import Any
 
-from pisek.utils.paths import InputPath, OutputPath
+from pisek.utils.paths import IInputPath, IOutputPath, IRawPath
 from pisek.jobs.jobs import Job
 from pisek.task_jobs.task_manager import TaskJobManager, SOLUTION_MAN_CODE
+from pisek.task_jobs.manager_results import SolutionManagerResult, FuzzingManagerResult
 from pisek.task_jobs.checker.chaos_monkey import (
     Invalidate,
     Incomplete,
@@ -39,13 +39,16 @@ class FuzzingManager(TaskJobManager):
     def _get_jobs(self) -> list[Job]:
         jobs: list[Job] = []
 
-        primary_sol = self.prerequisites_results[
-            SOLUTION_MAN_CODE + self._env.config.primary_solution
-        ]
+        primary_sol = self.prerequisite_result(
+            SOLUTION_MAN_CODE + self._env.config.primary_solution, SolutionManagerResult
+        )
 
-        self._inputs: dict[str, tuple[list[int], int | None]] = primary_sol["inputs"]
-        testcases: list[tuple[InputPath, OutputPath]] = []
-        for inp, res in primary_sol["results"].items():
+        self._inputs = primary_sol.inputs
+        testcases: list[tuple[IInputPath, IOutputPath]] = []
+        for inp, res in primary_sol.testcase_results.items():
+            assert res is not None and isinstance(
+                res.solution_run_result.stdout_file, IRawPath
+            )  # Batch task
             testcases.append(
                 (inp, res.solution_run_result.stdout_file.to_sanitized_output())
             )
@@ -87,8 +90,8 @@ class FuzzingManager(TaskJobManager):
     def _fuzz_jobs(
         self,
         job: type[Invalidate],
-        inp: InputPath,
-        out: OutputPath,
+        inp: IInputPath,
+        out: IOutputPath,
         seed: int,
         rand_gen: random.Random,
         expected_verdict: Verdict | None = None,
@@ -109,13 +112,12 @@ class FuzzingManager(TaskJobManager):
         run_judge.add_prerequisite(invalidate)
         return jobs
 
-    def _compute_result(self) -> dict[str, Any]:
-        result: dict[str, Any] = {}
-        result["checker_outs"] = set()
+    def _compute_result(self) -> FuzzingManagerResult:
+        checker_outs = set()
         for job in self.jobs:
             if isinstance(job, RunChecker):
                 if isinstance(job, RunCMSJudge):
-                    result["checker_outs"].add(job.points_file)
-                result["checker_outs"].add(job.checker_log_file)
+                    checker_outs.add(job.points_file)
+                checker_outs.add(job.checker_log_file)
 
-        return result
+        return FuzzingManagerResult(checker_outs)

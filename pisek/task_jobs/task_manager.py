@@ -10,16 +10,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from dataclasses import dataclass
+
 from pisek.utils.paths import IInputPath, IOutputPath
 from pisek.config.task_config import TestSection
 from pisek.jobs.status import StatusJobManager
 from pisek.task_jobs.task_job import TaskHelper
 from pisek.task_jobs.data.testcase_info import TestcaseInfo
+from pisek.task_jobs.manager_results import DataManagerResult
 
 TOOLS_MAN_CODE = "tools"
-GENERATOR_MAN_CODE = "generator"
-GENERATE_INPUTS_MAN_CODE = "generate"
-INPUTS_MAN_CODE = "inputs"
+PREPARE_GENERATOR_CODE = "generator"
+RUN_GENERATOR_CODE = "generate"
+DATA_MAN_CODE = "inputs"
 BUILD_MAN_CODE = "build"
 SOLUTION_MAN_CODE = "solution_"
 DATA_MAN_CODE = "data"
@@ -39,10 +42,10 @@ class TaskJobManager(StatusJobManager, TaskHelper):
             for inp in self._test_testcases(self._env.config.test_sections[0])
         ]
 
-    def _test_testcases(self, test: TestSection) -> list[TestcaseInfo]:
-        """Get all inputs of given test."""
-        return self.prerequisites_results[INPUTS_MAN_CODE]["testcase_info"][test.num]
-
     def _all_testcases(self) -> dict[int, list[TestcaseInfo]]:
         """Get all inputs grouped by test."""
-        return self.prerequisites_results[INPUTS_MAN_CODE]["testcase_info"]
+        return self.prerequisite_result(DATA_MAN_CODE, DataManagerResult).testcase_infos
+
+    def _test_testcases(self, test: TestSection) -> list[TestcaseInfo]:
+        """Get all inputs of given test."""
+        return self._all_testcases()[test.num]

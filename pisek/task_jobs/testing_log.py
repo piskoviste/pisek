@@ -24,6 +24,7 @@ from pisek.task_jobs.task_manager import (
     TaskJobManager,
     SOLUTION_MAN_CODE,
 )
+from pisek.task_jobs.manager_results import SolutionManagerResult
 from pisek.task_jobs.solution.solution_result import (
     SolutionResult,
     RelativeSolutionResult,
@@ -52,22 +53,18 @@ class CreateTestingLog(TaskJobManager):
 
     def _evaluate(self) -> None:
         log: dict[str, Any] = {"source": "pisek", "solutions": {}}
-        solutions: set[str] = set()
         warn_skipped: bool = False
-        for name, data in self.prerequisites_results.items():
-            if not name.startswith(SOLUTION_MAN_CODE) or not any(
-                data["results"].values()
-            ):
-                continue
+        for solution in self._env.solutions:
+            solution_result = self.prerequisite_result(
+                f"{SOLUTION_MAN_CODE}{solution}", SolutionManagerResult
+            )
 
-            solution = name[len(SOLUTION_MAN_CODE) :]
-            solutions.add(solution)
             log["solutions"][solution] = {"results": {}}
             solution_results = log["solutions"][solution]["results"]
 
             inp: TaskPath
             detail: SolutionResultDetail | None
-            for inp, detail in data["results"].items():
+            for inp, detail in solution_result.testcase_results.items():
                 if detail is None:
                     warn_skipped = True
                     continue
@@ -91,10 +88,10 @@ class CreateTestingLog(TaskJobManager):
                         f"Unknown {SolutionResult.__name__} instance found: {type(detail.result)}"
                     )
 
-        if len(solutions) == 0:
+        if len(self._env.solutions) == 0:
             raise PipelineItemFailure("No solution was tested.")
 
-        if len(solutions) < len(self._env.config.solutions):
+        if len(self._env.solutions) < len(self._env.config.solutions):
             self._warn("Not all solutions were tested.")
         if warn_skipped:
             self._warn("Not all inputs were tested. For testing them use --all-inputs.")
