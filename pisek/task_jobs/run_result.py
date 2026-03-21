@@ -1,6 +1,6 @@
 # pisek  - Tool for developing tasks for programming competitions.
 #
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,7 +13,6 @@
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import auto, StrEnum
-from typing import Optional
 
 from pisek.utils.paths import TaskPath
 
@@ -37,5 +36,5 @@ class RunResult:
     memory: int
     stdin_file: TaskPath | int | None = None
     stdout_file: TaskPath | int | None = None
-    stderr_file: Optional[TaskPath] = None
+    stderr_file: TaskPath | None = None
     status: str = ""

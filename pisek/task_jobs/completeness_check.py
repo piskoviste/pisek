@@ -22,6 +22,7 @@ from pisek.task_jobs.task_manager import (
     FUZZ_MAN_CODE,
     SOLUTION_MAN_CODE,
 )
+from pisek.task_jobs.manager_results import SolutionManagerResult, FuzzingManagerResult
 
 
 class CompletenessCheck(TaskJobManager):
@@ -35,18 +36,23 @@ class CompletenessCheck(TaskJobManager):
 
     def _get_checker_outs(self) -> set[TaskPath]:
         checker_outs: set[TaskPath] = set()
-        if FUZZ_MAN_CODE in self.prerequisites_results:
-            checker_outs |= self.prerequisites_results[FUZZ_MAN_CODE]["checker_outs"]
+
+        fuzz_outs = self.get_prerequisite_result(
+            FUZZ_MAN_CODE, FuzzingManagerResult, None
+        )
+        if fuzz_outs is not None:
+            checker_outs |= fuzz_outs.checker_outs
+
         for solution in self._env.solutions:
-            checker_outs |= self.prerequisites_results[
-                f"{SOLUTION_MAN_CODE}{solution}"
-            ]["checker_outs"]
+            checker_outs |= self.prerequisite_result(
+                f"{SOLUTION_MAN_CODE}{solution}", SolutionManagerResult
+            ).checker_outs
         return checker_outs
 
     def _check_solution_succeeds_only_on(self, sol_name: str, tests: list[int]) -> bool:
-        tests_res = self.prerequisites_results[f"{SOLUTION_MAN_CODE}{sol_name}"][
-            "tests"
-        ]
+        tests_res = self.prerequisite_result(
+            f"{SOLUTION_MAN_CODE}{sol_name}", SolutionManagerResult
+        ).tests_results
         for num in self._env.config.test_sections:
             if num == 0:
                 continue  # Skip samples
@@ -78,9 +84,10 @@ class CompletenessCheck(TaskJobManager):
         if self._env.config.task.task_type == TaskType.interactive:
             return
 
-        res = self.prerequisites_results[
-            f"{SOLUTION_MAN_CODE}{self._env.config.primary_solution}"
-        ]["results"]
+        res = self.prerequisite_result(
+            f"{SOLUTION_MAN_CODE}{self._env.config.primary_solution}",
+            SolutionManagerResult,
+        ).testcase_results
         for test in self._env.config.test_sections.values():
             if not test.checks_different_outputs:
                 continue

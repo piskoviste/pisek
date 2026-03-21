@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from typing import cast, Any, Optional
+from typing import cast, Optional
 from hashlib import blake2b
 
 from pisek.env.env import Env
@@ -23,6 +23,8 @@ from pisek.config.config_types import GenType
 from pisek.config.task_config import RunSection
 from pisek.jobs.jobs import Job, JobManager
 from pisek.task_jobs.task_manager import TaskJobManager
+from pisek.task_jobs.manager_results import PrepareGeneratorResult, RunGeneratorResult
+from pisek.task_jobs.run_result import RunResult
 from pisek.task_jobs.data.data import InputSmall, OutputSmall
 from pisek.task_jobs.tools import sanitize_job
 from pisek.task_jobs.validator.validator_base import ValidatorJob
@@ -67,8 +69,9 @@ class PrepareGenerator(TaskJobManager):
 
         return jobs
 
-    def _compute_result(self) -> dict[str, Any]:
-        return {"inputs": self._list_inputs.result}
+    def _compute_result(self) -> PrepareGeneratorResult:
+        assert self._list_inputs.result is not None
+        return PrepareGeneratorResult(self._list_inputs.result)
 
 
 def list_inputs_job(env: Env, generator: RunSection) -> GeneratorListInputs:
@@ -125,7 +128,7 @@ def generator_test_determinism(
 
 class TestcaseInfoMixin(JobManager):
     def __init__(self, name: str, **kwargs) -> None:
-        self.inputs: dict[str, tuple[set[int], int | None]] = {}
+        self.inputs: dict[IInputPath, tuple[set[int], int | None]] = {}
         self.input_dataset: set[IInputPath] = set()
         self._gen_inputs_job: dict[Optional[int], GenerateInput] = {}
 
@@ -176,7 +179,7 @@ class TestcaseInfoMixin(JobManager):
 
             self._begin_new_testcase()
             input_path = testcase_info.input_path(seed)
-            self.inputs[input_path.name] = ({test}, seed)
+            self.inputs[input_path] = ({test}, seed)
             self.input_dataset.add(input_path)
 
             self._add_generate_input_jobs(testcase_info, seed, test, i == 0)
@@ -198,8 +201,8 @@ class TestcaseInfoMixin(JobManager):
         self, testcase_info: TestcaseInfo, seed: Optional[int], test: int
     ) -> None:
         input_path = testcase_info.input_path(seed)
-        assert self.inputs[input_path.name][1] == seed
-        self.inputs[input_path.name][0].add(test)
+        assert self.inputs[input_path][1] == seed
+        self.inputs[input_path][0].add(test)
 
     def _add_generate_input_jobs(
         self,
@@ -300,14 +303,17 @@ class TestcaseInfoMixin(JobManager):
         if self._env.config.limits.output_max_size != 0:
             self._add_job(OutputSmall(self._env, output_path))
 
-    def _compute_result(self) -> dict[str, Any]:
-        return {
-            "input_dataset": list(sorted(self.input_dataset, key=lambda i: i.name)),
-            "inputs": {i: (list(sorted(t)), s) for i, (t, s) in self.inputs.items()},
-            "generator_run_results": [
-                j.run_result for j in self._jobs if isinstance(j, GenerateInput)
+    def _compute_result(self) -> RunGeneratorResult:
+        return RunGeneratorResult(
+            input_dataset=list(sorted(self.input_dataset, key=lambda i: i.name)),
+            inputs={i.name: (list(sorted(t)), s) for i, (t, s) in self.inputs.items()},
+            generator_run_results=[
+                j.run_result
+                for j in self._jobs
+                if isinstance(j, GenerateInput)
+                if isinstance(j.run_result, RunResult)
             ],
-        }
+        )
 
 
 class RunGenerator(TaskJobManager, TestcaseInfoMixin):

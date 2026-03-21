@@ -27,7 +27,6 @@ from typing import (
     AbstractSet,
     Any,
     Callable,
-    Iterable,
     MutableSet,
     NamedTuple,
     Optional,
@@ -112,12 +111,12 @@ class PipelineItem(ABC):
     def __init__(self, name: str) -> None:
         self.name = name
         self.state = State.in_queue
-        self.result: Optional[Any] = None
+        self.result: Any | None = None
         self.fail_msg = ""
 
         self.prerequisites = 0
         self.required_by: list[RequiredBy] = []
-        self.prerequisites_results: dict[str, Any] = {}
+        self._prerequisites_results: dict[str, Any] = {}
         # List of prints (string to print, whether to use stderr)
         self.terminal_output: list[tuple[str, bool]] = []
 
@@ -175,6 +174,19 @@ class PipelineItem(ABC):
         self.prerequisites += 1
         item.required_by.append(RequiredBy(self, name, condition))
 
+    def prerequisite_result[T](self, prerequisite_name: str, type_: type[T]) -> T:
+        result = self._prerequisites_results[prerequisite_name]
+        assert isinstance(result, type_)
+        return result
+
+    def get_prerequisite_result[T, Q](
+        self, prerequisite_name: str, type_: type[T], default: Q
+    ) -> T | Q:
+        if prerequisite_name not in self._prerequisites_results:
+            return default
+        else:
+            return self.prerequisite_result(prerequisite_name, type_)
+
     def finish(self) -> None:
         """Notifies PipelineItems that depend on this job."""
         for item, name, condition in self.required_by:
@@ -183,7 +195,7 @@ class PipelineItem(ABC):
             ):
                 item.prerequisites -= 1
                 if name is not None:
-                    item.prerequisites_results[name] = deepcopy(self.result)
+                    item._prerequisites_results[name] = deepcopy(self.result)
             else:
                 item.cancel()
 
@@ -280,7 +292,7 @@ class Job(PipelineItem, CaptureInitParams):
                 set(cache_entry.envs),
                 set(cache_entry.files),
                 set(cache_entry.globs),
-                self.prerequisites_results,
+                self._prerequisites_results,
                 cache,
             )
             if cache_entry.signature == sign:
@@ -293,7 +305,7 @@ class Job(PipelineItem, CaptureInitParams):
             self._accessed_envs,
             self._accessed_files,
             self._accessed_globs,
-            self.prerequisites_results,
+            self._prerequisites_results,
             cache,
         )
         if sign is None:
@@ -307,7 +319,7 @@ class Job(PipelineItem, CaptureInitParams):
             self._accessed_envs,
             self._accessed_files,
             self._accessed_globs,
-            self.prerequisites_results,
+            self._prerequisites_results,
             self.terminal_output,
             self._logs,
         )
@@ -440,6 +452,6 @@ class JobManager(PipelineItem):
         """Decide whether jobs did run as expected and return result."""
         pass
 
-    def _compute_result(self) -> dict[str, Any]:
+    def _compute_result(self) -> Any:
         """Creates result to be read by other managers."""
-        return {}
+        pass

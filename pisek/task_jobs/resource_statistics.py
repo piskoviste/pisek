@@ -19,7 +19,8 @@ from pisek.config.config_types import GenType
 from pisek.config.task_config import RunSection
 from pisek.env.env import TestingTarget
 from pisek.task_jobs.run_result import RunResult
-from pisek.task_jobs.task_manager import GENERATE_INPUTS_MAN_CODE, SOLUTION_MAN_CODE
+from pisek.task_jobs.task_manager import RUN_GENERATOR_CODE, SOLUTION_MAN_CODE
+from pisek.task_jobs.manager_results import RunGeneratorResult, SolutionManagerResult
 from pisek.task_jobs.solution.solution_result import SolutionResultDetail
 
 
@@ -67,22 +68,19 @@ class ResourceStatistics(StatusJobManager):
         if self.state == State.cancelled:
             return self._job_bar(self.name)
 
-        generator_rr: list[RunResult] = self.prerequisites_results[
-            GENERATE_INPUTS_MAN_CODE
-        ]["generator_run_results"]
+        generator_rr = self.prerequisite_result(
+            RUN_GENERATOR_CODE, RunGeneratorResult
+        ).generator_run_results
         solution_rr: dict[str, list[RunResult]] = defaultdict(list)
         checker_rr: list[RunResult] = []
 
-        for name, data in self.prerequisites_results.items():
-            if not name.startswith(SOLUTION_MAN_CODE) or not any(
-                data["results"].values()
-            ):
-                continue
-
-            solution = name[len(SOLUTION_MAN_CODE) :]
+        for solution in self._env.solutions:
+            solution_result = self.prerequisite_result(
+                f"{SOLUTION_MAN_CODE}{solution}", SolutionManagerResult
+            )
 
             detail: SolutionResultDetail | None
-            for detail in data["results"].values():
+            for detail in solution_result.testcase_results.values():
                 if detail is None:
                     continue
 

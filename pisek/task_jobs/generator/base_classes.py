@@ -26,6 +26,8 @@ from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationM
 class GeneratorListInputs(ProgramsJob):
     """Lists all inputs generator can generate."""
 
+    result: list[TestcaseInfo] | None
+
     def __init__(
         self, env: Env, generator: RunSection, *, name: str = "", **kwargs
     ) -> None:
