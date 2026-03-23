@@ -469,7 +469,7 @@ class Make(BuildStrategy):
                     f"Makefile strategy: '{self._target_subdir}' already exists"
                 )
             self._makedirs(self._target_subdir)
-            self._run_subprocess(["make"])
+            self._run_subprocess(["make"] + self._build_section.comp_args)
             if not self._isdir(self._target_subdir):
                 raise PipelineItemFailure(
                     f"Makefile must create '{self._target_subdir}/' directory"
