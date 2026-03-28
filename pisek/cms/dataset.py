@@ -26,9 +26,11 @@ from pisek.cms.testcase import create_testcase
 from pisek.env.env import Env
 from pisek.config.task_config import TaskConfig
 from pisek.config.config_types import JudgeType, OutCheck, TaskType, DataFormat
-from pisek.utils.paths import TaskPath, InputPath, BUILD_DIR
+from pisek.utils.paths import TaskPath, InputPath
 
 T = TypeVar("T")
+
+INVALID_CODENAME_CHARACTERS = re.compile(r"[^A-Za-z0-9_-]")
 
 
 def check_key(name: str, value: T, condition: Callable[[T], bool]):
@@ -101,7 +103,7 @@ def create_dataset(
     for num, test in config.test_sections.items():
         check_key(f"[test{num:02d}] points", test.max_points, lambda p: p % 1 == 0)
 
-    score_params = get_group_score_parameters(config)
+    score_params = get_group_score_parameters(config, testcases)
 
     task_type: str
     task_params: Any
@@ -143,6 +145,7 @@ def create_dataset(
 
     for input_ in testcases:
         name = input_.name.removesuffix(".in")
+        name = escape_codename(name)
         output: TaskPath | None = None
 
         if outputs_needed:
@@ -160,13 +163,24 @@ def create_dataset(
     return dataset
 
 
-def get_group_score_parameters(config: TaskConfig) -> list[tuple[int, str]]:
+def get_group_score_parameters(
+    config: TaskConfig, testcases: list[InputPath]
+) -> list[tuple[int, str]]:
     params = []
 
     for subtask in config.test_sections.values():
         globs = map(strip_input_extention, subtask.all_globs)
+        regex = globs_to_regex(globs)
+
+        for input_ in testcases:
+            name = input_.name.removesuffix(".in")
+            name = escape_codename(name)
+            assert (re.fullmatch(regex, name) is not None) == subtask.in_test(
+                input_.name
+            )
+
         # CMS supports only relative points therefore we convert 'unscored' to 0
-        params.append((int(subtask.max_points), globs_to_regex(globs)))
+        params.append((int(subtask.max_points), regex))
 
     return params
 
@@ -183,6 +197,8 @@ def glob_char_to_regex(c: str) -> str:
         return "."
     elif c == "*":
         return ".*"
+    elif INVALID_CODENAME_CHARACTERS.fullmatch(c):
+        return "_"
     else:
         return re.escape(c)
 
@@ -195,6 +211,10 @@ def globs_to_regex(globs: Iterator[str]) -> str:
         patterns.append(f"({pattern})")
 
     return f"^{'|'.join(patterns)}$"
+
+
+def escape_codename(codename: str) -> str:
+    return INVALID_CODENAME_CHARACTERS.sub("_", codename)
 
 
 def add_judge(session: Session, files: FileCacher, env: Env, dataset: Dataset):
