@@ -28,7 +28,8 @@ from pisek.utils.text import eprint, tab
 
 RUNTIME_ERROR_MESSAGES = [
     "Evaluation didn't produce file %s",
-    "Execution killed (could be triggered by violating memory limits)",
+    "Memory limit exceeded",
+    "Execution killed by signal",
     "Execution failed because the return code was nonzero",
 ]
 
