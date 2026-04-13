@@ -29,7 +29,6 @@ from typing import (
     Callable,
     MutableSet,
     NamedTuple,
-    Optional,
     TYPE_CHECKING,
 )
 
@@ -98,7 +97,7 @@ class CaptureInitParams:
 
 class RequiredBy(NamedTuple):
     pipeline_item: "PipelineItem"
-    name: Optional[str]
+    name: str | None
     run_condition: Callable[[Any], bool]
 
 
@@ -163,8 +162,8 @@ class PipelineItem(ABC):
 
     def add_prerequisite(
         self,
-        item: Optional["PipelineItem"],
-        name: Optional[str] = None,
+        item: "PipelineItem | None",
+        name: str | None = None,
         condition: Callable[[Any], bool] = lambda _: True,
     ) -> None:
         """Adds given PipelineItem as a prerequisite to this job."""
@@ -383,7 +382,7 @@ class JobManager(PipelineItem):
 
     def create_jobs(self) -> list[Job]:
         """Crates this JobManager's jobs."""
-        self.result: Optional[Any]
+        self.result: Any | None
         if self.state == State.cancelled:
             self.jobs = []
         else:
