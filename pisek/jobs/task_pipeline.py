@@ -19,7 +19,8 @@ from typing import Optional
 from pisek.jobs.job_pipeline import JobPipeline
 from pisek.env.env import Env, TestingTarget
 from pisek.config.config_types import TaskType, OutCheck
-from pisek.utils.paths import InputPath
+from pisek.task_jobs.manager_results import RunGeneratorResult
+from pisek.utils.paths import IInputPath, InputPath
 from pisek.task_jobs.task_manager import (
     TOOLS_MAN_CODE,
     DATA_MAN_CODE,
@@ -157,7 +158,9 @@ class TaskPipeline(JobPipeline):
 
         return named_pipeline
 
-    def input_dataset(self) -> list[InputPath]:
+    def input_dataset(self) -> list[IInputPath]:
+        result = self.input_generator.result
         if self.input_generator.result is None:
             raise RuntimeError("Input dataset has not been computed yet.")
-        return self.input_generator.result["input_dataset"]
+        assert isinstance(result, RunGeneratorResult)
+        return result.input_dataset

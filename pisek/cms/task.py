@@ -20,13 +20,13 @@ from sqlalchemy.orm.exc import NoResultFound
 from pisek.cms.dataset import create_dataset
 from pisek.env.env import Env
 from pisek.config.task_config import TaskConfig
-from pisek.utils.paths import InputPath
+from pisek.utils.paths import IInputPath
 
 
 def create_task(
     session: Session,
     env: Env,
-    testcases: list[InputPath],
+    testcases: list[IInputPath],
     description: str,
     time_limit: Optional[Decimal],
 ) -> Task:
