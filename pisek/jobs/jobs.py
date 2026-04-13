@@ -383,7 +383,7 @@ class JobManager(PipelineItem):
 
     def create_jobs(self) -> list[Job]:
         """Crates this JobManager's jobs."""
-        self.result: Optional[dict[str, Any]]
+        self.result: Optional[Any]
         if self.state == State.cancelled:
             self.jobs = []
         else:

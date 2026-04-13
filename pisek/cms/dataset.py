@@ -26,7 +26,7 @@ from pisek.cms.testcase import create_testcase
 from pisek.env.env import Env
 from pisek.config.task_config import TaskConfig
 from pisek.config.config_types import JudgeType, OutCheck, TaskType, DataFormat
-from pisek.utils.paths import TaskPath, InputPath, BUILD_DIR
+from pisek.utils.paths import TaskPath, IInputPath
 
 T = TypeVar("T")
 
@@ -40,7 +40,7 @@ def create_dataset(
     session: Session,
     env: Env,
     task: Task,
-    testcases: list[InputPath],
+    testcases: list[IInputPath],
     description: Optional[str],
     time_limit: Optional[Decimal],
     autojudge: bool = True,
