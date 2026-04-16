@@ -34,6 +34,11 @@ class MissingSolution(Exception):
         super().__init__(f"Missing solution {name} in testing log.")
 
 
+class SolutionNotTested(Exception):
+    def __init__(self, name: str) -> None:
+        super().__init__(f"Solution {name} has not been tested.")
+
+
 @dataclass
 class LoggedResult:
     verdict: Verdict
@@ -152,11 +157,15 @@ class SolutionResults:
     def from_log(
         name: str, config: TaskConfig, testing_log, limit: Decimal
     ) -> "SolutionResults":
-        if name not in testing_log["solutions"]:
+        solutions = testing_log["solutions"]
+        if name not in solutions:
             raise MissingSolution(name)
+        solution_results = solutions[name]["results"]
+        if not solution_results:
+            raise SolutionNotTested(name)
 
         results = []
-        for test_name, result in testing_log["solutions"][name]["results"].items():
+        for test_name, result in solution_results.items():
 
             def load_decimal(result: dict[str, Any], key: str) -> Optional[Decimal]:
                 return Decimal(result[key]) if key in result else None
@@ -300,9 +309,10 @@ def visualize(
                 sol, config, testing_log, time_limit
             )
             max_test_length = max(
-                max_test_length, max(map(lambda r: len(r.test), results[sol].get_all()))
+                max_test_length,
+                max(map(lambda r: len(r.test), results[sol].get_all()), default=0),
             )
-        except MissingSolution as err:
+        except (MissingSolution, SolutionNotTested) as err:
             eprint(color_settings.colored(str(err), "yellow"))
 
     wrong_solutions = {}
