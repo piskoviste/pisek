@@ -1,3 +1,4 @@
+import os
 import unittest
 
 from util import TestFixtureVariant, modify_config
@@ -7,6 +8,15 @@ class TestOddStub(TestFixtureVariant):
     @property
     def fixture_path(self) -> str:
         return "fixtures/odd_stub/"
+
+
+class TestBrokenListInputs(TestOddStub):
+    def expecting_success(self) -> bool:
+        return False
+
+    def modify_task(self) -> None:
+        with open(os.path.join(self.task_dir, "gen.py"), "w") as f:
+            f.writelines(["#!/usr/bin/env python3", "exit(1)"])
 
 
 class TestBigInput(TestOddStub):
