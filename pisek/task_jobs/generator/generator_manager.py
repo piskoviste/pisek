@@ -23,7 +23,11 @@ from pisek.config.config_types import GenType
 from pisek.config.task_config import RunSection
 from pisek.jobs.jobs import Job, JobManager
 from pisek.task_jobs.task_manager import TaskJobManager
-from pisek.task_jobs.manager_results import PrepareGeneratorResult, RunGeneratorResult
+from pisek.task_jobs.manager_results import (
+    InvalidResult,
+    PrepareGeneratorResult,
+    RunGeneratorResult,
+)
 from pisek.task_jobs.run_result import RunResult
 from pisek.task_jobs.data.data import InputSmall, OutputSmall
 from pisek.task_jobs.tools import sanitize_job
@@ -69,9 +73,11 @@ class PrepareGenerator(TaskJobManager):
 
         return jobs
 
-    def _compute_result(self) -> PrepareGeneratorResult:
-        assert self._list_inputs.result is not None
-        return PrepareGeneratorResult(self._list_inputs.result)
+    def _compute_result(self) -> PrepareGeneratorResult | InvalidResult:
+        if self._list_inputs.result is None:
+            return InvalidResult()
+        else:
+            return PrepareGeneratorResult(self._list_inputs.result)
 
 
 def list_inputs_job(env: Env, generator: RunSection) -> GeneratorListInputs:

@@ -19,6 +19,11 @@ from pisek.task_jobs.solution.solution_result import SolutionResultDetail, Verdi
 
 
 @dataclass
+class InvalidResult:
+    pass
+
+
+@dataclass
 class PrepareGeneratorResult:
     inputs: list[TestcaseInfo]
 
