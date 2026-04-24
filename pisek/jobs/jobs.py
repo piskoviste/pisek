@@ -152,6 +152,8 @@ class PipelineItem(ABC):
         for item, _, _ in self.required_by:
             if not item.run_always:
                 item.cancel()
+            else:
+                item.prerequisites -= 1
 
     def _check_prerequisites(self) -> None:
         """Checks if all prerequisites are finished raises error otherwise."""
@@ -440,7 +442,8 @@ class JobManager(PipelineItem):
             except PipelineItemFailure as failure:
                 self._fail(failure)
             else:
-                self.state = State.succeeded
+                if self.state == State.running:
+                    self.state = State.succeeded
         else:
             self.state = State.failed
 
