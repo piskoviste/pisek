@@ -55,9 +55,11 @@ class CreateTestingLog(TaskJobManager):
         log: dict[str, Any] = {"source": "pisek", "solutions": {}}
         warn_skipped: bool = False
         for solution in self._env.solutions:
-            solution_result = self.prerequisite_result(
-                f"{SOLUTION_MAN_CODE}{solution}", SolutionManagerResult
+            solution_result = self.get_prerequisite_result(
+                f"{SOLUTION_MAN_CODE}{solution}", SolutionManagerResult, None
             )
+            if solution_result is None:
+                return self.cancel()
 
             log["solutions"][solution] = {"results": {}}
             solution_results = log["solutions"][solution]["results"]
