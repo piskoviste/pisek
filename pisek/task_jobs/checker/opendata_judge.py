@@ -80,13 +80,14 @@ class RunOpendataJudge(RunBatchChecker):
             "stderr_force_content": True,
         }
 
+        assert self.checker_rr is not None
         key_values: dict[str, Any] = {}
         with self._open_file(self.checker_log_file) as f:
             message = f.readline().removesuffix("\n")
             if len(message.encode()) > 255:
                 raise self._create_program_failure(
                     f"Message longer than 255 bytes: '{message}'",
-                    self._result,
+                    self.checker_rr,
                     **FAIL_KWARGS,
                 )
             for line in f.readlines():
@@ -94,22 +95,24 @@ class RunOpendataJudge(RunBatchChecker):
 
                 if "=" not in line:
                     raise self._create_program_failure(
-                        f"Invalid key-value pair: '{line}'", self._result, **FAIL_KWARGS
+                        f"Invalid key-value pair: '{line}'",
+                        self.checker_rr,
+                        **FAIL_KWARGS,
                     )
                 key, val = line.split("=", 1)
 
                 if key not in KEYS:
                     raise self._create_program_failure(
-                        f"Invalid key: '{key}'", self._result, **FAIL_KWARGS
+                        f"Invalid key: '{key}'", self.checker_rr, **FAIL_KWARGS
                     )
                 if key in key_values:
                     raise self._create_program_failure(
-                        f"Duplicate key: '{key}'", self._result, **FAIL_KWARGS
+                        f"Duplicate key: '{key}'", self.checker_rr, **FAIL_KWARGS
                     )
                 if len(val.encode()) > 255:
                     raise self._create_program_failure(
                         f"Value longer than 255 bytes: '{val}'",
-                        self._result,
+                        self.checker_rr,
                         **FAIL_KWARGS,
                     )
                 try:
@@ -117,7 +120,7 @@ class RunOpendataJudge(RunBatchChecker):
                 except ValueError:
                     raise self._create_program_failure(
                         f"Value is not of type '{KEYS[key]}': '{val}'",
-                        self._result,
+                        self.checker_rr,
                         **FAIL_KWARGS,
                     )
 
@@ -132,7 +135,7 @@ class RunOpendataJudge(RunBatchChecker):
             envs["TEST_OUTPUT"] = self.correct_output.abspath
             self._access_file(self.correct_output)
 
-        self._result = self._run_program(
+        self.checker_rr = self._run_program(
             ProgramRole.judge,
             self.judge,
             args=[
@@ -144,11 +147,11 @@ class RunOpendataJudge(RunBatchChecker):
             env=envs,
         )
 
-        if self._result.returncode not in (self.return_code_ok, self.return_code_wa):
+        if self.checker_rr.returncode not in (self.return_code_ok, self.return_code_wa):
             # We need to check this first to report the correct problem
             raise self._create_program_failure(
                 f"Judge failed on output {self.output:n}:",
-                self._result,
+                self.checker_rr,
                 stderr_force_content=True,
             )
 
@@ -159,7 +162,7 @@ class RunOpendataJudge(RunBatchChecker):
                 "info", f"Judge on output {self.output:p}: LOG={key_values['LOG']}"
             )
 
-        if self._result.returncode == self.return_code_ok:
+        if self.checker_rr.returncode == self.return_code_ok:
             if "POINTS" not in key_values:
                 return RelativeSolutionResult(
                     verdict=Verdict.ok,
