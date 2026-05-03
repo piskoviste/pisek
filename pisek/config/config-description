@@ -4,6 +4,9 @@ use=
 task_type=
 score_precision=
 
+processes=
+#!if task task_type==interactive
+
 [tests]
 has_sample_test=
 

@@ -344,6 +344,7 @@ class TaskSection(BaseEnv):
     _section: str = "task"
     task_type: TaskType
     score_precision: int = Field(ge=0)
+    processes: int = Field(ge=1)
 
     @classmethod
     def load_dict(cls, configs: ConfigHierarchy) -> ConfigValuesDict:
