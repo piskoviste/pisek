@@ -113,7 +113,7 @@ class Env(BaseEnv):
         else:
             assert_never(target)
 
-        if expanded_solutions and config.tests.judge_needs_out:
+        if expanded_solutions and config.judge_needs_out:
             if config.primary_solution in expanded_solutions:
                 expanded_solutions.remove(config.primary_solution)
             expanded_solutions.insert(0, config.primary_solution)

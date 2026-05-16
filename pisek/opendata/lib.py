@@ -291,12 +291,12 @@ class Testcase:
         self._run_pipeline(output_needed=True, clear=clear)
 
     def check(self, contestant_output_path: str, clear: bool = True) -> OpendataVerdict:
-        assert self._built_task._config.tests.judge_needs_in is not None
-        assert self._built_task._config.tests.judge_needs_out is not None
+        assert self._built_task._config.judge_needs_in is not None
+        assert self._built_task._config.judge_needs_out is not None
 
         res = self._run_pipeline(
-            input_needed=self._built_task._config.tests.judge_needs_in,
-            output_needed=self._built_task._config.tests.judge_needs_out,
+            input_needed=self._built_task._config.judge_needs_in,
+            output_needed=self._built_task._config.judge_needs_out,
             check=True,
             contestant_output=contestant_output_path,
             clear=clear,

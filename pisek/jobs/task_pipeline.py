@@ -86,7 +86,7 @@ class TaskPipeline(JobPipeline):
         else:
             # First solution generates inputs
             assert (
-                not env.config.tests.judge_needs_out
+                not env.config.judge_needs_out
                 or env.solutions[0] == env.config.primary_solution
             )
 
