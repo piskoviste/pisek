@@ -137,15 +137,11 @@ def create_dataset(
 
     files = FileCacher()
 
-    outputs_needed = (
-        config.task.task_type == TaskType.batch and config.tests.judge_needs_out
-    )
-
     for input_ in testcases:
         name = input_.name.removesuffix(".in")
         output: TaskPath | None = None
 
-        if outputs_needed:
+        if config.judge_needs_out:
             output = input_.to_output()
 
             if not path.exists(output.path):

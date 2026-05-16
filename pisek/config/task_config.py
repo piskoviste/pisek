@@ -146,6 +146,26 @@ class TaskConfig(BaseEnv):
         return sum((sub.all_globs for sub in self.test_sections.values()), start=[])
 
     @computed_field  # type: ignore[misc]
+    @cached_property
+    def judge_needs_in(self) -> bool:
+        if self.task.task_type == TaskType.interactive:
+            return True
+        elif self.tests.out_check == OutCheck.judge:
+            return self.tests.raw_judge_needs_in
+        else:
+            return False
+
+    @computed_field  # type: ignore[misc]
+    @cached_property
+    def judge_needs_out(self) -> bool:
+        if self.task.task_type == TaskType.interactive:
+            return False
+        elif self.tests.out_check == OutCheck.judge:
+            return self.tests.raw_judge_needs_out
+        else:
+            return True
+
+    @computed_field  # type: ignore[misc]
     @property
     def primary_solution(self) -> str:
         if len(self.solutions) == 0:
@@ -368,8 +388,8 @@ class TestsSection(BaseEnv):
     out_check: OutCheck
     out_judge: Maybe["RunSection"]
     judge_type: Maybe[JudgeType]
-    judge_needs_in: bool | None
-    judge_needs_out: bool | None
+    raw_judge_needs_in: bool
+    raw_judge_needs_out: bool
     tokens_ignore_newlines: bool | None
     tokens_ignore_case: bool | None
     tokens_float_rel_error: Maybe[Decimal]
@@ -409,8 +429,8 @@ class TestsSection(BaseEnv):
         OUT_CHECK_SPECIFIC_KEYS = [
             ((None, "judge"), "out_judge", ""),
             ((None, "judge"), "judge_type", ""),
-            ((TaskType.batch, "judge"), "judge_needs_in", "0"),
-            ((TaskType.batch, "judge"), "judge_needs_out", "1"),
+            ((TaskType.batch, "judge"), "raw_judge_needs_in", "0"),
+            ((TaskType.batch, "judge"), "raw_judge_needs_out", "1"),
             ((None, "tokens"), "tokens_ignore_newlines", "0"),
             ((None, "tokens"), "tokens_ignore_case", "0"),
             ((None, "tokens"), "tokens_float_rel_error", ""),
@@ -431,13 +451,14 @@ class TestsSection(BaseEnv):
                 )
 
         # Load judge specific keys
-        for (task_type_cond, out_check), key, default in OUT_CHECK_SPECIFIC_KEYS:
+        for (task_type_cond, out_check), python_key, default in OUT_CHECK_SPECIFIC_KEYS:
+            key = python_key.removeprefix("raw_")
             if (task_type_cond is None or task_type_cond == task_type) and args[
                 "out_check"
             ].value == out_check:
-                args[key] = configs.get("tests", key)
+                args[python_key] = configs.get("tests", key)
             else:
-                args[key] = ConfigValue.make_internal(default, "tests", key)
+                args[python_key] = ConfigValue.make_internal(default, "tests", key)
 
         return {"_section": configs.get("tests", None), **args}
 

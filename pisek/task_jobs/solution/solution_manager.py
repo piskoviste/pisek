@@ -160,7 +160,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
             if isinstance(sanitize, SanitizeAbstract):
                 run_checker.add_prerequisite(sanitize, "sanitize")
 
-            if self._env.config.tests.judge_needs_out:
+            if self._env.config.judge_needs_out:
                 self._add_job(
                     SymlinkData(
                         self._env,
@@ -204,9 +204,7 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
                 self._env,
                 seed,
                 solution=(
-                    self.solution_label
-                    if self._env.config.tests.judge_needs_out
-                    else None
+                    self.solution_label if self._env.config.judge_needs_out else None
                 ),
             ),
             test,
