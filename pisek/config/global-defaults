@@ -72,8 +72,9 @@ headers_c=
 extra_sources_c=
 headers_cpp=
 extra_sources_cpp=
-extra_sources_py=
+extra_sources_hs=
 extra_sources_java=
+extra_sources_py=
 
 [limits]
 input_max_size=50

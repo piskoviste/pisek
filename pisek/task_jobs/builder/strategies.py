@@ -537,15 +537,34 @@ class Cargo(BuildStrategy):
         return self._artifact_dir
 
 
+class Haskell(BuildBinary):
+    name = BuildStrategyName.haskell
+    extra_sources: str | None = "extra_sources_hs"
+
+    @classmethod
+    def applicable_on_files(cls, build: "BuildSection", sources: list[str]) -> bool:
+        return cls._all_end_with(sources, [".hs"])
+
+    def _build(self) -> str:
+        hs_flags = ["-static", "-O2", "-Wall"]
+        self._run_subprocess(
+            ["ghc", *self.sources, "-o", self.target]
+            + hs_flags
+            + self._build_section.comp_args
+        )
+        return self.target
+
+
 # When adding a strategy, add it also to docs/config-v3-documentation.md#strategy
 AUTO_STRATEGIES: list[type[BuildStrategy]] = [
-    Python,
-    Shell,
+    Cargo,
     C,
     Cpp,
-    Pascal,
-    Java,
     Go,
+    Haskell,
+    Java,
     Make,
-    Cargo,
+    Pascal,
+    Python,
+    Shell,
 ]

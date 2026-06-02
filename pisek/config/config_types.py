@@ -115,15 +115,16 @@ class ProgramRole(StrEnum):
 
 
 class BuildStrategyName(StrEnum):
-    python = auto()
-    shell = auto()
+    cargo = auto()
     c = auto()
     cpp = auto()
-    pascal = auto()
+    go = auto()
+    haskell = auto()
     java = auto()
     make = auto()
-    cargo = auto()
-    go = auto()
+    pascal = auto()
+    python = auto()
+    shell = auto()
     auto = auto()
 
 
