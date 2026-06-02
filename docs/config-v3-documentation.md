@@ -823,15 +823,16 @@ Build strategy for building this program.
 
 Other strategies are:
 
-- `python`
-- `shell`
+- `cargo`
 - `c`
 - `cpp`
-- `pascal`
-- `java`
 - `go`
+- `haskell`
+- `java`
 - `make`
-- `cargo`
+- `pascal`
+- `python`
+- `shell`
 
 
 ### headers_c
@@ -861,6 +862,13 @@ Headers to include in the `cpp` [`strategy`](#strategy) (**with** suffixes).
 <!-- md:default-empty -->
 
 Extra source files for the `cpp` [`strategy`](#strategy).
+
+### extra_sources_hs
+<!-- md:version 2.4.0 -->
+<!-- md:type list[path] -->
+<!-- md:default-empty -->
+
+Extra source files for the `haskell` [`strategy`](#strategy).
 
 ### extra_sources_java
 <!-- md:version 2.0.0 -->
