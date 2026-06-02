@@ -64,6 +64,9 @@ tests=@all
 [solution_solve_go_complex]
 tests=@all
 
+[solution_solve_hs]
+tests=@all
+
 [solution_solve_env]
 tests=@all
 
@@ -96,6 +99,9 @@ exec=max
 process_limit=0
 
 [run_solution:solve_go_complex]
+process_limit=0
+
+[run_solution:solve_hs]
 process_limit=0
 
 [run_solution:solve_env]

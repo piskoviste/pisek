@@ -868,8 +868,9 @@ class BuildSection(BaseEnv):
     extra_sources_c: ListTaskPathFromStr
     headers_cpp: ListTaskPathFromStr
     extra_sources_cpp: ListTaskPathFromStr
-    extra_sources_py: ListTaskPathFromStr
+    extra_sources_hs: ListTaskPathFromStr
     extra_sources_java: ListTaskPathFromStr
+    extra_sources_py: ListTaskPathFromStr
 
     @classmethod
     def load_dict(cls, name: ConfigValue, configs: ConfigHierarchy) -> ConfigValuesDict:
