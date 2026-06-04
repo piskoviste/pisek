@@ -16,6 +16,7 @@ from abc import ABC, abstractmethod
 import inspect
 import json
 import os
+import re
 import shutil
 import subprocess
 from tempfile import NamedTemporaryFile, _TemporaryFileWrapper
@@ -57,6 +58,10 @@ class RunPopen(Protocol):
     ) -> subprocess.Popen: ...
 
 
+class Warn(Protocol):
+    def __call__(self, msg: str) -> None: ...
+
+
 class Log(Protocol):
     def __call__(
         self, level: LogLevel, message: str, bypass_cache: bool = False
@@ -73,14 +78,16 @@ class BuildStrategy(ABC):
         self,
         build_section: "BuildSection",
         env: "Env",
-        _run_subprocess: RunPopen,
-        _log: Log,
+        run_subprocess: RunPopen,
+        warn: Warn,
+        log: Log,
     ) -> None:
         self._build_section = build_section
         self._env = env
         self.stderr_output = ""
-        self._run_popen = _run_subprocess
-        self._log = _log
+        self._run_popen = run_subprocess
+        self._warn = warn
+        self._log = log
 
         self.workdir = "."
 
@@ -365,12 +372,20 @@ class Cpp(BuildBinary):
             "-fdiagnostics-color=" + ("never" if self._env.no_colors else "always")
         )
 
+        self._check_for_bits()
         self._run_subprocess(
             ["g++", *self.sources, "-o", self.target, "-I."]
             + cpp_flags
             + self._build_section.comp_args,
         )
         return self.target
+
+    def _check_for_bits(self):
+        for source in self.sources:
+            with self._open(source) as f:
+                code = f.read()
+            if re.search(r"#include(\s*)<bits/stdc\+\+\.h>", code):
+                self._warn(f'"#include <bits/stdc++.h>" should not be used. ({source})')
 
 
 class Pascal(BuildBinary):
