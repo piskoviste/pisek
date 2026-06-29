@@ -25,6 +25,7 @@ from pisek.task_jobs.checker.opendata_judge import (
     RunOpendataV1Judge,
     RunOpendataV2Judge,
 )
+from pisek.task_jobs.checker.codeforces_judge import RunCodeforcesBatchV1Judge
 
 
 def checker_job(
@@ -84,6 +85,16 @@ def checker_job(
             output,
             correct_output,
             seed,
+            expected_verdict,
+        )
+    elif env.config.tests.judge_type == JudgeType.codeforces_batch_v1:
+        return RunCodeforcesBatchV1Judge(
+            env,
+            env.config.tests.out_judge,
+            test,
+            input_,
+            output,
+            correct_output,
             expected_verdict,
         )
     else:
