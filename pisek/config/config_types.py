@@ -45,6 +45,7 @@ class JudgeType(StrEnum):
     cms_communication = "cms-communication"
     opendata_v1 = "opendata-v1"
     opendata_v2 = "opendata-v2"
+    codeforces_batch_v1 = "codeforces-batch-v1"
 
 
 class ShuffleMode(StrEnum):
