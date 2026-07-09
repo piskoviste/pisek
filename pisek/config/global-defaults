@@ -2,6 +2,7 @@
 version=v3
 task_type=batch
 score_precision=0
+processes=1
 
 [tests]
 has_sample_test=yes
