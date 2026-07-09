@@ -574,7 +574,8 @@ Exactly one solution has to be set to primary
 <!-- md:type string -->
 <!-- md:default @auto -->
 
-A string describing the expected result on each test. It should have one character for each test, including [`[test00]`](#test00).
+A string describing the expected result on each test. It should have one character for each test,
+including [`[test00]`](#test00) if [`has_sample_test=true`](#has_sample_test).
 
 Recognized results are:
 

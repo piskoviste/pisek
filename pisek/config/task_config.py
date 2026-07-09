@@ -186,7 +186,7 @@ class TaskConfig(BaseEnv):
         return next(sources, None)
 
     def __init__(self, **kwargs):
-        value = {"test_count": max(kwargs["test_sections"]) + 1}
+        value = {"test_numbers": list(kwargs["test_sections"].keys())}
 
         with init_context(value):
             super().__init__(**kwargs)
@@ -584,7 +584,7 @@ class TestSection(BaseEnv):
     def expand_predecessors(cls, value: str, info: ValidationInfo) -> list[str]:
         if info.context is None:
             raise RuntimeError(MISSING_VALIDATION_CONTEXT)
-        test_cnt = info.context.get("test_count")
+        test_numbers: list[int] = info.context.get("test_numbers")
         number = info.data["num"]
 
         predecessors = []
@@ -600,10 +600,10 @@ class TestSection(BaseEnv):
                     raise PydanticCustomError(
                         "predecessors_must_be_int", "Predecessors must be int"
                     )
-                if not 0 <= num < test_cnt:
+                if num not in test_numbers:
                     raise PydanticCustomError(
-                        "predecessors_must_be_in_range",
-                        f"Predecessors must be in range 0, {test_cnt-1}",
+                        "nonexistent_predecessor",
+                        f"Nonexistent test {num}",
                     )
                 predecessors.append(num)
 
@@ -627,7 +627,7 @@ class SolutionSection(BaseEnv):
     points: SolutionPoints
     points_min: SolutionPoints
     points_max: SolutionPoints
-    tests: str
+    raw_tests: str
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -640,12 +640,14 @@ class SolutionSection(BaseEnv):
             "points",
             "points_min",
             "points_max",
-            "tests",
+            "raw_tests",
         ]
-        args = {
-            key: configs.get_from_candidates([(name.section, key), ("solutions", key)])
-            for key in KEYS
-        }
+        args = {}
+        for key in KEYS:
+            config_key = key.removeprefix("raw_")
+            args[key] = configs.get_from_candidates(
+                [(name.section, config_key), ("solutions", config_key)]
+            )
 
         if args["run"].value == "@auto":
             args["run"] = args["run"].change_value(name.value)
@@ -668,11 +670,11 @@ class SolutionSection(BaseEnv):
     def validate_name(cls, value: str) -> str:
         return _validate_program_name("solution name", value)
 
-    @field_validator("tests", mode="after")
+    @field_validator("raw_tests", mode="after")
     def validate_tests(cls, value, info: ValidationInfo):
         if info.context is None:
             raise RuntimeError(MISSING_VALIDATION_CONTEXT)
-        test_cnt = info.context.get("test_count")
+        test_cnt = len(info.context.get("test_numbers"))
         primary = info.data.get("primary")
         if value == "@auto":
             value = ("1" if primary else "X") * test_cnt
@@ -713,6 +715,12 @@ class SolutionSection(BaseEnv):
                 )
 
         return self
+
+    def test(self, index: int, has_sample_test: bool) -> str:
+        if has_sample_test:
+            return self.raw_tests[index]
+        else:
+            return self.raw_tests[index - 1]
 
 
 def get_run_defaults(program_role: ProgramRole, program_name: str) -> list[str]:

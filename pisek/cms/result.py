@@ -152,9 +152,8 @@ def check_results(session: Session, env: Env, dataset: Dataset) -> None:
             continue
 
         target: str
-        for (num, subtask), fraction, target in zip(
-            subtasks, fractions, solution.tests
-        ):
+        for (num, subtask), fraction in zip(subtasks, fractions):
+            target = solution.test(num, config.tests.has_sample_test)
             name = subtask.name or f"Subtask {num}"
 
             if target == "X":
