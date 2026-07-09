@@ -71,7 +71,13 @@ class SolutionManager(TaskJobManager, TestcaseInfoMixin):
 
         for sub_num, inputs in self._all_testcases().items():
             self.tests.append(
-                TestJobGroup(self._env, sub_num, self._solution.tests[sub_num])
+                TestJobGroup(
+                    self._env,
+                    sub_num,
+                    self._solution.test(
+                        sub_num, self._env.config.tests.has_sample_test
+                    ),
+                )
             )
             for inp in inputs:
                 self._add_testcase_info_jobs(inp, sub_num)

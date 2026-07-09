@@ -149,7 +149,7 @@ class SolutionResults:
     ) -> tuple[bool, bool, Optional[LoggedResult]]:
         ok, definitive, breaker = check_verdicts(
             list(map(lambda r: r.verdict, results)),
-            self._solution.tests[test_num],
+            self._solution.test(test_num, self._config.tests.has_sample_test),
         )
         return ok, definitive, results[breaker] if breaker is not None else None
 
@@ -203,7 +203,7 @@ class SolutionResults:
     def check_test(self, num: int) -> Optional[str]:
         results = self.get_by_test()
 
-        expected = self._solution.tests[num]
+        expected = self._solution.test(num, self._config.tests.has_sample_test)
         ok, _, breaker = self._evaluate_results(results[num], num)
         if not ok:
             failed_test = f" ({breaker.test})" if breaker else ""
