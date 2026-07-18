@@ -897,7 +897,6 @@ and use the [`sources`](#sources) and [`extras`](#extras) keys for program-speci
     extra_sources_c=src/stub.c
     headers_cpp=src/guess.h
     extra_sources_cpp=src/stub.cpp
-    extra_sources_py=src/python.py
     ```
 
 ## [limits]
