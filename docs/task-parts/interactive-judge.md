@@ -20,3 +20,11 @@ The judge should print a relative number of points (a float between 0.0 and 1.0)
 To its stderr it should write a single-line message to the contestant.
 **Unlike what the CMS documentation specifies, the files should be single-line only.**
 There will be a warning otherwise.
+
+??? example "Example `cms-communication` judge"
+
+	For a binary search [task](https://github.com/piskoviste/pisek/blob/master/examples/cms-communication)
+	the judge may look like this:
+    ```py
+    --8<-- "examples/cms-communication/judge.py"
+    ```

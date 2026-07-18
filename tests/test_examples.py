@@ -19,5 +19,11 @@ class TestOpendata(TestFixtureVariant):
         return "examples/opendata/"
 
 
+class TestCmsCommunication(TestFixtureVariant):
+    @property
+    def fixture_path(self) -> str:
+        return "examples/cms-communication/"
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

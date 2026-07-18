@@ -1,0 +1,69 @@
+# Pisek example task
+# See https://github.com/piskoviste/pisek/blob/master/docs/config-v3-documentation.md for more information
+
+[task]
+version=v3
+task_type=interactive
+
+[tests]
+# Generator source file
+in_gen=gen
+gen_type=pisek-v1
+
+validator=validate
+validator_type=simple-42
+
+out_check=judge
+# Judge source file
+out_judge=judge
+judge_type=cms-communication
+
+checks.all_inputs_in_last_test=on
+checks.solution_for_this_test=on
+
+[test01]
+points=20
+in_globs=small*.in
+predecessors=0
+
+[test02]
+points=30
+in_globs=medium*.in
+predecessors=1
+
+[test03]
+points=50
+in_globs=big*.in
+predecessors=2
+
+[build_solution]
+headers_c=stubs/binsearch.h
+extra_sources_c=stubs/stub.c
+headers_cpp=stubs/binsearch.h
+extra_sources_cpp=stubs/stub.cpp
+extra_sources_py=stubs/library.py
+# This will currently not work in CMS. Pisek doesn't support stubs for
+# interpreted languages and CMS doesn't support libraries.
+
+[run_solution]
+subdir=solutions
+time_limit=1
+
+[solution_solve_bin_search]
+primary=yes
+
+[solution_solve_iterate]
+tests=111W
+
+[solution_solve_random]
+tests=11WW
+
+[build_solution:solutions/solve_random]
+entrypoint=solve_random
+
+[cms]
+name=binsearch
+title=Binary search
+time_limit=1
+min_submission_interval=30
+feedback_level=full
