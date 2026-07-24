@@ -1,4 +1,4 @@
-# Organization config examples 
+# Organization config examples
 
 Here you can find examples of organization configs that provide defaults
 for all of the organization's tasks. It is useful to put some options there
