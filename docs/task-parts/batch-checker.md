@@ -124,5 +124,5 @@ return codes, return code 0 for a correct output and return code 1 for a wrong o
 
 ??? danger "This [`judge_type`](../config-v3-documentation.md#judge_type) is not recommended"
 
-    Return with exit code 1 is very common and is for example trigger by any exception in Python.
+    Exit code 1 is very common and is for example triggered by any exception in Python.
     This can lead to internal judge bugs disguising themselves as wrong answers.
