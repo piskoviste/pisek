@@ -1,6 +1,6 @@
 [task]
 version=v3
-use=mo-v1
+use=cms-base-v1
 task_type=interactive
 
 [tests]
