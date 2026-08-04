@@ -13,8 +13,11 @@
 from decimal import Decimal, InvalidOperation
 from enum import auto, StrEnum
 from pydantic_core import PydanticCustomError
-from pydantic import BeforeValidator
+from pydantic import BeforeValidator, Field
 from typing import Annotated, Literal
+
+PositiveDecimal = Annotated[Decimal, Field(gt=0)]
+PositiveDecimalLimit = PositiveDecimal | Literal["unlimited"]
 
 
 class TaskType(StrEnum):

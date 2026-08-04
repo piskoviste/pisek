@@ -428,6 +428,8 @@ extra_sources_py=
 [limits]
 input_max_size=
 output_max_size=
+total_inputs_max_size=
+total_outputs_max_size=
 
 [cms]
 name=
