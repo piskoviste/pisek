@@ -52,6 +52,7 @@ from pisek.config.config_types import (
     BuildStrategyName,
     CMSFeedbackLevel,
     CMSScoreMode,
+    PositiveDecimalLimit,
 )
 from pisek.env.context import init_context
 from pisek.task_jobs.solution.solution_result import TEST_SPEC
@@ -948,6 +949,8 @@ class LimitsSection(BaseEnv):
 
     input_max_size: Decimal
     output_max_size: Decimal
+    total_inputs_max_size: PositiveDecimalLimit
+    total_outputs_max_size: PositiveDecimalLimit
 
     @classmethod
     def load_dict(cls, configs: ConfigHierarchy) -> ConfigValuesDict:

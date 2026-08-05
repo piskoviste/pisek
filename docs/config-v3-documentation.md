@@ -916,6 +916,20 @@ Maximum input size [MB]. (`0` for unlimited.)
 
 Maximum output size [MB]. (`0` for unlimited.)
 
+### total_inputs_max_size
+<!-- md:version 2.4.0 -->
+<!-- md:type decimal | 'unlimited' -->
+<!-- md:default 1024 -->
+
+Limit on the total size of all inputs [MB].
+
+### total_outputs_max_size
+<!-- md:version 2.4.0 -->
+<!-- md:type decimal | 'unlimited' -->
+<!-- md:default 1024 -->
+
+Limit on the total size of all outputs [MB].
+
 ## [cms]
 Settings related to the CMS importer. See [CMS docs](https://cms.readthedocs.io/en/latest/) for details.
 

@@ -11,18 +11,21 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import filecmp
+import os
 
 from pisek.utils.paths import TaskPath
 from pisek.env.env import TestingTarget
 from pisek.config.config_types import JudgeType, TaskType
 from pisek.task_jobs.solution.solution_result import Verdict
-from pisek.jobs.jobs import Job
+from pisek.jobs.jobs import Job, PipelineItemFailure
 from pisek.task_jobs.task_manager import (
     TaskJobManager,
     FUZZ_MAN_CODE,
     SOLUTION_MAN_CODE,
 )
 from pisek.task_jobs.manager_results import SolutionManagerResult, FuzzingManagerResult
+
+MB = 1024 * 1024
 
 
 class CompletenessCheck(TaskJobManager):
@@ -117,9 +120,40 @@ class CompletenessCheck(TaskJobManager):
                     if self._env.verbosity <= 0:
                         return
 
+    def _check_total_inputs_size(self) -> None:
+        tr = self.prerequisite_result(
+            f"{SOLUTION_MAN_CODE}{self._env.config.primary_solution}",
+            SolutionManagerResult,
+        ).testcase_results
+
+        total = sum(os.path.getsize(inp.path) for inp in tr)
+        limit = self._env.config.limits.total_inputs_max_size
+        if limit != "unlimited" and total > limit * MB:
+            raise PipelineItemFailure(
+                f"Total input size is bigger than {limit}MB: {(total+MB-1)//MB}MB"
+            )
+
+    def _check_total_outputs_size(self) -> None:
+        if self._env.config.task.task_type == TaskType.interactive:
+            return
+
+        tr = self.prerequisite_result(
+            f"{SOLUTION_MAN_CODE}{self._env.config.primary_solution}",
+            SolutionManagerResult,
+        ).testcase_results
+
+        total = sum(os.path.getsize(inp.to_output().path) for inp in tr)
+        limit = self._env.config.limits.total_outputs_max_size
+        if limit != "unlimited" and total > limit * MB:
+            raise PipelineItemFailure(
+                f"Total output size is bigger than {limit}MB: {(total+MB-1)//MB}MB"
+            )
+
     def _evaluate(self) -> None:
         assert self._env.target == TestingTarget.all
 
         self._check_cms_judge()
         self._check_different_outputs()
         self._check_dedicated_solutions()
+        self._check_total_inputs_size()
+        self._check_total_outputs_size()
