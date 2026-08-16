@@ -12,12 +12,103 @@
 
 from decimal import Decimal, InvalidOperation
 from enum import auto, StrEnum
+from functools import total_ordering
 from pydantic_core import PydanticCustomError
 from pydantic import BeforeValidator, Field
-from typing import Annotated, Literal
+from types import NotImplementedType
+from typing import Annotated, Any, Literal, overload, get_args
+from pydantic_core import core_schema
 
-PositiveDecimal = Annotated[Decimal, Field(gt=0)]
-PositiveDecimalLimit = PositiveDecimal | Literal["unlimited"]
+
+@total_ordering
+class Limit[T: int | Decimal]:
+    value: T | Literal["unlimited"]
+
+    def __init__(self, value: T | Literal["unlimited"]) -> None:
+        if isinstance(value, str):
+            if value != "unlimited":
+                raise ValueError(
+                    f'Limit string value must be "unlimited", got {value!r}'
+                )
+            self.value = "unlimited"
+        elif isinstance(value, (int, Decimal)):
+            if value < 0:
+                raise ValueError("Limit must be greater then or equal to 0")
+            self.value = value
+        else:
+            raise TypeError(
+                f"Limit value must be a number or 'unlimited', got {type(value)!r}"
+            )
+
+    @property
+    def is_unlimited(self) -> bool:
+        return self.value == "unlimited"
+
+    def __format__(self, format_spec: str) -> str:
+        if self.is_unlimited:
+            return "unlim"
+        else:
+            return format(self.value, format_spec)
+
+    def __repr__(self) -> str:
+        return f"Limit({self.value!r})"
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+    @staticmethod
+    def _coerce(
+        other: Any,
+    ) -> int | Decimal | Literal["unlimited"] | NotImplementedType:
+        if isinstance(other, Limit):
+            return other.value
+        if isinstance(other, str):
+            return "unlimited" if other == "unlimited" else NotImplemented
+        if isinstance(other, (int, Decimal)):
+            return other
+        return NotImplemented
+
+    def __eq__(self, other: object) -> bool:
+        other_value = self._coerce(other)
+        if other_value is NotImplemented:
+            return NotImplemented
+        return self.value == other_value
+
+    def __lt__(self, other: object) -> bool:
+        other_value = self._coerce(other)
+        if other_value is NotImplemented:
+            return NotImplemented
+        if self.value == "unlimited":
+            return False
+        if other_value == "unlimited":
+            return True
+        return self.value < other_value
+
+    @overload
+    def __mul__(self, other: int | Limit[int] | Literal["unlimited"]) -> Limit[T]: ...
+    @overload
+    def __mul__(self, other: Decimal | Limit[Decimal]) -> Limit[Decimal]: ...
+    def __mul__(self, other: Any) -> Limit[T] | Limit[Decimal]:
+        other_value = self._coerce(other)
+        if other_value is NotImplemented:
+            return NotImplemented
+        if self.value == "unlimited" or other_value == "unlimited":
+            return Limit("unlimited")
+        return Limit(self.value * other_value)  # type: ignore[return-value]
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type, handler):
+        (numeric_type,) = get_args(source_type) or (int,)
+        numeric_schema = handler.generate_schema(numeric_type)
+        unlimited_schema = core_schema.literal_schema(["unlimited"])
+        value_schema = core_schema.union_schema([numeric_schema, unlimited_schema])
+
+        return core_schema.chain_schema(
+            [value_schema, core_schema.no_info_plain_validator_function(cls)]
+        )
+
+
+type PositiveLimit[T] = Annotated[Limit[T], Field(gt=0)]
 
 
 class TaskType(StrEnum):

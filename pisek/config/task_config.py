@@ -52,7 +52,8 @@ from pisek.config.config_types import (
     BuildStrategyName,
     CMSFeedbackLevel,
     CMSScoreMode,
-    PositiveDecimalLimit,
+    Limit,
+    PositiveLimit,
 )
 from pisek.env.context import init_context
 from pisek.task_jobs.solution.solution_result import TEST_SPEC
@@ -123,7 +124,7 @@ class TaskConfig(BaseEnv):
 
     solutions: dict[str, "SolutionSection"]
 
-    solution_time_limit: Decimal = Field(ge=0)  # Needed for visualization
+    solution_time_limit: PositiveLimit[Decimal]  # Needed for visualization
 
     limits: "LimitsSection"
 
@@ -176,10 +177,10 @@ class TaskConfig(BaseEnv):
 
     @computed_field  # type: ignore[misc]
     @cached_property
-    def max_solution_time_limit(self) -> Decimal:
+    def max_solution_time_limit(self) -> PositiveLimit[Decimal]:
         return max(
             (solution.run.time_limit for solution in self.solutions.values()),
-            default=Decimal(0),
+            default=Limit(Decimal(0)),
         )
 
     def get_solution_by_run(self, run: str) -> Optional[str]:
@@ -524,7 +525,7 @@ class TestSection(BaseEnv):
     checks_validate: bool
     checks_solution_for_this_test: bool
     checks_different_outputs: bool
-    opendata_online_validity: int | Literal["unlimited"]
+    opendata_online_validity: PositiveLimit[int]
 
     @property
     def max_points(self) -> Decimal:
@@ -750,12 +751,11 @@ class RunSection(BaseEnv):
     subdir: str
     build: "BuildSection"
     exec: TaskPathFromStr
-    time_limit: Decimal = Field(ge=0)  # [seconds]
-    clock_mul: Decimal = Field(ge=0)  # [1]
-    clock_min: Decimal = Field(ge=0)  # [seconds]
-    mem_limit: int = Field(ge=0)  # [MB]
-    process_limit: int = Field(ge=0)  # [1]
-    # limit=0 means unlimited
+    time_limit: PositiveLimit[Decimal] = Field(ge=0)  # [seconds]
+    clock_mul: Limit[Decimal] = Field(ge=0)  # [1]
+    clock_min: Limit[Decimal] = Field(ge=0)  # [seconds]
+    mem_limit: PositiveLimit[int] = Field(ge=0)  # [MB]
+    process_limit: PositiveLimit[int] = Field(ge=0)  # [1]
     args: ListStr
     env: dict[str, str]
 
@@ -763,10 +763,10 @@ class RunSection(BaseEnv):
     def executable(self) -> TaskPath:
         return TaskPath.executable_path(self.build.program_name, self.exec.path)
 
-    def clock_limit(self, override_time_limit: Decimal | None = None) -> Decimal:
+    def clock_limit(
+        self, override_time_limit: PositiveLimit[Decimal] | None = None
+    ) -> Limit[Decimal]:
         tl = override_time_limit if override_time_limit is not None else self.time_limit
-        if tl == 0:
-            return Decimal(0)
         return max(tl * self.clock_mul, self.clock_min)
 
     @classmethod
@@ -947,10 +947,10 @@ class LimitsSection(BaseEnv):
 
     _section: str = "limits"
 
-    input_max_size: Decimal
-    output_max_size: Decimal
-    total_inputs_max_size: PositiveDecimalLimit
-    total_outputs_max_size: PositiveDecimalLimit
+    input_max_size: PositiveLimit[Decimal]
+    output_max_size: PositiveLimit[Decimal]
+    total_inputs_max_size: PositiveLimit[Decimal]
+    total_outputs_max_size: PositiveLimit[Decimal]
 
     @classmethod
     def load_dict(cls, configs: ConfigHierarchy) -> ConfigValuesDict:
@@ -967,8 +967,8 @@ class CMSSection(BaseEnv):
     title: str
     submission_format: ListStr
 
-    time_limit: Decimal = Field(gt=0)  # [seconds]
-    mem_limit: int = Field(gt=0)  # [MB]
+    time_limit: PositiveLimit[Decimal]  # [seconds]
+    mem_limit: PositiveLimit[int]  # [MB]
 
     max_submissions: MaybeInt = Field(gt=0)
     min_submission_interval: int = Field(ge=0)  # [seconds]
@@ -1054,6 +1054,12 @@ def _convert_errors(e: ValidationError, config_values: ConfigValuesDict) -> list
     for error in e.errors():
         value: Any = config_values
         for loc in error["loc"]:
+            # XXX: Hack for pydantic treatment of union types
+            # Unfortunately pydantic throws multiple errors,
+            # but what can you do...
+            # https://pydantic.com.cn/en/concepts/unions/
+            if isinstance(value, ConfigValue):
+                break
             value = value[loc]
 
         if isinstance(value, ConfigValue):
@@ -1061,6 +1067,7 @@ def _convert_errors(e: ValidationError, config_values: ConfigValuesDict) -> list
         elif "_section" in value:
             location = value["_section"].location()
         elif "_loc" in error["ctx"]:
+            # For glob config keys, such as env_{KEY}
             location = value[error["ctx"]["_loc"]].location()
         else:
             location = "global config"

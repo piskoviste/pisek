@@ -51,13 +51,13 @@ tests=X1WW
 
 [run_solution:solve_all_ones]
 # We need to increase process limit for Java
-process_limit=0
+process_limit=unlimited
 
 [solution_solve_spread]
 tests=P1PP
 
 [run_solution]
-time_limit=1
+time_limit=unlimited
 
 [cms]
 name=sandcastles
