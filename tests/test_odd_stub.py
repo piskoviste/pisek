@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from util import TestFixtureVariant, modify_config
+from tests.util import TestFixtureVariant, modify_config
 
 
 class TestOddStub(TestFixtureVariant):

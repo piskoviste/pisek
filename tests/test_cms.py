@@ -3,7 +3,7 @@ import os
 import unittest
 
 from pisek.utils.paths import TESTS_DIR, GENERATED_SUBDIR
-from util import TestFixtureVariant, overwrite_file, modify_config
+from tests.util import TestFixtureVariant, overwrite_file, modify_config
 
 
 class TestSumCMS(TestFixtureVariant):

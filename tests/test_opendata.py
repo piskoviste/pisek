@@ -11,7 +11,7 @@ import os
 import shutil
 import unittest
 
-from util import TestFixture, overwrite_file, modify_config
+from tests.util import TestFixture, overwrite_file, modify_config
 
 from pisek.user_errors import UserError
 from pisek.task_jobs.data.testcase_info import TestcaseGenerationMode
