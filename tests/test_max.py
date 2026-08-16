@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from util import TestFixtureVariant
+from tests.util import TestFixtureVariant
 
 
 class TestMax(TestFixtureVariant):

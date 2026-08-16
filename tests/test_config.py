@@ -6,8 +6,8 @@ pisek catches the problem.
 
 import unittest
 
-from util import modify_config
-from test_cms import TestSumCMS
+from tests.util import modify_config
+from tests.test_cms import TestSumCMS
 
 
 class TestMissingTest(TestSumCMS):

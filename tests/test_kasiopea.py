@@ -7,7 +7,7 @@ pisek catches the problem.
 import unittest
 import os
 
-from util import TestFixtureVariant, overwrite_file, modify_config
+from tests.util import TestFixtureVariant, overwrite_file, modify_config
 
 
 class TestSumKasiopea(TestFixtureVariant):

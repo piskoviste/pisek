@@ -8,7 +8,7 @@ import unittest
 from io import StringIO
 from unittest import mock
 
-from util import TestFixture
+from tests.util import TestFixture
 
 from pisek.__main__ import main
 
