@@ -25,6 +25,7 @@ from pisek.env.base_env import BaseEnv
 from pisek.config.config_hierarchy import DEFAULT_CONFIG_FILENAME
 from pisek.config.task_config import load_config, TaskConfig
 from pisek.config.select_solutions import expand_solutions
+from pisek.config.config_types import Limit, PositiveLimit
 
 
 class TestingTarget(StrEnum):
@@ -69,7 +70,7 @@ class Env(BaseEnv):
     strict: bool
     testing_log: bool
     solutions: list[str]
-    time_limit: Decimal | None = Field(ge=0)
+    time_limit: PositiveLimit[Decimal] | None
     all_inputs: bool
     stats: bool
     repeat: int = Field(ge=1)
@@ -89,7 +90,7 @@ class Env(BaseEnv):
         strict: bool = False,
         testing_log: bool = False,
         solutions: Optional[list[str]] = None,
-        time_limit: Decimal | None = None,
+        time_limit: PositiveLimit[Decimal] | None = None,
         stats: bool = False,
         repeat: int = 1,
         iteration: int = 0,
@@ -132,7 +133,9 @@ class Env(BaseEnv):
             strict=strict,
             testing_log=testing_log,
             solutions=expanded_solutions,
-            time_limit=time_limit,
+            # XXX: We could allow Limit as an input
+            # but then we will get weird config errors shown to the user.
+            time_limit=time_limit.value if time_limit is not None else None,  # type: ignore[arg-type]
             all_inputs=all_inputs,
             stats=stats,
             repeat=repeat,

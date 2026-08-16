@@ -1,4 +1,5 @@
 import configparser
+from decimal import Decimal
 import io
 import os
 import shutil
@@ -8,6 +9,7 @@ import unittest
 from unittest import mock
 
 from pisek.user_errors import UserError
+from pisek.config.config_types import PositiveLimit
 from pisek.config import config_hierarchy
 from pisek.__main__ import test_task_path
 from pisek.utils.util import clean_task_dir
@@ -118,7 +120,7 @@ class TestFixtureVariant(TestFixture):
         pass
 
     @property
-    def time_limit(self) -> float | None:
+    def time_limit(self) -> PositiveLimit[Decimal] | None:
         return None
 
     def runTest(self) -> None:

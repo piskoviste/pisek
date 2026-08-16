@@ -242,6 +242,8 @@ def update_to_v3(config: ConfigParser, task_path: str) -> None:
                 f"{old_program_role}_{limit}_limit",
                 f"{limit}_limit",
             )
+            if config[section].get(f"{limit}_limit") == "0":
+                config[section][f"{limit}_limit"] = "unlimited"
 
     update_to_extra(config, "stub", "extra_sources_c", ".c")
     update_to_extra(config, "stub", "extra_sources_cpp", ".cpp")

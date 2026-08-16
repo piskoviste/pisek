@@ -36,7 +36,7 @@ from pisek.utils.text import eprint
 from pisek.utils.colors import color_settings
 from pisek.utils.argparse_util import (
     argparse_positive_Decimal,
-    argparse_nonnegative_Decimal,
+    argparse_PositiveDecimalLimit,
 )
 
 from pisek.visualize import visualize
@@ -195,7 +195,7 @@ def _main(argv: list[str]) -> None:
     parser_test.add_argument(
         "--time-limit",
         "-t",
-        type=argparse_nonnegative_Decimal,
+        type=argparse_PositiveDecimalLimit,
         help="override time limit for solutions to TIME_LIMIT seconds",
     )
     parser_test.add_argument(
@@ -292,7 +292,7 @@ def _main(argv: list[str]) -> None:
         "--limit",
         "-l",
         default=None,
-        type=argparse_nonnegative_Decimal,
+        type=argparse_positive_Decimal,
         help="visualize as if the time limit was LIMIT seconds",
     )
     parser_visualize.add_argument(

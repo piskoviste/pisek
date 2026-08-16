@@ -15,7 +15,7 @@ from decimal import Decimal
 
 from pisek.jobs.jobs import State, Job
 from pisek.jobs.status import StatusJobManager
-from pisek.config.config_types import GenType
+from pisek.config.config_types import GenType, Limit
 from pisek.config.task_config import RunSection
 from pisek.env.env import TestingTarget
 from pisek.task_jobs.run_result import RunResult
@@ -32,9 +32,9 @@ class ResourceStatistics(StatusJobManager):
         return []
 
     def get_status(self) -> str:
-        def format_stat(
+        def format_stat[T: int | Decimal](
             run_results: list[RunResult],
-            limit: Decimal | int,
+            limit: Limit[T],
             attr: str,
             dec_places: int = 0,
         ) -> list[str]:
@@ -43,9 +43,9 @@ class ResourceStatistics(StatusJobManager):
 
             if limit == 0:
                 color = "green"
-            elif value < Decimal("0.5") * limit:
+            elif value < limit * Decimal("0.5"):
                 color = "green"
-            elif value < Decimal("0.9") * limit:
+            elif value < limit * Decimal("0.9"):
                 color = "yellow"
             elif value <= limit:
                 color = "red"

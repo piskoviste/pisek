@@ -1,6 +1,8 @@
+from decimal import Decimal
 import unittest
 
 from tests.util import TestFixtureVariant
+from pisek.config.config_types import Limit, PositiveLimit
 
 
 class TestCmsBatch(TestFixtureVariant):
@@ -11,8 +13,8 @@ class TestCmsBatch(TestFixtureVariant):
 
 class TestOpendata(TestFixtureVariant):
     @property
-    def time_limit(self) -> float | None:
-        return 1.0
+    def time_limit(self) -> PositiveLimit[Decimal] | None:
+        return Limit(Decimal(1))
 
     @property
     def fixture_path(self) -> str:

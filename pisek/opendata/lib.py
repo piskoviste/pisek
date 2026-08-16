@@ -139,7 +139,7 @@ class BuiltTask:
 
     def tests(self) -> list[OpendataTestInfo]:
         return [
-            OpendataTestInfo(test.points, test.opendata_online_validity)
+            OpendataTestInfo(test.points, test.opendata_online_validity.value)
             for test in self._config.test_sections.values()
         ]
 
