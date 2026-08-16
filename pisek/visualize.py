@@ -1,6 +1,6 @@
 # pisek  - Tool for developing tasks for programming competitions.
 #
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 # Copyright (c)   2024        Antonín Maloň <git@tonyl.eu>
 
 # This program is free software: you can redistribute it and/or modify
@@ -22,7 +22,7 @@ from pisek.user_errors import MissingFile
 from pisek.utils.text import pad, tab, eprint
 from pisek.utils.colors import color_settings
 from pisek.utils.terminal import terminal_width
-from pisek.config.config_types import TestPoints
+from pisek.config.config_types import TestPoints, Limit, PositiveLimit
 from pisek.config.task_config import load_config, TaskConfig
 from pisek.config.select_solutions import expand_solutions
 from pisek.task_jobs.solution.solution_result import Verdict
@@ -62,12 +62,13 @@ class LoggedResult:
 
     def to_str(
         self,
-        limit: Decimal,
+        limit: PositiveLimit[Decimal],
         segments: int,
         test_pad_length: int = 15,
     ) -> str:
         def get_bar() -> str:
-            percentage = self.time / limit
+            assert limit.value != "unlimited"
+            percentage = self.time / limit.value
             full = max(ceil(segments * percentage), 1)
 
             bounded = min(full, segments)
@@ -98,7 +99,7 @@ class LoggedResult:
         )
 
 
-def limit_result(result: LoggedResult, limit: Decimal) -> LoggedResult:
+def limit_result(result: LoggedResult, limit: PositiveLimit[Decimal]) -> LoggedResult:
     if result.time <= limit and result.verdict == Verdict.timeout:
         new_verdict = result.original_verdict
         if new_verdict == Verdict.timeout:
@@ -155,7 +156,7 @@ class SolutionResults:
 
     @staticmethod
     def from_log(
-        name: str, config: TaskConfig, testing_log, limit: Decimal
+        name: str, config: TaskConfig, testing_log, limit: PositiveLimit[Decimal]
     ) -> "SolutionResults":
         solutions = testing_log["solutions"]
         if name not in solutions:
@@ -247,7 +248,7 @@ class SolutionResults:
         max_possible = 0
         for i, time in enumerate(times):
             ok, _, _ = self._evaluate_results(
-                list(map(lambda r: limit_result(r, time), results)),
+                list(map(lambda r: limit_result(r, Limit(time)), results)),
                 num,
             )
             if ok:
@@ -290,10 +291,10 @@ def visualize(
         )
 
     if testing_log["source"] == "cms":
-        limit_default = config.cms.time_limit
+        limit_default = Limit(config.cms.time_limit)
     else:
         limit_default = config.solution_time_limit
-    time_limit = limit_default if limit is None else limit
+    time_limit = limit_default if limit is None else Limit(limit)
 
     filter_fn = show_all if filter == "all" else show_slowest
 

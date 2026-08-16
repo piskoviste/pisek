@@ -71,7 +71,7 @@ tests=@all
 tests=@all
 
 [run_solution]
-time_limit=0.2
+time_limit=unlimited
 
 [run_judge:solve_judge]
 build=solve_judge
@@ -79,13 +79,13 @@ build=solve_judge
 build=solve_judge
 
 [run_solution:solve_py_cpp]
-process_limit=0
+process_limit=unlimited
 
 [run_solution:solve_java_simple]
-process_limit=0
+process_limit=unlimited
 
 [run_solution:solve_java_complex]
-process_limit=0
+process_limit=unlimited
 
 [run_solution:solve_rs_complex_min]
 build=solve_rs_complex
@@ -96,13 +96,13 @@ build=solve_rs_complex
 exec=max
 
 [run_solution:solve_go_simple]
-process_limit=0
+process_limit=unlimited
 
 [run_solution:solve_go_complex]
-process_limit=0
+process_limit=unlimited
 
 [run_solution:solve_hs]
-process_limit=0
+process_limit=unlimited
 
 [run_solution:solve_env]
 env_TASK=max

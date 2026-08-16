@@ -38,14 +38,14 @@ exec=
 time_limit=360
 clock_mul=2
 clock_min=1
-mem_limit=0
+mem_limit=unlimited
 process_limit=1
 args=
 subdir=
 
 [limits]
-input_max_size=0
-output_max_size=0
+input_max_size=unlimited
+output_max_size=unlimited
 
 [cms]
 name=

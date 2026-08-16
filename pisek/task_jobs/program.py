@@ -18,14 +18,14 @@ from contextlib import ExitStack
 from dataclasses import dataclass, field
 from decimal import Decimal
 from math import ceil
-import os
 from tempfile import NamedTemporaryFile, TemporaryDirectory
-from typing import assert_never, Optional, Any, Union, Callable
+from typing import Optional, Any, Union, Callable
 import signal
 import subprocess
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import Optional, Any, Union, Callable
 
+from pisek.config.config_types import Limit, PositiveLimit
 from pisek.config.task_config import ProgramRole, RunSection
 from pisek.env.env import Env
 from pisek.utils.paths import TaskPath, LogPath
@@ -40,10 +40,10 @@ class ProgramPoolItem:
     name: str
     executable: TaskPath
     args: list[str]
-    time_limit: Decimal
-    clock_limit: Decimal
-    mem_limit: int
-    process_limit: int
+    time_limit: PositiveLimit[Decimal]
+    clock_limit: PositiveLimit[Decimal]
+    mem_limit: PositiveLimit[int]
+    process_limit: PositiveLimit[int]
     stdin: Optional[Union[TaskPath, int]]
     stdout: Optional[Union[TaskPath, int]]
     stderr: Optional[TaskPath]
@@ -54,9 +54,9 @@ class ProgramPoolItem:
         result: dict[str, Any] = {}
 
         minibox_args = []
-        minibox_args.append(f"--time={self.time_limit}")
-        minibox_args.append(f"--wall-time={self.clock_limit}")
-        minibox_args.append(f"--mem={self.mem_limit*1024}")
+        minibox_args.append(f"--time={self.time_limit.unlimited_as(0)}")
+        minibox_args.append(f"--wall-time={self.clock_limit.unlimited_as(0)}")
+        minibox_args.append(f"--mem={(self.mem_limit*1024).unlimited_as(0)}")
         # Minibox doesn't support limits for multiple processes (#613)
         if self.process_limit != 1:
             minibox_args.append(f"--processes=0")
@@ -112,10 +112,10 @@ class ProgramsJob(TaskJob):
         self,
         path: TaskPath,
         args: list[str],
-        time_limit: Decimal,
-        clock_limit: Decimal,
-        mem_limit: int,
-        process_limit: int,
+        time_limit: PositiveLimit[Decimal],
+        clock_limit: PositiveLimit[Decimal],
+        mem_limit: PositiveLimit[int],
+        process_limit: PositiveLimit[int],
         stdin: Optional[Union[TaskPath, int]] = None,
         stdout: Optional[Union[TaskPath, int]] = None,
         stderr: Optional[LogPath] = None,
@@ -171,7 +171,7 @@ class ProgramsJob(TaskJob):
         env={},
     ) -> None:
         """Adds program to execution pool."""
-        time_limit: Decimal | None = None
+        time_limit: PositiveLimit[Decimal] | None = None
         if program_role.is_solution():
             time_limit = self._env.time_limit
 
@@ -353,10 +353,10 @@ class ProgramsJob(TaskJob):
         self._load_executable(
             TaskPath.executable_path(program),
             args=args,
-            time_limit=Decimal(300),
-            clock_limit=Decimal(300),
-            mem_limit=0,
-            process_limit=1,
+            time_limit=Limit(Decimal(300)),
+            clock_limit=Limit(Decimal(300)),
+            mem_limit=Limit("unlimited"),
+            process_limit=Limit(1),
             stdin=stdin,
             stdout=stdout,
             stderr=stderr,

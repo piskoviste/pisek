@@ -1,6 +1,6 @@
 # pisek  - Tool for developing tasks for programming competitions.
 #
-# Copyright (c)   2026        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2026        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -12,6 +12,8 @@
 
 from argparse import ArgumentTypeError
 from decimal import Decimal, InvalidOperation
+
+from pisek.config.config_types import Limit, PositiveLimit
 
 
 def argparse_Decimal(value: str, type_str: str = "decimal") -> Decimal:
@@ -33,10 +35,18 @@ def argparse_positive_Decimal(
     return dvalue
 
 
-def argparse_nonnegative_Decimal(
-    value: str, type_str: str = "non-negative decimal"
-) -> Decimal:
-    dvalue = argparse_Decimal(value, type_str)
-    if dvalue < 0:
-        raise ArgumentTypeError(f"invalid {type_str} value: '{value}'")
-    return dvalue
+def argparse_PositiveLimit[T: int | Decimal](
+    value: str, t: type[T]
+) -> PositiveLimit[T]:
+    try:
+        limit = Limit[T].from_str(value, t)
+        assert limit > 0
+        return limit
+    except (ValueError, AssertionError):
+        raise ArgumentTypeError(
+            f"invalid limit value: '{value}'. Expected positive {t.__name__} or 'unlimited'."
+        )
+
+
+def argparse_PositiveDecimalLimit(value: str) -> PositiveLimit[Decimal]:
+    return argparse_PositiveLimit(value, Decimal)

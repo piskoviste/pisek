@@ -51,7 +51,7 @@ tests=X1WW
 
 [run_solution:solve_all_ones]
 # We need to increase process limit for Java
-process_limit=0
+process_limit=unlimited
 
 [solution_solve_spread]
 tests=P1PP
