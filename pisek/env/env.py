@@ -25,6 +25,7 @@ from pisek.env.base_env import BaseEnv
 from pisek.config.config_hierarchy import DEFAULT_CONFIG_FILENAME
 from pisek.config.task_config import load_config, TaskConfig
 from pisek.config.select_solutions import expand_solutions
+from pisek.config.config_types import Limit, PositiveLimit
 
 
 class TestingTarget(StrEnum):
@@ -69,7 +70,7 @@ class Env(BaseEnv):
     strict: bool
     testing_log: bool
     solutions: list[str]
-    time_limit: Decimal | None = Field(ge=0)
+    time_limit: PositiveLimit[Decimal] | None
     all_inputs: bool
     stats: bool
     repeat: int = Field(ge=1)
@@ -118,6 +119,14 @@ class Env(BaseEnv):
                 expanded_solutions.remove(config.primary_solution)
             expanded_solutions.insert(0, config.primary_solution)
 
+        tl: PositiveLimit[Decimal] | None
+        if time_limit is None:
+            tl = None
+        elif time_limit == 0:
+            tl = Limit("unlimited")
+        else:
+            tl = Limit(time_limit)
+
         return Env(
             target=TestingTarget(TestingTarget.all if target is None else target),
             jobs=(
@@ -132,7 +141,7 @@ class Env(BaseEnv):
             strict=strict,
             testing_log=testing_log,
             solutions=expanded_solutions,
-            time_limit=time_limit,
+            time_limit=tl,
             all_inputs=all_inputs,
             stats=stats,
             repeat=repeat,
