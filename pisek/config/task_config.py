@@ -61,16 +61,9 @@ from pisek.task_jobs.builder.strategies import ALL_STRATEGIES
 
 type Maybe[T] = Annotated[T | None, BeforeValidator(lambda t: t or None)]
 
-
-MaybeInt = Annotated[
-    Optional[int], BeforeValidator(lambda i: (None if i == "X" else i))
-]
 ListStr = Annotated[list[str], BeforeValidator(lambda s: s.split())]
 
 TaskPathFromStr = Annotated[TaskPath, BeforeValidator(lambda s: TaskPath(s))]
-OptionalTaskPathFromStr = Annotated[
-    Optional[TaskPath], BeforeValidator(lambda s: TaskPath(s) if s else None)
-]
 ListTaskPathFromStr = Annotated[
     list[TaskPath], BeforeValidator(lambda s: [TaskPath(p) for p in s.split()])
 ]
@@ -984,7 +977,7 @@ class CMSSection(BaseEnv):
     time_limit: Decimal = Field(gt=0)  # [seconds]
     mem_limit: int = Field(gt=0)  # [MB]
 
-    max_submissions: MaybeInt = Field(gt=0)
+    max_submissions: PositiveLimit[int]
     min_submission_interval: int = Field(ge=0)  # [seconds]
 
     score_mode: CMSScoreMode
