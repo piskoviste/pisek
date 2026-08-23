@@ -708,46 +708,46 @@ Subdirectory where to look for the program. (If empty, the task root is used.) O
 
 ### time_limit
 <!-- md:version 1.6.0 -->
-<!-- md:type decimal -->
+<!-- md:type decimal | 'unlimited' -->
 <!-- md:default 360 -->
 
-Execution time limit [seconds]. (`0` for unlimited.)
+Execution time limit [seconds].
 
 ### clock_mul
 <!-- md:version 1.6.0 -->
-<!-- md:type decimal -->
+<!-- md:type decimal | 'unlimited' -->
 <!-- md:default 2 -->
 
-Wall clock multiplier [1]. (`0` for unlimited.)
+Wall clock multiplier [1].
 
 The wall clock limit will be computed as `max(time_limit * clock_mul, clock_min)`.
 
 ### clock_min
 <!-- md:version 1.6.0 -->
-<!-- md:type decimal -->
+<!-- md:type decimal | 'unlimited' -->
 <!-- md:default 1 -->
 
 Wall clock minimum [seconds].
 
 ### mem_limit
 <!-- md:version 1.6.0 -->
-<!-- md:type int -->
+<!-- md:type int | 'unlimited' -->
 <!-- md:default 0 -->
 
-Memory limit [MB]. (`0` for unlimited.)
+Memory limit [MB].
 
 ### process_limit
 <!-- md:version 1.6.0 -->
-<!-- md:type int -->
+<!-- md:type int | 'unlimited' -->
 <!-- md:default 1 -->
 
-Maximum number of processes. (`0` for unlimited.)
+Maximum number of processes.
 
 Please keep in mind that killing multiple processes
 upon errors is inherently unreliable.
 
 !!! danger
-    At the moment limits greater than `1` are interpreted as "unlimited".
+    At the moment limits greater than `1` are interpreted as `'unlimited'`.
 
 ### env_{KEY}
 <!-- md:version 2.1.0 -->
@@ -904,17 +904,17 @@ Section with input/output size limits.
 
 ### input_max_size
 <!-- md:version 1.0.0 -->
-<!-- md:type int -->
+<!-- md:type int | 'unlimited' -->
 <!-- md:default 50 -->
 
-Maximum input size [MB]. (`0` for unlimited.)
+Maximum input size [MB].
 
 ### output_max_size
 <!-- md:version 1.0.0 -->
-<!-- md:type int -->
+<!-- md:type int | 'unlimited' -->
 <!-- md:default 10 -->
 
-Maximum output size [MB]. (`0` for unlimited.)
+Maximum output size [MB].
 
 ### total_inputs_max_size
 <!-- md:version 2.4.0 -->
@@ -974,10 +974,10 @@ Memory limit [MB].
 
 ### max_submissions
 <!-- md:version 1.0.0 -->
-<!-- md:type int | 'X' -->
+<!-- md:type int | 'unlimited' -->
 <!-- md:default 50 -->
 
-The number of submissions one contestant is allowed to make, or `X` for unlimited.
+The number of submissions one contestant is allowed to make.
 
 ### min_submission_interval
 <!-- md:version 1.0.0 -->
