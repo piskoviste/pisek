@@ -46,7 +46,7 @@ def create_task(
 def set_task_settings(task: Task, config: TaskConfig):
     task.title = config.cms.title
     task.submission_format = config.cms.submission_format
-    task.max_submission_number = config.cms.max_submissions
+    task.max_submission_number = config.cms.max_submissions.unlimited_as(None)
     task.min_submission_interval = (
         timedelta(seconds=config.cms.min_submission_interval)
         if config.cms.min_submission_interval > 0
