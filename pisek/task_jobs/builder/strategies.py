@@ -385,7 +385,9 @@ class Cpp(BuildBinary):
             with self._open(source) as f:
                 code = f.read()
             if re.search(r"#include(\s*)<bits/stdc\+\+\.h>", code):
-                self._warn(f'"#include <bits/stdc++.h>" should not be used. It is undocumented and makes compilation longer. ({source})')
+                self._warn(
+                    f'"#include <bits/stdc++.h>" should not be used. It is undocumented and makes compilation longer. ({source})'
+                )
 
 
 class Pascal(BuildBinary):
