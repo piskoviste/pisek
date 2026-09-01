@@ -257,6 +257,7 @@ class TaskConfig(BaseEnv):
                 JudgeType.opendata_v1,
                 JudgeType.opendata_v2,
                 JudgeType.cms_batch,
+                JudgeType.codeforces_batch_v1,
             ],
             TaskType.interactive: [JudgeType.cms_communication],
         }
