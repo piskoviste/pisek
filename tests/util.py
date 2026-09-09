@@ -2,6 +2,7 @@ import configparser
 from decimal import Decimal
 import io
 import os
+from pathlib import Path
 import shutil
 import tempfile
 from typing import Callable
@@ -56,9 +57,10 @@ class TestFixture(unittest.TestCase):
 
         self.set_env()
 
+        pd_env = os.environ.get("PISEK_DIRECTORY")
         assert_task_dir(
             self.task_dir,
-            os.environ.get("PISEK_DIRECTORY"),
+            Path(pd_env) if pd_env is not None else None,
             config_hierarchy.DEFAULT_CONFIG_FILENAME,
         )
         clean_task_dir(self.task_dir)

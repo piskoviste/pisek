@@ -16,6 +16,7 @@ from decimal import Decimal
 import json
 from math import ceil, inf
 import os
+from pathlib import Path
 from typing import Any, Optional
 
 from pisek.user_errors import MissingFile
@@ -275,7 +276,7 @@ def visualize(
     limit: Decimal | None,
     filename: str,
     segments: Optional[int],
-    pisek_dir: Optional[str],
+    pisek_dir: Path | None,
     config_filename: str,
     **_,
 ) -> None:
