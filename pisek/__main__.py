@@ -19,6 +19,7 @@ import argcomplete
 import argparse
 import logging
 import os
+from pathlib import Path
 import sys
 from typing import Optional
 
@@ -140,7 +141,7 @@ def _main(argv: list[str]) -> None:
     parser.add_argument(
         "--pisek-dir",
         help="pisek directory for higher level settings",
-        type=str,
+        type=Path,
     )
     parser.add_argument(
         "--config-filename",
@@ -352,15 +353,33 @@ def _main(argv: list[str]) -> None:
     argcomplete.autocomplete(parser)
     args = parser.parse_args(argv)
 
-    if args.pisek_dir is None and "PISEK_DIRECTORY" in os.environ:
-        args.pisek_dir = os.path.join(os.getcwd(), os.environ["PISEK_DIRECTORY"])
+    # Set pisek directory
+    if args.pisek_dir is not None:
+        pass
+    elif "PISEK_DIRECTORY" in os.environ:
+        args.pisek_dir = Path(os.getcwd(), os.environ["PISEK_DIRECTORY"])
+    else:
+        current_path = Path().absolute()
+        while current_path:
+            if (current_path / ".git").exists():
+                pisek_dir = current_path / "pisek"
+                if pisek_dir.exists():
+                    args.pisek_dir = pisek_dir
+                break
+            step_up = current_path.parent
+            if step_up == current_path:
+                break  # topmost directory
+            if os.stat(step_up).st_uid != os.stat(current_path).st_uid:
+                break  # other user's directory
+            current_path = step_up
+
     color_settings.set_state(not args.plain and not args.no_colors)
 
     # Taskless subcommands
     if args.subcommand == "version":
         return print_version()
     elif args.subcommand == "init":
-        return init_task(args.config_filename, args.no_jumps)
+        return init_task(args.config_filename, args.no_jumps, args.pisek_dir)
 
     # !!! Ensure this is always run before clean_directory !!!
     assert_task_dir(PATH, args.pisek_dir, args.config_filename)

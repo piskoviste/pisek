@@ -19,8 +19,9 @@ from argparse import Namespace
 from datetime import datetime
 from functools import wraps
 import os
+from pathlib import Path
 import sys
-from typing import Callable, Optional, ParamSpec, TypeVar
+from typing import Callable, ParamSpec, TypeVar
 
 from pisek.user_errors import TestingFailed
 from pisek.jobs.job_pipeline import JobPipeline
@@ -123,7 +124,7 @@ def with_env(fun: Callable[[Env, Namespace], None]) -> Callable[[Namespace], Non
 
 
 def assert_task_dir(
-    task_dir: str, pisek_directory: Optional[str], config_filename: str
+    task_dir: str, pisek_directory: Path | None, config_filename: str
 ) -> None:
     # XXX: Safeguard, raises an exception if task_dir isn't really a task
     # directory

@@ -19,6 +19,7 @@ from decimal import Decimal
 import fnmatch
 from functools import cached_property
 import os
+from pathlib import Path
 from pydantic_core import PydanticCustomError, ErrorDetails
 from pydantic import (
     BeforeValidator,
@@ -1085,14 +1086,14 @@ def _convert_errors(e: ValidationError, config_values: ConfigValuesDict) -> list
 
 def load_config(
     path: str,
-    pisek_directory: Optional[str],
+    pisek_directory: Path | None,
     config_filename: str,
     strict: bool = False,
     suppress_warnings: bool = False,
 ) -> TaskConfig:
     """Loads config from given path."""
     try:
-        config_hierarchy = ConfigHierarchy(
+        config_hierarchy = ConfigHierarchy.task_hierarchy(
             path, not suppress_warnings, pisek_directory, config_filename
         )
         config_values = TaskConfig.load_dict(config_hierarchy)
