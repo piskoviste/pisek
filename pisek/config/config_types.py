@@ -233,6 +233,17 @@ class ProgramRole(StrEnum):
         else:
             return self.name
 
+    def config_key(self) -> str:
+        match self:
+            case ProgramRole.gen:
+                return "in_gen"
+            case ProgramRole.validator:
+                return "validator"
+            case ProgramRole.judge:
+                return "out_judge"
+            case ProgramRole.primary_solution | ProgramRole.secondary_solution:
+                raise ValueError("Solution has no associated config key")
+
 
 class BuildStrategyName(StrEnum):
     cargo = auto()
