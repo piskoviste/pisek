@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+from pathlib import Path
 
 from pisek.config.update_config import update_config
 from pisek.config.config_hierarchy import (
@@ -12,7 +12,7 @@ from pisek.config.task_config import load_config, TaskConfig
 
 def update_and_replace_config(
     task_path: str,
-    pisek_directory: Optional[str],
+    pisek_directory: Path | None,
     config_filename: str,
 ) -> None:
     load_config(task_path, pisek_directory, config_filename, suppress_warnings=True)
@@ -27,11 +27,11 @@ def update_and_replace_config(
 
 def export_config(
     task_path: str,
-    pisek_directory: str | None,
+    pisek_directory: Path | None,
     config_filename: str,
     exported_config_path: str,
 ) -> None:
-    config_hierarchy = ConfigHierarchy(
+    config_hierarchy = ConfigHierarchy.task_hierarchy(
         task_path, False, pisek_directory, config_filename
     )
     TaskConfig.load_dict(config_hierarchy)

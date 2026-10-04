@@ -17,6 +17,7 @@
 from decimal import Decimal
 from enum import StrEnum, auto
 import os
+from pathlib import Path
 from pydantic import Field
 from typing import assert_never, Optional
 
@@ -94,7 +95,7 @@ class Env(BaseEnv):
         stats: bool = False,
         repeat: int = 1,
         iteration: int = 0,
-        pisek_dir: Optional[str] = None,
+        pisek_dir: Path | None = None,
         config_filename: str = DEFAULT_CONFIG_FILENAME,
         **_,
     ) -> "Env":

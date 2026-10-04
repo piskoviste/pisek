@@ -23,6 +23,7 @@ from configparser import (
 from dataclasses import dataclass
 from importlib.resources import files
 import os
+from pathlib import Path
 import re
 from typing import Optional, Iterable
 
@@ -40,6 +41,7 @@ V2_DEFAULTS = {
 }
 
 DEFAULT_CONFIG_FILENAME = "config"
+CONFIGS_FOLDER = "configs"
 
 
 def new_config_parser() -> ConfigParser:
@@ -90,9 +92,8 @@ class ConfigHierarchy:
     def __init__(
         self,
         task_path: str,
-        info: bool,
-        pisek_directory: Optional[str],
-        config_filename: str,
+        pisek_directory: Path | None,
+        configs: list[tuple[str, bool]],
     ) -> None:
         self._task_path = task_path
         self._pisek_directory = pisek_directory
@@ -103,8 +104,39 @@ class ConfigHierarchy:
         # We want set that stores the order of insertions
         self.loaded_values: dict[ConfigValue, None] = {}
 
-        self._load_config(os.path.join(task_path, config_filename), info)
-        self._load_config(GLOBAL_DEFAULTS_FILE, False)
+        for config, info in configs:
+            self._load_config(config, info)
+
+    @staticmethod
+    def task_hierarchy(
+        task_path: str, info: bool, pisek_directory: Path | None, config_filename: str
+    ) -> "ConfigHierarchy":
+        return ConfigHierarchy(
+            task_path,
+            pisek_directory,
+            [
+                (os.path.join(task_path, config_filename), info),
+                (GLOBAL_DEFAULTS_FILE, False),
+            ],
+        )
+
+    @staticmethod
+    def org_hierarchy_without_defaults(
+        task_path: str, info: bool, pisek_directory: Path, config_filename: str
+    ) -> "ConfigHierarchy":
+        return ConfigHierarchy(
+            task_path,
+            pisek_directory,
+            [
+                (os.path.join(pisek_directory, CONFIGS_FOLDER, config_filename), info),
+            ],
+        )
+
+    @staticmethod
+    def empty_hierarchy(
+        task_path: str, pisek_directory: Path | None
+    ) -> "ConfigHierarchy":
+        return ConfigHierarchy(task_path, pisek_directory, [])
 
     def _load_config(self, path: str, info: bool = True) -> None:
         self._config_paths.append(path)
@@ -129,9 +161,9 @@ class ConfigHierarchy:
             raise TaskConfigParsingError(path, f"Missing section header")
         return len(res) > 0
 
-    def _resolve_defaults_config(self, name: str):
+    def _resolve_defaults_config(self, name: str) -> str:
         def load_from_path(path: str) -> str:
-            configs_folder = os.path.join(path, "configs")
+            configs_folder = os.path.join(path, CONFIGS_FOLDER)
             if not os.path.exists(configs_folder):
                 raise TaskConfigError(f"'{configs_folder}' does not exist.")
             defaults = os.path.join(configs_folder, name)
@@ -145,22 +177,10 @@ class ConfigHierarchy:
             if (default := V2_DEFAULTS.get(name.removeprefix("@"))) is None:
                 raise TaskConfigError(f"Unknown special task_type: '{name}'")
             return default
-
-        if self._pisek_directory is not None:
+        elif self._pisek_directory is not None:
             return load_from_path(os.path.join(self._task_path, self._pisek_directory))
-
-        current_path = os.path.abspath(self._task_path)
-        while current_path:
-            if os.path.exists(os.path.join(current_path, ".git")):
-                return load_from_path(os.path.join(current_path, "pisek"))
-            step_up = os.path.abspath(os.path.join(current_path, ".."))
-            if step_up == current_path:
-                break  # topmost directory
-            if os.stat(step_up).st_uid != os.stat(current_path).st_uid:
-                break  # other user's directory
-            current_path = step_up
-
-        return name
+        else:
+            raise TaskConfigError("'use' key requires pisek directory")
 
     def get(self, section: str, key: str | None) -> ConfigValue:
         return self.get_from_candidates([(section, key)])

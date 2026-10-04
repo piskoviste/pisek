@@ -13,6 +13,7 @@
 # !!! BEWARE: This library is backwards incompatible and it's interface can change. !!!
 
 import os
+from pathlib import Path
 import shutil
 import tempfile
 
@@ -54,12 +55,19 @@ class Task:
     def __init__(
         self,
         path: str,
-        pisek_dir: str | None = None,
+        pisek_dir: Path | None = None,
         config_filename: str = DEFAULT_CONFIG_FILENAME,
     ) -> None:
         self._path = path
-        self._pisek_dir = pisek_dir or os.environ.get("PISEK_DIRECTORY")
         self._config_filename = config_filename
+
+        self._pisek_dir: Path | None
+        if pisek_dir is not None:
+            self._pisek_dir = pisek_dir
+        elif (pisek_dir_env := os.environ.get("PISEK_DIRECTORY")) is not None:
+            self._pisek_dir = Path(pisek_dir_env)
+        else:
+            self._pisek_dir = None
 
     def test(self, strict: bool = True, disable_cache: bool = False) -> bool:
         try:
