@@ -125,7 +125,7 @@ def _get_subdir(
         if default != ".":
             assert default_run_section is not None
             config[default_run_section]["subdir"] = default
-    if subdir != ".":
+    if subdir and subdir != ".":
         os.makedirs(subdir)
     return Path(subdir)
 
