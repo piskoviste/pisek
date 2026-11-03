@@ -82,9 +82,15 @@ class RunChecker(ProgramsJob):
             self.expected_verdict is not None
             and result.verdict != self.expected_verdict
         ):
-            raise PipelineItemFailure(
-                f"{self._checking_message_capitalized()} should have got verdict '{self.expected_verdict}' but got '{result.verdict}'."
+            message = (
+                f"{self._checking_message_capitalized()} should have got verdict "
+                f"'{self.expected_verdict}' but got '{result.verdict}'."
             )
+            if self._exists(self.checker_log_file):
+                message += f"\n{self.checker_name} log: " + self._quote_file_with_path(
+                    self.checker_log_file, force_content=True, style="ht"
+                )
+            raise PipelineItemFailure(message.removesuffix("\n"))
 
         return result
 
