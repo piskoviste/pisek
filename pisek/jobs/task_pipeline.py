@@ -155,6 +155,7 @@ class TaskPipeline(JobPipeline):
             )
             for solution in solutions:
                 resource_statistics[0].add_prerequisite(*solution)
+            resource_statistics[0].add_prerequisite(*fuzz_judge)
 
         return named_pipeline
 

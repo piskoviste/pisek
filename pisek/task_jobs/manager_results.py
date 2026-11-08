@@ -49,4 +49,5 @@ class SolutionManagerResult(RunGeneratorResult):
 
 @dataclass
 class FuzzingManagerResult:
+    checker_run_results: list[RunResult]
     checker_outs: set[TaskPath]

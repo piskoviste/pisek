@@ -19,8 +19,16 @@ from pisek.config.config_types import GenType, Limit
 from pisek.config.task_config import RunSection
 from pisek.env.env import TestingTarget
 from pisek.task_jobs.run_result import RunResult
-from pisek.task_jobs.task_manager import RUN_GENERATOR_CODE, SOLUTION_MAN_CODE
-from pisek.task_jobs.manager_results import RunGeneratorResult, SolutionManagerResult
+from pisek.task_jobs.task_manager import (
+    RUN_GENERATOR_CODE,
+    SOLUTION_MAN_CODE,
+    FUZZ_MAN_CODE,
+)
+from pisek.task_jobs.manager_results import (
+    RunGeneratorResult,
+    SolutionManagerResult,
+    FuzzingManagerResult,
+)
 from pisek.task_jobs.solution.solution_result import SolutionResultDetail
 
 
@@ -87,6 +95,12 @@ class ResourceStatistics(StatusJobManager):
                 solution_rr[solution].append(detail.solution_run_result)
                 if detail.checker_run_result is not None:
                     checker_rr.append(detail.checker_run_result)
+
+        fuzz_result = self.get_prerequisite_result(
+            FUZZ_MAN_CODE, FuzzingManagerResult, None
+        )
+        if fuzz_result:
+            checker_rr.extend(fuzz_result.checker_run_results)
 
         table: list[list[str]] = []
 
