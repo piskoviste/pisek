@@ -10,14 +10,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from pisek.jobs.jobs import Job
+from pisek.jobs.jobs import Job, chain
 from pisek.task_jobs.task_manager import TaskJobManager
 from pisek.jobs.job_pipeline import JobPipeline
 from pisek.utils.paths import IInputPath, IOutputPath, IRawPath
 
 from pisek.task_jobs.tools import sanitize_job, sanitize_job_direct
 from pisek.task_jobs.data.testcase_info import TestcaseInfo, TestcaseGenerationMode
-from pisek.task_jobs.data.data import LinkData
+from pisek.task_jobs.data.data import InputSmall, LinkData
 from pisek.task_jobs.run_result import RunResultKind
 from pisek.task_jobs.generator.generator_manager import generate_input_direct
 from pisek.task_jobs.solution.solution import RunBatchSolution
@@ -74,19 +74,15 @@ class InputManager(TaskJobManager):
     def _get_jobs(self) -> list[Job]:
         jobs: list[Job] = []
         if self._info.generation_mode == TestcaseGenerationMode.generated:
-            jobs.append(
-                gen := generate_input_direct(
-                    self._env, self._info, self._seed, self._input
-                )
-            )
+            gen = generate_input_direct(self._env, self._info, self._seed, self._input)
             sanitize = sanitize_job(self._env, self._input, True)
-            if sanitize is not None:
-                jobs.append(sanitize)
-                sanitize.add_prerequisite(gen)
+            inp_small = InputSmall(self._env, self._input)
+            jobs.extend(chain(gen, sanitize, inp_small))
+
         else:
-            jobs.append(
-                LinkData(self._env, self._info.input_path(self._seed), self._input)
-            )
+            link = LinkData(self._env, self._info.input_path(self._seed), self._input)
+            inp_small = InputSmall(self._env, self._input)
+            jobs.extend(chain(link, inp_small))
 
         return jobs
 
