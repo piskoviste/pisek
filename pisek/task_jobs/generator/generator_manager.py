@@ -239,7 +239,7 @@ class TestcaseInfoMixin(JobManager):
                 new_last=True,
             )
 
-        self._check_input_jobs(input_path)
+        self._add_check_input_jobs(input_path)
 
         if self._env.config.tests.validator is not None:
             for t in self._env.config.test_nums:
@@ -298,15 +298,15 @@ class TestcaseInfoMixin(JobManager):
         for i in range(2):
             check_seeded.add_prerequisite(self._gen_inputs_job[seeds[i]])
 
-    def _check_input_jobs(self, input_path: IInputPath) -> None:
-        if self._env.config.limits.input_max_size != 0:
+    def _add_check_input_jobs(self, input_path: IInputPath) -> None:
+        if not self._env.config.limits.input_max_size.is_unlimited:
             self._add_job(InputSmall(self._env, input_path))
 
     def _add_check_output_jobs(
         self,
         output_path: IOutputPath,
     ) -> None:
-        if self._env.config.limits.output_max_size != 0:
+        if not self._env.config.limits.output_max_size.is_unlimited:
             self._add_job(OutputSmall(self._env, output_path))
 
     def _compute_result(self) -> RunGeneratorResult:
