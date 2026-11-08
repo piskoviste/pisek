@@ -64,10 +64,12 @@ class TestFixtureOpendata(TestFixture):
                 print(e)
                 return False
 
-        self.assertEqual(run(), self.expecting_success())
+        success = run()
+        self.assertEqual(success, self.expecting_success())
 
-        for file in self._testcase_files:
-            self.assertTrue(os.path.isfile(file))
+        if success:
+            for file in self._testcase_files:
+                self.assertTrue(os.path.isfile(file), file)
 
         self.check_end_state()
         self.check_files()
@@ -258,6 +260,35 @@ class TestSumKasiopeaOpendataPrimarySolutionSlow(TestSumKasiopeaOpendataBuild):
     def run_opendata_test(self) -> None:
         self.init_testcase("02", 2)
         self.testcase.gen_output()
+
+
+def _small_input_max_size(raw_config):
+    raw_config.add_section("limits")
+    raw_config["limits"]["input_max_size"] = "0.00001"
+
+
+class TestSumKasiopeaStaticInputTooBig(TestSumKasiopeaOpendataBuild):
+    def expecting_success(self) -> bool:
+        return False
+
+    def modify_task(self) -> None:
+        modify_config(self.task_dir, _small_input_max_size)
+
+    def run_opendata_test(self) -> None:
+        self.init_testcase("sample", 0, None)
+        self.testcase.gen_input()
+
+
+class TestSumKasiopeaGeneratedInputTooBig(TestSumKasiopeaOpendataBuild):
+    def expecting_success(self) -> bool:
+        return False
+
+    def modify_task(self) -> None:
+        modify_config(self.task_dir, _small_input_max_size)
+
+    def run_opendata_test(self) -> None:
+        self.init_testcase("01", 1)
+        self.testcase.gen_input()
 
 
 if __name__ == "__main__":

@@ -457,3 +457,15 @@ class JobManager(PipelineItem):
     def _compute_result(self) -> Any:
         """Creates result to be read by other managers."""
         pass
+
+
+def chain[T: Job](*jobs: T | None) -> list[T]:
+    """Chains jobs after each other, omitting `None`s."""
+    result: list[T] = []
+    for job in jobs:
+        if job is None:
+            continue
+        if result:
+            job.add_prerequisite(result[-1])
+        result.append(job)
+    return result
