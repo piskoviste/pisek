@@ -113,11 +113,16 @@ class FuzzingManager(TaskJobManager):
         return jobs
 
     def _compute_result(self) -> FuzzingManagerResult:
+        checker_run_results = []
         checker_outs = set()
         for job in self.jobs:
             if isinstance(job, RunChecker):
+                # _compute_result is called on failing manager so checker_rr can be None
+                if job.checker_rr is not None:
+                    checker_run_results.append(job.checker_rr)
+
                 if isinstance(job, RunCMSJudge):
                     checker_outs.add(job.points_file)
                 checker_outs.add(job.checker_log_file)
 
-        return FuzzingManagerResult(checker_outs)
+        return FuzzingManagerResult(checker_run_results, checker_outs)
