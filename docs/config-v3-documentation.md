@@ -904,14 +904,14 @@ Section with input/output size limits.
 
 ### input_max_size
 <!-- md:version 1.0.0 -->
-<!-- md:type int | 'unlimited' -->
+<!-- md:type decimal | 'unlimited' -->
 <!-- md:default 50 -->
 
 Maximum input size [MB].
 
 ### output_max_size
 <!-- md:version 1.0.0 -->
-<!-- md:type int | 'unlimited' -->
+<!-- md:type decimal | 'unlimited' -->
 <!-- md:default 10 -->
 
 Maximum output size [MB].
