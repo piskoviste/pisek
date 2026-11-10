@@ -28,6 +28,8 @@ from pisek.utils.paths import (
 
 
 class TestcaseGenerationMode(StrEnum):
+    __test__ = False  # Not a test class, despite the name (for pytest)
+
     static = auto()
     mixed = auto()
     generated = auto()
