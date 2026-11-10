@@ -38,9 +38,15 @@ classifiers = [
 
 [project.optional-dependencies]
 dev = [
-    "black",
+    # Black changes its stable style every January (new major version)
+    "black>=26.1,<27",
     "commitizen",
-    "mypy"
+    # New mypy minor versions can report new errors
+    "mypy~=2.4.0",
+    "pytest",
+    "pytest-xdist",
+    "types-colorama",
+    "types-setuptools",
 ]
 
 [project.scripts]
@@ -63,6 +69,11 @@ pisek = [
 
 [tool.setuptools.dynamic]
 version = {attr = "pisek.version.__version__"}
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Run tests in parallel (override with -n0, e.g. for debugging)
+addopts = "-n auto"
 
 [tool.commitizen]
 name = "cz_conventional_commits"

@@ -1,0 +1,67 @@
+# https://squidfunk.github.io/mkdocs-material/publishing-your-site/
+
+name: Documentation ⏳
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "docs/**"
+      - "examples/**" # Included into docs via snippets
+      - "mkdocs.yml"
+      - ".github/workflows/docs.yml"
+
+# Cancel outdated runs when a PR gets new commits (but let every master run finish)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: 3.x
+      - run: pip install mkdocs-material
+      - name: Build documentation
+        env:
+          NO_MKDOCS_2_WARNING: 1
+        run: mkdocs build --strict
+
+  deploy:
+    name: Publish documentation
+    if: github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - name: Configure Git Credentials
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+      - uses: actions/setup-python@v7
+        with:
+          python-version: 3.x
+      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+      - uses: actions/cache@v6
+        with:
+          key: mkdocs-material-${{ env.cache_id }}
+          path: ~/.cache
+          restore-keys: |
+            mkdocs-material-
+      - run: pip install mkdocs-material
+      - run: mkdocs gh-deploy --force
+        env:
+          NO_MKDOCS_2_WARNING: 1
