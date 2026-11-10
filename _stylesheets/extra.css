@@ -1,0 +1,47 @@
+/* Edited version of https://github.com/squidfunk/mkdocs-material/blob/master/src/overrides/assets/stylesheets/custom/_typeset.scss */
+
+.md-typeset .headerlink:hover, .md-typeset [id]:target .headerlink {
+  background-color: var(--md-accent-fg-color);
+}
+
+.md-typeset .headerlink {
+  width: 1em;
+  height: 1em;
+  vertical-align: middle;
+  background-color: var(--md-default-fg-color--lighter);
+  background-size: 1em;
+  -webkit-mask-size: 1em;
+  mask-size: 1em;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  visibility: visible;
+  -webkit-mask-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path d="M14.78 3.653a3.936 3.936 0 1 1 5.567 5.567l-3.627 3.627a3.936 3.936 0 0 1-5.88-.353.75.75 0 0 0-1.18.928 5.436 5.436 0 0 0 8.12.486l3.628-3.628a5.436 5.436 0 1 0-7.688-7.688l-3 3a.75.75 0 0 0 1.06 1.061l3-3Z"></path><path d="M7.28 11.153a3.936 3.936 0 0 1 5.88.353.75.75 0 0 0 1.18-.928 5.436 5.436 0 0 0-8.12-.486L2.592 13.72a5.436 5.436 0 1 0 7.688 7.688l3-3a.75.75 0 1 0-1.06-1.06l-3 3a3.936 3.936 0 0 1-5.567-5.568l3.627-3.627Z"></path></svg>');
+  mask-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path d="M14.78 3.653a3.936 3.936 0 1 1 5.567 5.567l-3.627 3.627a3.936 3.936 0 0 1-5.88-.353.75.75 0 0 0-1.18.928 5.436 5.436 0 0 0 8.12.486l3.628-3.628a5.436 5.436 0 1 0-7.688-7.688l-3 3a.75.75 0 0 0 1.06 1.061l3-3Z"></path><path d="M7.28 11.153a3.936 3.936 0 0 1 5.88.353.75.75 0 0 0 1.18-.928 5.436 5.436 0 0 0-8.12-.486L2.592 13.72a5.436 5.436 0 1 0 7.688 7.688l3-3a.75.75 0 1 0-1.06-1.06l-3 3a3.936 3.936 0 0 1-5.567-5.568l3.627-3.627Z"></path></svg>');
+}
+
+.mdx-badge {
+  font-size: 0.85em;
+}
+
+.mdx-badge--right {
+  float: right;
+  margin-left: 0.35em;
+}
+
+.mdx-badge__icon {
+  padding: 0.25rem;
+  background: var(--md-primary-fg-color);
+  border-start-start-radius: 0.125rem;
+  border-end-start-radius: 0.125rem;
+}
+
+.mdx-badge__icon:last-child {
+  border-radius: 0.125rem;
+}
+
+.mdx-badge__text {
+  padding: 0.25rem 0.375rem;
+  border-start-end-radius: 0.125rem;
+  border-end-end-radius: 0.125rem;
+  box-shadow: 0 0 0 1px inset var(--md-primary-fg-color);
+}
