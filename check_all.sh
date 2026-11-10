@@ -12,7 +12,7 @@ echo "======== Checking formatting ========"
 python3 -m black . --check
 
 echo "======== Checking types ========"
-python3 -m mypy pisek/
+python3 -m mypy pisek tests
 
 echo "======== Testing ========"
 ./tests.sh
