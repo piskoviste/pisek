@@ -1,2 +1,2 @@
 #!/bin/bash
-python3 -m unittest discover tests/ -v
+python3 -m pytest tests/ "$@"
