@@ -4,7 +4,7 @@
 # Copyright (c)   2019 - 2022 Jiří Beneš <mail@jiribenes.com>
 # Copyright (c)   2020 - 2022 Michal Töpfer <michal.topfer@gmail.com>
 # Copyright (c)   2022        Jiří Kalvoda <jirikalvoda@kam.mff.cuni.cz>
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy.kam.mff.cuni.cz>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,19 +31,19 @@ if TYPE_CHECKING:
 
 class Verdict(Enum):
     # Higher value means more unsuccessful verdict.
-    superopt = auto()
+    superoptimal = auto()
     ok = auto()
     partial_ok = auto()
     timeout = auto()
     wrong_answer = auto()
     normalization_fail = auto()
-    error = auto()
+    runtime_error = auto()
 
     def is_zero_point(self) -> bool:
         return self in (
             Verdict.timeout,
             Verdict.wrong_answer,
-            Verdict.error,
+            Verdict.runtime_error,
             Verdict.normalization_fail,
         )
 
@@ -51,11 +51,11 @@ class Verdict(Enum):
     def mark(self) -> str:
         mark = {
             Verdict.ok: "·",
-            Verdict.superopt: "S",
+            Verdict.superoptimal: "S",
             Verdict.partial_ok: "P",
             Verdict.timeout: "T",
             Verdict.wrong_answer: "W",
-            Verdict.error: "!",
+            Verdict.runtime_error: "!",
             Verdict.normalization_fail: "N",
         }[self]
         return color_settings.colored(mark, self.color)
@@ -64,12 +64,24 @@ class Verdict(Enum):
     def color(self) -> str:
         return {
             Verdict.ok: "green",
-            Verdict.superopt: "blue",
+            Verdict.superoptimal: "blue",
             Verdict.partial_ok: "yellow",
             Verdict.timeout: "red",
             Verdict.wrong_answer: "red",
-            Verdict.error: "red",
+            Verdict.runtime_error: "red",
             Verdict.normalization_fail: "red",
+        }[self]
+
+    @cached_property
+    def full_name(self) -> str:
+        return {
+            Verdict.ok: "OK",
+            Verdict.superoptimal: "Superoptimal",
+            Verdict.partial_ok: "Partial OK",
+            Verdict.timeout: "Timeout",
+            Verdict.wrong_answer: "Wrong answer",
+            Verdict.runtime_error: "Runtime error",
+            Verdict.normalization_fail: "Normalization fail",
         }[self]
 
     @staticmethod
@@ -130,7 +142,7 @@ def verdict_always(res: Verdict) -> bool:
 
 
 def verdict_accepted(res: Verdict) -> bool:
-    return res in (Verdict.ok, Verdict.superopt)
+    return res in (Verdict.ok, Verdict.superoptimal)
 
 
 def specific_verdict(res: Verdict, verdict: Verdict) -> bool:
@@ -145,7 +157,7 @@ TEST_SPEC: dict[str, tuple[Callable[[Verdict], bool], Callable[[Verdict], bool]]
         verdict_accepted,
         partial(specific_verdict, verdict=Verdict.ok),
     ),
-    "S": (partial(specific_verdict, verdict=Verdict.superopt), verdict_always),
+    "S": (partial(specific_verdict, verdict=Verdict.superoptimal), verdict_always),
     "A": (verdict_accepted, verdict_always),
     "0": (verdict_always, lambda verdict: verdict.is_zero_point()),
     "X": (verdict_always, verdict_always),
@@ -161,7 +173,7 @@ TEST_SPEC: dict[str, tuple[Callable[[Verdict], bool], Callable[[Verdict], bool]]
         verdict_always,
         partial(specific_verdict, verdict=Verdict.normalization_fail),
     ),
-    "!": (verdict_always, partial(specific_verdict, verdict=Verdict.error)),
+    "!": (verdict_always, partial(specific_verdict, verdict=Verdict.runtime_error)),
     "T": (verdict_always, partial(specific_verdict, verdict=Verdict.timeout)),
 }
 

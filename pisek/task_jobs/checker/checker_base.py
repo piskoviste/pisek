@@ -1,6 +1,6 @@
 # pisek  - Tool for developing tasks for programming competitions.
 #
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@ from decimal import Decimal
 from typing import assert_never, Optional, override
 
 from pisek.utils.text import tab
-from pisek.utils.paths import IInputPath, IOutputPath, LogPath
+from pisek.utils.paths import IInputPath, IOutputPath, LogPath, TaskPath
 from pisek.env.env import Env
 from pisek.config.config_types import DataFormat
 from pisek.task_jobs.tools import SanitizationResult, SanitizationResultKind
@@ -40,7 +40,7 @@ class RunChecker(ProgramsJob):
         checker_name: str,
         input_: IInputPath,
         checker_log_file: LogPath,
-        expected_verdict: Optional[Verdict],
+        expected_verdict: Verdict | None,
         **kwargs,
     ) -> None:
         super().__init__(env=env, name=name, **kwargs)
@@ -75,6 +75,9 @@ class RunChecker(ProgramsJob):
         msg = self._checking_message()
         return msg[0].upper() + msg[1:]
 
+    def _judging_files(self) -> list[tuple[str, TaskPath]]:
+        return [("input", self.input)]
+
     def _run(self) -> SolutionResult:
         result = self._get_solution_result(self._get_solution_run_res_kind())
 
@@ -82,8 +85,17 @@ class RunChecker(ProgramsJob):
             self.expected_verdict is not None
             and result.verdict != self.expected_verdict
         ):
+            judging_files_info = "".join(
+                f"{name}: {self._quote_file_with_path(path)}"
+                for name, path in self._judging_files()
+            )
             raise PipelineItemFailure(
-                f"{self._checking_message_capitalized()} should have got verdict '{self.expected_verdict}' but got '{result.verdict}'."
+                f"{self._checking_message_capitalized()} should have got verdict '{self.expected_verdict.full_name}':\n"
+                + tab(
+                    f"{judging_files_info}"
+                    f"result: {result.verdict.full_name}\n"
+                    f"message: {result.message}\n"
+                )
             )
 
         return result
@@ -113,7 +125,7 @@ class RunChecker(ProgramsJob):
             return self._check()
         elif kind == RunResultKind.RUNTIME_ERROR:
             return RelativeSolutionResult(
-                verdict=Verdict.error,
+                verdict=Verdict.runtime_error,
                 message=None,
                 relative_points=Decimal(0),
             )
@@ -134,7 +146,7 @@ class RunChecker(ProgramsJob):
         text = f"input: {self._quote_file_with_path(self.input)}"
         if isinstance(self, RunBatchChecker):
             text += f"correct output: {self._quote_file_with_path(self.correct_output)}"
-        text += f"result: {self.result.verdict.name}\n"
+        text += f"result: {self.result.verdict.full_name}\n"
         if self.result.message is not None:
             text += f"message: {self.result.message}\n"
 
@@ -167,7 +179,7 @@ class RunChecker(ProgramsJob):
         if self.result is not None:
             if self.result.message is not None:
                 return self.result.message
-            return self.result.verdict.name
+            return self.result.verdict.full_name
         else:
             return self.state.name
 
@@ -220,3 +232,11 @@ class RunBatchChecker(RunChecker):
         return (
             f"output {self.output.col(self._env)} for input {self.input.col(self._env)}"
         )
+
+    @override
+    def _judging_files(self) -> list[tuple[str, TaskPath]]:
+        return [
+            *super()._judging_files(),
+            ("correct output", self.correct_output),
+            ("output", self.output),
+        ]
