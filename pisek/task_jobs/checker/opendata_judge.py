@@ -1,6 +1,6 @@
 # pisek  - Tool for developing tasks for programming competitions.
 #
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -179,7 +179,7 @@ class RunOpendataJudge(RunBatchChecker):
             elif points < max_points:
                 verdict = Verdict.partial_ok
             else:
-                verdict = Verdict.superopt
+                verdict = Verdict.superoptimal
 
             return AbsoluteSolutionResult(
                 verdict=verdict,

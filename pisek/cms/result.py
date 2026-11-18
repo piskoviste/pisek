@@ -71,7 +71,7 @@ def create_testing_log(session: Session, env: Env, dataset: Dataset) -> None:
                     if evaluation.text[0] in TIME_LIMIT_MESSAGES:
                         result_type = Verdict.timeout.name
                     elif evaluation.text[0] in RUNTIME_ERROR_MESSAGES:
-                        result_type = Verdict.error.name
+                        result_type = Verdict.runtime_error.name
                     else:
                         result_type = Verdict.wrong_answer.name
                 else:
