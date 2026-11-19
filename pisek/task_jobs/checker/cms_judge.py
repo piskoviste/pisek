@@ -1,6 +1,6 @@
 # pisek  - Tool for developing tasks for programming competitions.
 #
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -10,11 +10,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import os
 from decimal import Decimal, InvalidOperation
 from typing import Optional
-from tempfile import gettempdir
-from uuid import uuid4
 
 from pisek.utils.paths import IInputPath, IOutputPath
 from pisek.env.env import Env
@@ -116,10 +113,6 @@ class RunCMSBatchJudge(RunCMSJudge, RunBatchChecker):
             **kwargs,
         )
 
-    @staticmethod
-    def _invalid_path(name: str):
-        return os.path.join(gettempdir(), f"the-{name}-is-not-available-{uuid4()}")
-
     def _check(self) -> SolutionResult:
         config = self._env.config
 
@@ -133,16 +126,8 @@ class RunCMSBatchJudge(RunCMSJudge, RunBatchChecker):
             ProgramRole.judge,
             self.judge,
             args=[
-                (
-                    self.input.abspath
-                    if config.judge_needs_in
-                    else RunCMSBatchJudge._invalid_path("input")
-                ),
-                (
-                    self.correct_output.abspath
-                    if config.judge_needs_out
-                    else RunCMSBatchJudge._invalid_path("output")
-                ),
+                self._maybe_input_path(),
+                self._maybe_correct_output_path(),
                 self.output.abspath,
             ],
             stdout=self.points_file,

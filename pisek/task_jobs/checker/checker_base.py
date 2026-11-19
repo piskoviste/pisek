@@ -1,6 +1,6 @@
 # pisek  - Tool for developing tasks for programming competitions.
 #
-# Copyright (c)   2023        Daniel Skýpala <daniel@honza.info>
+# Copyright (c)   2023        Daniel Skýpala <skipy@kam.mff.cuni.cz>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -12,7 +12,10 @@
 
 from abc import abstractmethod
 from decimal import Decimal
+import os
 from typing import assert_never, Optional, override
+from tempfile import gettempdir
+from uuid import uuid4
 
 from pisek.utils.text import tab
 from pisek.utils.paths import IInputPath, IOutputPath, LogPath
@@ -220,3 +223,19 @@ class RunBatchChecker(RunChecker):
         return (
             f"output {self.output.col(self._env)} for input {self.input.col(self._env)}"
         )
+
+    @staticmethod
+    def _invalid_path(name: str) -> str:
+        return os.path.join(gettempdir(), f"the-{name}-is-not-available-{uuid4()}")
+
+    def _maybe_input_path(self) -> str:
+        if self._env.config.judge_needs_in:
+            return self.input.abspath
+        else:
+            return self._invalid_path("input")
+
+    def _maybe_correct_output_path(self) -> str:
+        if self._env.config.judge_needs_out:
+            return self.correct_output.abspath
+        else:
+            return self._invalid_path("correct-output")
